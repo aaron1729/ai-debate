@@ -85,10 +85,12 @@ for the MVP, just use API calls to claude only.
 
 - [ ] save snapshots of the cited webpages.
 - [ ] verify that the cited webpages contain the claimed evidence (being careful with phishing, etc.).
-- [ ] add chatGPT, grok, gemini, et al.; assess how different LLMs do, perhaps depending on the nature of the debate -- particularly the political leanings of the sides that the LLMs are instructed to defend.
+- [X] add chatGPT, grok, gemini, and maybe others.
+- [ ] assess how different LLMs do, perhaps depending on the nature of the debate -- particularly the political leanings of the sides that the LLMs are instructed to defend.
 - [ ] allow the input of an entire news article, either in plain text or as a website. in this case, the first step is to extract specific claims; then, those are fed into the above pipeline.
 - [ ] weight sources according to credibility, e.g. ranging from government websites and reuters down towards blog posts and news sources that are known to be politically biased.
 - [ ] have multiple judges (a "mixture of experts"); average their scores, or have another judge that synthesizes their scores.
 - [ ] save all the data (including metadata such as the topic of debate), and try to extract specific learnings -- about debates in general (e.g. first-mover dis/advantage), varying sources, and specific LLMs.
-- [ ] make this into a webpage, where a user can input their own claim or news article (and probably their own API key(s)).
+- [X] make this into a webpage, where a user can input their own claim or news article (and probably their own API key(s)).
+- [ ] deploy webpage.
 - [ ] add an RL policy that learns which actions lead to higher final scores (depending on various hyperparameters such as the costs of various citations). this can be a single policy that updates after debates against a frozen opponent, or ideally multiple policies that learn through self-play.
