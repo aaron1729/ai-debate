@@ -8,29 +8,151 @@ import os
 import sys
 import json
 import argparse
-from typing import Literal
-from anthropic import Anthropic
+import re
+from typing import Literal, Optional
 from dotenv import load_dotenv
-
 
 # Load environment variables
 load_dotenv()
 
 
+# Model configuration
+MODELS = {
+    "claude": {
+        "name": "Claude Sonnet 4.5",
+        "id": "claude-sonnet-4-5-20250929",
+        "provider": "anthropic"
+    },
+    "gpt4": {
+        "name": "GPT-4",
+        "id": "gpt-4-turbo-preview",
+        "provider": "openai"
+    },
+    "gpt35": {
+        "name": "GPT-3.5 Turbo",
+        "id": "gpt-3.5-turbo",
+        "provider": "openai"
+    },
+    "gemini": {
+        "name": "Gemini Pro",
+        "id": "gemini-pro",
+        "provider": "google"
+    },
+    "grok": {
+        "name": "Grok 3",
+        "id": "grok-3",
+        "provider": "xai"
+    }
+}
+
+
+class ModelClient:
+    """Unified interface for different LLM providers."""
+
+    def __init__(self, model_key: str):
+        """
+        Initialize model client.
+
+        Args:
+            model_key: Key from MODELS dict (e.g., "claude", "gpt4")
+        """
+        if model_key not in MODELS:
+            raise ValueError(f"Unknown model: {model_key}. Available: {list(MODELS.keys())}")
+
+        self.model_config = MODELS[model_key]
+        self.model_key = model_key
+        self.provider = self.model_config["provider"]
+        self.model_id = self.model_config["id"]
+
+        # Initialize appropriate client
+        if self.provider == "anthropic":
+            from anthropic import Anthropic
+            api_key = os.getenv("ANTHROPIC_API_KEY")
+            if not api_key:
+                raise ValueError("ANTHROPIC_API_KEY not set in environment")
+            self.client = Anthropic(api_key=api_key)
+        elif self.provider == "openai":
+            from openai import OpenAI
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                raise ValueError("OPENAI_API_KEY not set in environment")
+            self.client = OpenAI(api_key=api_key)
+        elif self.provider == "google":
+            import google.generativeai as genai
+            api_key = os.getenv("GOOGLE_API_KEY")
+            if not api_key:
+                raise ValueError("GOOGLE_API_KEY not set in environment")
+            genai.configure(api_key=api_key)
+            self.client = genai.GenerativeModel(self.model_id)
+        elif self.provider == "xai":
+            from openai import OpenAI
+            api_key = os.getenv("XAI_API_KEY")
+            if not api_key:
+                raise ValueError("XAI_API_KEY not set in environment")
+            # Grok uses OpenAI-compatible API
+            self.client = OpenAI(
+                api_key=api_key,
+                base_url="https://api.x.ai/v1"
+            )
+
+    def generate(self, system_prompt: str, user_prompt: str, max_tokens: int = 2000) -> str:
+        """
+        Generate a response from the model.
+
+        Args:
+            system_prompt: System instructions
+            user_prompt: User message
+            max_tokens: Maximum tokens to generate
+
+        Returns:
+            Generated text response
+        """
+        try:
+            if self.provider == "anthropic":
+                response = self.client.messages.create(
+                    model=self.model_id,
+                    max_tokens=max_tokens,
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": user_prompt}]
+                )
+                return response.content[0].text
+
+            elif self.provider in ["openai", "xai"]:
+                response = self.client.chat.completions.create(
+                    model=self.model_id,
+                    max_tokens=max_tokens,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ]
+                )
+                return response.choices[0].message.content
+
+            elif self.provider == "google":
+                # Gemini doesn't have explicit system prompt, prepend to user message
+                combined_prompt = f"{system_prompt}\n\n{user_prompt}"
+                response = self.client.generate_content(combined_prompt)
+                return response.text
+
+        except Exception as e:
+            error_type = type(e).__name__
+            raise RuntimeError(f"API error ({error_type}): {str(e)}")
+
+
 class Debater:
     """An AI agent that argues for or against a claim."""
 
-    def __init__(self, position: Literal["pro", "con"], api_key: str):
+    def __init__(self, position: Literal["pro", "con"], model_key: str):
         """
         Initialize a debater.
 
         Args:
             position: Whether this debater argues "pro" (for) or "con" (against) the claim
-            api_key: Anthropic API key
+            model_key: Model to use (e.g., "claude", "gpt4")
         """
         self.position = position
-        self.client = Anthropic(api_key=api_key)
-        self.model = "claude-3-opus-20240229"
+        self.model_client = ModelClient(model_key)
+        self.model_name = MODELS[model_key]["name"]
 
     def get_system_prompt(self, claim: str) -> str:
         """Generate the system prompt for this debater."""
@@ -56,6 +178,18 @@ IMPORTANT PRINCIPLES:
 - Arguing for a position does NOT mean you personally endorse it
 - The goal is to help determine what's actually true by stress-testing both sides
 - A judge will evaluate based on evidence quality, not rhetoric
+
+QUALITY OF DISAGREEMENT (Paul Graham's Hierarchy):
+Aim for the highest levels of disagreement:
+- DH6 (Best): Refute the central point with evidence and reasoning
+- DH5: Refute specific claims with quotes and explanations
+- DH4: Provide counterargument with reasoning/evidence
+- DH3: State contradiction (weak without evidence)
+- DH2: Respond to tone rather than substance (avoid)
+- DH1: Ad hominem attacks (avoid)
+- DH0 (Worst): Name-calling (avoid)
+
+Your arguments should operate at DH5-DH6: identify specific claims from sources and explain why they support your position with clear reasoning.
 
 CRITICAL INSTRUCTION - PARTICIPATION IS ESSENTIAL:
 You are STRONGLY EXPECTED to participate in this debate. The entire system depends on both sides presenting their best arguments. Even if you believe your assigned position is wrong, misleading, or controversial, you should still argue it to the best of your ability based on available evidence. This is how truth emerges - through rigorous adversarial testing.
@@ -118,9 +252,6 @@ Example response format:
             Dictionary with url, quote, context, and argument
         """
         # Build conversation history
-        messages = []
-
-        # Add debate history (filter out refusals - opponent doesn't see them)
         if debate_history:
             history_text = "\n\nDEBATE SO FAR:\n"
             for i, turn in enumerate(debate_history, 1):
@@ -133,31 +264,15 @@ Example response format:
                 history_text += f"Context: {turn['context']}\n"
                 history_text += f"Argument: {turn['argument']}\n"
 
-            messages.append({
-                "role": "user",
-                "content": f"Here is the debate history so far. Now make your next argument.{history_text}\n\nProvide your response in JSON format."
-            })
+            user_prompt = f"Here is the debate history so far. Now make your next argument.{history_text}\n\nProvide your response in JSON format."
         else:
-            messages.append({
-                "role": "user",
-                "content": "Make your opening argument. Provide your response in JSON format."
-            })
+            user_prompt = "Make your opening argument. Provide your response in JSON format."
 
-        # Call Claude API with proper error handling
-        try:
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=2000,
-                system=self.get_system_prompt(claim),
-                messages=messages
-            )
-        except Exception as e:
-            # API errors - re-raise to be handled by caller
-            error_type = type(e).__name__
-            raise RuntimeError(f"API error ({error_type}): {str(e)}")
-
-        # Parse the response
-        response_text = response.content[0].text
+        # Call model API
+        response_text = self.model_client.generate(
+            self.get_system_prompt(claim),
+            user_prompt
+        )
 
         # Try to extract JSON from the response
         try:
@@ -165,7 +280,6 @@ Example response format:
             result = json.loads(response_text)
         except json.JSONDecodeError:
             # If that fails, try to find JSON within the response
-            import re
             json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
             if json_match:
                 try:
@@ -182,6 +296,7 @@ Example response format:
             # Structured refusal - return it
             return {
                 "position": self.position,
+                "model": self.model_name,
                 "refused": True,
                 "refusal_reason": result.get("reason", "No reason provided"),
                 "url": "",
@@ -198,8 +313,9 @@ Example response format:
             # Incomplete response - this is an error
             raise ValueError(f"Response missing required fields: {missing_fields}")
 
-        # Valid argument - add position and return
+        # Valid argument - add position and model, return
         result["position"] = self.position
+        result["model"] = self.model_name
         result["refused"] = False
 
         return result
@@ -208,15 +324,15 @@ Example response format:
 class Judge:
     """An AI agent that judges the outcome of a debate."""
 
-    def __init__(self, api_key: str):
+    def __init__(self, model_key: str):
         """
         Initialize the judge.
 
         Args:
-            api_key: Anthropic API key
+            model_key: Model to use (e.g., "claude", "gpt4")
         """
-        self.client = Anthropic(api_key=api_key)
-        self.model = "claude-3-opus-20240229"
+        self.model_client = ModelClient(model_key)
+        self.model_name = MODELS[model_key]["name"]
 
     def get_system_prompt(self) -> str:
         """Generate the system prompt for the judge."""
@@ -230,6 +346,18 @@ You must choose ONE of these four labels:
 3. "misleading" - The claim is technically true but misleading or lacks important context
 4. "needs more evidence" - The debate did not provide sufficient evidence to make a determination
 
+EVALUATING ARGUMENT QUALITY (Paul Graham's Hierarchy of Disagreement):
+Give more weight to higher-quality arguments:
+- DH6 (Strongest): Refutes central point with evidence and reasoning
+- DH5: Refutes specific claims with quotes and explanations
+- DH4: Counterargument with reasoning/evidence
+- DH3: Simple contradiction (weak)
+- DH2: Responds to tone (very weak)
+- DH1: Ad hominem (ignore)
+- DH0: Name-calling (ignore)
+
+Arguments at DH5-DH6 should carry the most weight in your evaluation.
+
 Respond in valid JSON format:
 {
     "verdict": "one of the four labels above",
@@ -238,7 +366,7 @@ Respond in valid JSON format:
 
 Consider:
 - Quality and credibility of sources cited
-- Strength of arguments on both sides
+- Strength of arguments on both sides (prioritize DH5-DH6)
 - Whether evidence directly addresses the claim
 - Logical soundness of reasoning
 
@@ -272,25 +400,17 @@ Be objective and base your decision on the evidence presented in the debate."""
                 transcript += f"Argument: {turn['argument']}\n"
             transcript += "\n" + "-" * 80 + "\n\n"
 
-        # Call Claude API
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=1500,
-            system=self.get_system_prompt(),
-            messages=[{
-                "role": "user",
-                "content": f"{transcript}\n\nProvide your verdict in JSON format."
-            }]
+        # Call model API
+        response_text = self.model_client.generate(
+            self.get_system_prompt(),
+            f"{transcript}\n\nProvide your verdict in JSON format.",
+            max_tokens=1500
         )
 
         # Parse the response
-        response_text = response.content[0].text
-
-        # Try to extract JSON from the response
         try:
             result = json.loads(response_text)
         except json.JSONDecodeError:
-            import re
             json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
             if json_match:
                 result = json.loads(json_match.group())
@@ -308,20 +428,27 @@ Be objective and base your decision on the evidence presented in the debate."""
         return result
 
 
-def format_debate_output(claim: str, debate_history: list[dict], verdict: dict) -> str:
+def format_debate_output(claim: str, debate_history: list[dict], verdict: dict,
+                        pro_model: str, con_model: str, judge_model: str) -> str:
     """Format the debate for console output."""
     output = "\n" + "=" * 80 + "\n"
     output += "AI DEBATE SYSTEM\n"
     output += "=" * 80 + "\n\n"
 
     output += f"CLAIM: {claim}\n\n"
+    output += f"MODELS:\n"
+    output += f"  Pro: {pro_model}\n"
+    output += f"  Con: {con_model}\n"
+    output += f"  Judge: {judge_model}\n\n"
+
     output += "=" * 80 + "\n"
     output += "DEBATE TRANSCRIPT\n"
     output += "=" * 80 + "\n\n"
 
     for i, turn in enumerate(debate_history, 1):
         side_label = "PRO (Supporting)" if turn['position'] == "pro" else "CON (Opposing)"
-        output += f"Turn {i} - {side_label}\n"
+        model_name = turn.get('model', 'Unknown')
+        output += f"Turn {i} - {side_label} [{model_name}]\n"
         output += "-" * 80 + "\n"
         if turn.get("refused", False):
             output += "[MODEL REFUSED TO ARGUE THIS POSITION]\n"
@@ -333,7 +460,7 @@ def format_debate_output(claim: str, debate_history: list[dict], verdict: dict) 
             output += f"Argument: {turn['argument']}\n\n"
 
     output += "=" * 80 + "\n"
-    output += "JUDGE'S VERDICT\n"
+    output += f"JUDGE'S VERDICT [{judge_model}]\n"
     output += "=" * 80 + "\n\n"
     output += f"Verdict: {verdict['verdict'].upper()}\n\n"
     output += f"Explanation: {verdict['explanation']}\n\n"
@@ -342,22 +469,29 @@ def format_debate_output(claim: str, debate_history: list[dict], verdict: dict) 
     return output
 
 
-def run_debate(claim: str, turns: int, api_key: str) -> None:
+def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_model: str) -> None:
     """
     Run a complete debate on the given claim.
 
     Args:
         claim: The claim to debate
         turns: Number of turns per side (total turns = turns * 2)
-        api_key: Anthropic API key
+        pro_model: Model key for pro debater
+        con_model: Model key for con debater
+        judge_model: Model key for judge
     """
     print(f"\nStarting debate with {turns} turns per side...")
-    print(f"Claim: {claim}\n")
+    print(f"Claim: {claim}")
+    print(f"Pro: {MODELS[pro_model]['name']}, Con: {MODELS[con_model]['name']}, Judge: {MODELS[judge_model]['name']}\n")
 
     # Initialize agents
-    pro_debater = Debater("pro", api_key)
-    con_debater = Debater("con", api_key)
-    judge = Judge(api_key)
+    try:
+        pro_debater = Debater("pro", pro_model)
+        con_debater = Debater("con", con_model)
+        judge = Judge(judge_model)
+    except ValueError as e:
+        print(f"\nModel initialization error: {e}", file=sys.stderr)
+        sys.exit(1)
 
     # Run the debate
     debate_history = []
@@ -367,7 +501,7 @@ def run_debate(claim: str, turns: int, api_key: str) -> None:
         print(f"Turn {turn + 1}/{turns}...")
 
         # Pro side argues
-        print("  Pro side is arguing...")
+        print(f"  Pro side ({MODELS[pro_model]['name']}) is arguing...")
         try:
             pro_arg = pro_debater.make_argument(claim, debate_history)
             debate_history.append(pro_arg)
@@ -390,7 +524,7 @@ def run_debate(claim: str, turns: int, api_key: str) -> None:
             sys.exit(1)
 
         # Con side argues
-        print("  Con side is arguing...")
+        print(f"  Con side ({MODELS[con_model]['name']}) is arguing...")
         try:
             con_arg = con_debater.make_argument(claim, debate_history)
             debate_history.append(con_arg)
@@ -418,7 +552,7 @@ def run_debate(claim: str, turns: int, api_key: str) -> None:
             break
 
     # Judge the debate
-    print("\nJudge is deliberating...")
+    print(f"\n{MODELS[judge_model]['name']} is deliberating...")
     try:
         verdict = judge.judge_debate(claim, debate_history)
     except Exception as e:
@@ -426,7 +560,10 @@ def run_debate(claim: str, turns: int, api_key: str) -> None:
         sys.exit(1)
 
     # Output the results
-    output = format_debate_output(claim, debate_history, verdict)
+    output = format_debate_output(claim, debate_history, verdict,
+                                  MODELS[pro_model]['name'],
+                                  MODELS[con_model]['name'],
+                                  MODELS[judge_model]['name'])
     print(output)
 
 
@@ -435,10 +572,13 @@ def main():
     parser = argparse.ArgumentParser(
         description="AI Debate System - Conduct structured debates on factual claims",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
+        epilog=f"""
+Available models: {', '.join(MODELS.keys())}
+
 Examples:
   python debate.py "Electric vehicles produce less CO2 than gas cars" --turns 2
-  python debate.py "Coffee is good for your health" --turns 4
+  python debate.py "Coffee is good for your health" --pro-model gpt4 --con-model claude
+  python debate.py "Climate change is real" --pro-model gemini --con-model grok --judge-model gpt4
         """
     )
 
@@ -456,19 +596,35 @@ Examples:
         help="Number of turns per side (default: 2)"
     )
 
-    args = parser.parse_args()
+    parser.add_argument(
+        "--pro-model",
+        type=str,
+        default="claude",
+        choices=list(MODELS.keys()),
+        help="Model for pro side (default: claude)"
+    )
 
-    # Get API key
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
-        print("Error: ANTHROPIC_API_KEY environment variable not set", file=sys.stderr)
-        print("Please create a .env file with your API key or export it:", file=sys.stderr)
-        print("  export ANTHROPIC_API_KEY=your_key_here", file=sys.stderr)
-        sys.exit(1)
+    parser.add_argument(
+        "--con-model",
+        type=str,
+        default="claude",
+        choices=list(MODELS.keys()),
+        help="Model for con side (default: claude)"
+    )
+
+    parser.add_argument(
+        "--judge-model",
+        type=str,
+        default="claude",
+        choices=list(MODELS.keys()),
+        help="Model for judge (default: claude)"
+    )
+
+    args = parser.parse_args()
 
     # Run the debate
     try:
-        run_debate(args.claim, args.turns, api_key)
+        run_debate(args.claim, args.turns, args.pro_model, args.con_model, args.judge_model)
     except KeyboardInterrupt:
         print("\n\nDebate interrupted by user.", file=sys.stderr)
         sys.exit(1)
