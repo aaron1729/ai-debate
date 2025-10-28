@@ -191,6 +191,8 @@ Aim for the highest levels of disagreement:
 
 Your arguments should operate at DH5-DH6: identify specific claims from sources and explain why they support your position with clear reasoning.
 
+IMPORTANT: Do NOT explicitly reference DH numbers (like "DH5" or "DH6") in your actual argument text. These are for your internal guidance only. Your output should be natural prose without mentioning the hierarchy levels.
+
 CRITICAL INSTRUCTION - PARTICIPATION IS ESSENTIAL:
 You are STRONGLY EXPECTED to participate in this debate. The entire system depends on both sides presenting their best arguments. Even if you believe your assigned position is wrong, misleading, or controversial, you should still argue it to the best of your ability based on available evidence. This is how truth emerges - through rigorous adversarial testing.
 
@@ -358,6 +360,8 @@ Give more weight to higher-quality arguments:
 
 Arguments at DH5-DH6 should carry the most weight in your evaluation.
 
+IMPORTANT: Do NOT explicitly reference DH numbers in your verdict explanation. These levels are for your internal evaluation only. Your explanation should be in natural language without mentioning the hierarchy.
+
 Respond in valid JSON format:
 {
     "verdict": "one of the four labels above",
@@ -366,7 +370,7 @@ Respond in valid JSON format:
 
 Consider:
 - Quality and credibility of sources cited
-- Strength of arguments on both sides (prioritize DH5-DH6)
+- Strength of arguments on both sides (prioritize evidence-based refutation)
 - Whether evidence directly addresses the claim
 - Logical soundness of reasoning
 
@@ -505,9 +509,19 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
         try:
             pro_arg = pro_debater.make_argument(claim, debate_history)
             debate_history.append(pro_arg)
+
+            # Display the argument immediately
+            print(f"\n  {'='*60}")
             if pro_arg.get("refused", False):
-                print("  Pro side declined to argue this position.")
+                print("  PRO SIDE DECLINED TO ARGUE")
+                print(f"  Reason: {pro_arg.get('refusal_reason', 'No reason provided')}")
                 debate_shortened = True
+            else:
+                print(f"  Source: {pro_arg['url']}")
+                print(f"  Quote: \"{pro_arg['quote']}\"")
+                print(f"  Context: {pro_arg['context']}")
+                print(f"  Argument: {pro_arg['argument']}")
+            print(f"  {'='*60}\n")
         except RuntimeError as e:
             # API errors - inform user and exit
             print(f"\n  API Error from Pro debater: {e}", file=sys.stderr)
@@ -528,9 +542,19 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
         try:
             con_arg = con_debater.make_argument(claim, debate_history)
             debate_history.append(con_arg)
+
+            # Display the argument immediately
+            print(f"\n  {'='*60}")
             if con_arg.get("refused", False):
-                print("  Con side declined to argue this position.")
+                print("  CON SIDE DECLINED TO ARGUE")
+                print(f"  Reason: {con_arg.get('refusal_reason', 'No reason provided')}")
                 debate_shortened = True
+            else:
+                print(f"  Source: {con_arg['url']}")
+                print(f"  Quote: \"{con_arg['quote']}\"")
+                print(f"  Context: {con_arg['context']}")
+                print(f"  Argument: {con_arg['argument']}")
+            print(f"  {'='*60}\n")
         except RuntimeError as e:
             # API errors - inform user and exit
             print(f"\n  API Error from Con debater: {e}", file=sys.stderr)
@@ -592,7 +616,7 @@ Examples:
         "--turns",
         type=int,
         default=2,
-        choices=[1, 2, 4, 6],
+        choices=[1, 2, 3, 4, 5, 6],
         help="Number of turns per side (default: 2)"
     )
 

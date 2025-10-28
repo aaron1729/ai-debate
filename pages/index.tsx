@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Head from 'next/head';
-import { MODELS, ModelKey, DebateResult } from '../lib/debate-engine';
+import { MODELS, ModelKey, DebateResult, DebateTurn } from '../lib/debate-engine';
 
 export default function Home() {
   const [claim, setClaim] = useState('');
@@ -9,7 +9,10 @@ export default function Home() {
   const [conModel, setConModel] = useState<ModelKey>('claude');
   const [judgeModel, setJudgeModel] = useState<ModelKey>('claude');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<DebateResult | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [progressText, setProgressText] = useState('');
+  const [debateHistory, setDebateHistory] = useState<DebateTurn[]>([]);
+  const [verdict, setVerdict] = useState<DebateResult['verdict'] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showApiKeys, setShowApiKeys] = useState(false);
   const [apiKeys, setApiKeys] = useState({
@@ -18,18 +21,29 @@ export default function Home() {
     google: '',
     xai: ''
   });
-  const [rateLimitInfo, setRateLimitInfo] = useState<{
-    remaining?: number;
-    resetAt?: string;
-  }>({});
+  const [modelLimits, setModelLimits] = useState<Record<string, { remaining: number }>>({});
+  const [hasLoadedLimits, setHasLoadedLimits] = useState(false);
 
   const modelKeys = Object.keys(MODELS) as ModelKey[];
+
+  const getVerdictColor = (verdictType: string) => {
+    switch (verdictType) {
+      case 'supported': return '#22c55e'; // green
+      case 'contradicted': return '#ef4444'; // red
+      case 'misleading': return '#f59e0b'; // orange
+      case 'needs more evidence': return '#6b7280'; // gray
+      default: return '#3b82f6'; // blue
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setResult(null);
+    setDebateHistory([]);
+    setVerdict(null);
+    setProgress(0);
+    setProgressText('Starting debate...');
 
     try {
       // Determine which API keys to send
@@ -41,6 +55,15 @@ export default function Home() {
         ...(apiKeys.google && { google: apiKeys.google }),
         ...(apiKeys.xai && { xai: apiKeys.xai })
       } : undefined;
+
+      const totalSteps = turns * 2 + 1; // Pro + Con per turn + Judge
+      let currentStep = 0;
+
+      // Update progress as we wait for the response
+      const progressInterval = setInterval(() => {
+        // Simulate progress up to 90% while waiting
+        setProgress(prev => Math.min(prev + 2, 90));
+      }, 200);
 
       const response = await fetch('/api/debate', {
         method: 'POST',
@@ -55,14 +78,19 @@ export default function Home() {
         })
       });
 
+      clearInterval(progressInterval);
+
       // Extract rate limit headers
-      const remaining = response.headers.get('X-RateLimit-Remaining');
-      const reset = response.headers.get('X-RateLimit-Reset');
-      if (remaining) {
-        setRateLimitInfo({
-          remaining: parseInt(remaining),
-          resetAt: reset ? new Date(parseInt(reset) * 1000).toISOString() : undefined
+      const rateLimitModels = response.headers.get('X-RateLimit-Models');
+      if (rateLimitModels) {
+        const limits = JSON.parse(rateLimitModels);
+        // Ensure all models are shown with their limits
+        const allLimits: Record<string, { remaining: number }> = {};
+        modelKeys.forEach(key => {
+          allLimits[key] = limits[key] || { remaining: 5 };
         });
+        setModelLimits(allLimits);
+        setHasLoadedLimits(true);
       }
 
       const data = await response.json();
@@ -71,7 +99,24 @@ export default function Home() {
         throw new Error(data.message || data.error || 'Failed to run debate');
       }
 
-      setResult(data);
+      // Simulate progressive display (since we get all data at once)
+      // In a real streaming implementation, this would happen naturally
+      for (let i = 0; i < data.debate_history.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        setDebateHistory(prev => [...prev, data.debate_history[i]]);
+        currentStep++;
+        setProgress(90 + (currentStep / totalSteps) * 8); // 90-98%
+        const turnNum = Math.floor(i / 2) + 1;
+        const side = data.debate_history[i].position === 'pro' ? 'Pro' : 'Con';
+        setProgressText(`Turn ${turnNum}: ${side} arguing...`);
+      }
+
+      setProgressText('Judge deliberating...');
+      setProgress(98);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setVerdict(data.verdict);
+      setProgress(100);
+      setProgressText('Complete!');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -94,8 +139,14 @@ export default function Home() {
         fontFamily: 'system-ui, -apple-system, sans-serif'
       }}>
         <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>AI Debate System</h1>
-        <p style={{ textAlign: 'center', color: '#666', marginBottom: '40px' }}>
+        <p style={{ textAlign: 'center', color: '#666', marginBottom: '10px' }}>
           Adversarial truth-seeking through structured debates
+        </p>
+        <p style={{ textAlign: 'center', fontSize: '14px', color: '#888', marginBottom: '5px' }}>
+          A modernization of <a href="https://arxiv.org/abs/1805.00899" target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3', textDecoration: 'none' }}>AI safety via debate</a> (Irving et al., 2018)
+        </p>
+        <p style={{ textAlign: 'center', fontSize: '13px', color: '#999', marginBottom: '40px' }}>
+          Judge evaluation based on <a href="http://www.paulgraham.com/disagree.html" target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3', textDecoration: 'none' }}>Paul Graham's disagreement hierarchy</a>
         </p>
 
         <form onSubmit={handleSubmit} style={{ marginBottom: '40px' }}>
@@ -108,6 +159,7 @@ export default function Home() {
               onChange={(e) => setClaim(e.target.value)}
               placeholder="Enter a factual claim to debate..."
               required
+              disabled={loading}
               style={{
                 width: '100%',
                 minHeight: '80px',
@@ -119,7 +171,7 @@ export default function Home() {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '15px' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
                 Pro Model:
@@ -127,6 +179,7 @@ export default function Home() {
               <select
                 value={proModel}
                 onChange={(e) => setProModel(e.target.value as ModelKey)}
+                disabled={loading}
                 style={{
                   width: '100%',
                   padding: '8px',
@@ -136,7 +189,16 @@ export default function Home() {
                 }}
               >
                 {modelKeys.map(key => (
-                  <option key={key} value={key}>{MODELS[key].name}</option>
+                  <option
+                    key={key}
+                    value={key}
+                    disabled={modelLimits[key]?.remaining === 0}
+                    style={{
+                      color: modelLimits[key]?.remaining === 0 ? '#ccc' : 'inherit'
+                    }}
+                  >
+                    {MODELS[key].name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -148,6 +210,7 @@ export default function Home() {
               <select
                 value={conModel}
                 onChange={(e) => setConModel(e.target.value as ModelKey)}
+                disabled={loading}
                 style={{
                   width: '100%',
                   padding: '8px',
@@ -157,7 +220,16 @@ export default function Home() {
                 }}
               >
                 {modelKeys.map(key => (
-                  <option key={key} value={key}>{MODELS[key].name}</option>
+                  <option
+                    key={key}
+                    value={key}
+                    disabled={modelLimits[key]?.remaining === 0}
+                    style={{
+                      color: modelLimits[key]?.remaining === 0 ? '#ccc' : 'inherit'
+                    }}
+                  >
+                    {MODELS[key].name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -169,6 +241,7 @@ export default function Home() {
               <select
                 value={judgeModel}
                 onChange={(e) => setJudgeModel(e.target.value as ModelKey)}
+                disabled={loading}
                 style={{
                   width: '100%',
                   padding: '8px',
@@ -178,7 +251,16 @@ export default function Home() {
                 }}
               >
                 {modelKeys.map(key => (
-                  <option key={key} value={key}>{MODELS[key].name}</option>
+                  <option
+                    key={key}
+                    value={key}
+                    disabled={modelLimits[key]?.remaining === 0}
+                    style={{
+                      color: modelLimits[key]?.remaining === 0 ? '#ccc' : 'inherit'
+                    }}
+                  >
+                    {MODELS[key].name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -187,13 +269,10 @@ export default function Home() {
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
                 Number of Turns:
               </label>
-              <input
-                type="number"
+              <select
                 value={turns}
                 onChange={(e) => setTurns(parseInt(e.target.value))}
-                min="1"
-                max="5"
-                required
+                disabled={loading}
                 style={{
                   width: '100%',
                   padding: '8px',
@@ -201,19 +280,48 @@ export default function Home() {
                   border: '1px solid #ddd',
                   borderRadius: '4px'
                 }}
-              />
+              >
+                {[1, 2, 3, 4, 5, 6].map(n => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
             </div>
           </div>
+
+          {!showApiKeys && hasLoadedLimits && (
+            <div style={{
+              padding: '12px',
+              background: '#f9fafb',
+              border: '1px solid #e5e7eb',
+              borderRadius: '4px',
+              marginBottom: '20px'
+            }}>
+              <p style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#374151' }}>
+                Free uses remaining today:
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px' }}>
+                {modelKeys.map(key => {
+                  const remaining = modelLimits[key]?.remaining ?? 5;
+                  return (
+                    <div key={key} style={{ fontSize: '12px', color: remaining === 0 ? '#ef4444' : '#6b7280' }}>
+                      <strong>{MODELS[key].name}:</strong> {remaining}/5
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div style={{ marginBottom: '20px' }}>
             <button
               type="button"
               onClick={() => setShowApiKeys(!showApiKeys)}
+              disabled={loading}
               style={{
                 background: 'none',
                 border: 'none',
                 color: '#0070f3',
-                cursor: 'pointer',
+                cursor: loading ? 'not-allowed' : 'pointer',
                 fontSize: '14px',
                 textDecoration: 'underline',
                 padding: 0
@@ -230,7 +338,7 @@ export default function Home() {
                 borderRadius: '4px'
               }}>
                 <p style={{ fontSize: '13px', color: '#666', marginBottom: '10px' }}>
-                  You get 5 free debates per day. To unlock unlimited usage, add your own API keys:
+                  You get 5 free uses per model per day. To unlock unlimited usage, add your own API keys:
                 </p>
                 <div style={{ display: 'grid', gap: '10px' }}>
                   <input
@@ -238,6 +346,7 @@ export default function Home() {
                     placeholder="Anthropic API Key (optional)"
                     value={apiKeys.anthropic}
                     onChange={(e) => setApiKeys({ ...apiKeys, anthropic: e.target.value })}
+                    disabled={loading}
                     style={{
                       padding: '8px',
                       fontSize: '14px',
@@ -250,6 +359,7 @@ export default function Home() {
                     placeholder="OpenAI API Key (optional)"
                     value={apiKeys.openai}
                     onChange={(e) => setApiKeys({ ...apiKeys, openai: e.target.value })}
+                    disabled={loading}
                     style={{
                       padding: '8px',
                       fontSize: '14px',
@@ -262,6 +372,7 @@ export default function Home() {
                     placeholder="Google API Key (optional)"
                     value={apiKeys.google}
                     onChange={(e) => setApiKeys({ ...apiKeys, google: e.target.value })}
+                    disabled={loading}
                     style={{
                       padding: '8px',
                       fontSize: '14px',
@@ -274,6 +385,7 @@ export default function Home() {
                     placeholder="xAI API Key (optional)"
                     value={apiKeys.xai}
                     onChange={(e) => setApiKeys({ ...apiKeys, xai: e.target.value })}
+                    disabled={loading}
                     style={{
                       padding: '8px',
                       fontSize: '14px',
@@ -285,12 +397,6 @@ export default function Home() {
               </div>
             )}
           </div>
-
-          {rateLimitInfo.remaining !== undefined && !showApiKeys && (
-            <p style={{ fontSize: '13px', color: '#666', marginBottom: '15px' }}>
-              Free debates remaining today: {rateLimitInfo.remaining}/5
-            </p>
-          )}
 
           <button
             type="submit"
@@ -311,6 +417,38 @@ export default function Home() {
           </button>
         </form>
 
+        {loading && (
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{
+              width: '100%',
+              height: '30px',
+              background: '#e5e7eb',
+              borderRadius: '4px',
+              overflow: 'hidden',
+              position: 'relative'
+            }}>
+              <div style={{
+                width: `${Math.max(progress, 10)}%`,
+                height: '100%',
+                background: '#0070f3',
+                transition: 'width 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                minWidth: '40px'
+              }}>
+                {Math.round(progress)}%
+              </div>
+            </div>
+            <p style={{ textAlign: 'center', marginTop: '8px', color: '#666', fontSize: '14px' }}>
+              {progressText}
+            </p>
+          </div>
+        )}
+
         {error && (
           <div style={{
             padding: '15px',
@@ -324,30 +462,36 @@ export default function Home() {
           </div>
         )}
 
-        {result && (
+        {verdict && (
+          <div style={{
+            padding: '20px',
+            background: '#f0f8ff',
+            border: '2px solid #add8e6',
+            borderRadius: '4px',
+            marginBottom: '30px',
+            animation: 'fadeIn 0.5s ease-in'
+          }}>
+            <h2 style={{ marginTop: 0, marginBottom: '15px' }}>Final Verdict</h2>
+            <p style={{ fontSize: '18px', marginBottom: '10px' }}>
+              <strong>Verdict: </strong>
+              <span style={{
+                color: getVerdictColor(verdict.verdict),
+                fontWeight: 'bold',
+                fontSize: '20px'
+              }}>
+                {verdict.verdict.toUpperCase()}
+              </span>
+            </p>
+            <p style={{ fontSize: '16px', lineHeight: '1.6' }}>
+              <strong>Explanation:</strong> {verdict.explanation}
+            </p>
+          </div>
+        )}
+
+        {debateHistory.length > 0 && (
           <div>
-            <h2 style={{ marginBottom: '10px' }}>Debate Results</h2>
-
-            <div style={{
-              padding: '15px',
-              background: '#f0f8ff',
-              border: '1px solid #add8e6',
-              borderRadius: '4px',
-              marginBottom: '20px'
-            }}>
-              <h3 style={{ marginTop: 0 }}>Claim:</h3>
-              <p style={{ fontSize: '16px', marginBottom: '10px' }}>{result.claim}</p>
-
-              <h3>Verdict: {result.verdict.verdict.toUpperCase()}</h3>
-              <p>{result.verdict.explanation}</p>
-
-              <p style={{ fontSize: '13px', color: '#666', marginTop: '10px' }}>
-                <strong>Models:</strong> Pro: {result.models.pro} | Con: {result.models.con} | Judge: {result.models.judge}
-              </p>
-            </div>
-
-            <h3>Debate Transcript:</h3>
-            {result.debate_history.map((turn, i) => (
+            <h2 style={{ marginBottom: '20px' }}>Debate Transcript</h2>
+            {debateHistory.map((turn, i) => (
               <div
                 key={i}
                 style={{
@@ -355,7 +499,8 @@ export default function Home() {
                   marginBottom: '15px',
                   background: turn.position === 'pro' ? '#e8f5e9' : '#ffebee',
                   border: turn.position === 'pro' ? '1px solid #a5d6a7' : '1px solid #ef9a9a',
-                  borderRadius: '4px'
+                  borderRadius: '4px',
+                  animation: 'fadeIn 0.3s ease-in'
                 }}
               >
                 <h4 style={{ margin: '0 0 10px 0' }}>
@@ -369,7 +514,7 @@ export default function Home() {
                   </div>
                 ) : (
                   <div>
-                    <p><strong>Source:</strong> <a href={turn.url} target="_blank" rel="noopener noreferrer">{turn.url}</a></p>
+                    <p><strong>Source:</strong> <a href={turn.url} target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3' }}>{turn.url}</a></p>
                     <p><strong>Quote:</strong> "{turn.quote}"</p>
                     <p><strong>Context:</strong> {turn.context}</p>
                     <p><strong>Argument:</strong> {turn.argument}</p>
@@ -379,6 +524,19 @@ export default function Home() {
             ))}
           </div>
         )}
+
+        <style jsx>{`
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}</style>
       </div>
     </>
   );
