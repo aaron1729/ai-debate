@@ -1,6 +1,65 @@
 # ai-debate
 
+Adversarial truth-seeking through structured AI debates.
 
+## Quick Start
+
+### CLI Usage
+
+1. Install dependencies:
+```bash
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+2. Create `.env` file with your API keys:
+```bash
+cp .env.example .env
+# Edit .env with your keys
+```
+
+3. Run a debate:
+```bash
+python debate.py "Your claim here" --turns 2
+```
+
+Options:
+- `--turns`: Number of debate turns (default: 2)
+- `--pro-model`: Model for pro side (claude/gpt4/gpt35/gemini/grok, default: claude)
+- `--con-model`: Model for con side (default: claude)
+- `--judge-model`: Model for judge (default: claude)
+
+### Web Deployment
+
+The web version is built with Next.js and can be deployed to Vercel.
+
+1. Install Node.js dependencies:
+```bash
+npm install
+```
+
+2. Set up Upstash Redis for rate limiting:
+   - Sign up at https://upstash.com/
+   - Create a Redis database
+   - Copy the REST URL and token to your `.env` file
+
+3. Run locally:
+```bash
+npm run dev
+```
+
+4. Deploy to Vercel:
+   - Push to GitHub
+   - Import project in Vercel
+   - Add environment variables in Vercel dashboard:
+     - `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, etc. (for free tier)
+     - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (required)
+
+The web version includes:
+- 5 free debates per IP per 24 hours
+- Option for users to provide their own API keys for unlimited usage
+- Support for all 5 models (Claude, GPT-4, GPT-3.5, Gemini, Grok)
 
 ## outline
 

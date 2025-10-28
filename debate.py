@@ -34,8 +34,8 @@ MODELS = {
         "provider": "openai"
     },
     "gemini": {
-        "name": "Gemini Pro",
-        "id": "gemini-pro",
+        "name": "Gemini 2.5 Flash",
+        "id": "gemini-2.5-flash",
         "provider": "google"
     },
     "grok": {
