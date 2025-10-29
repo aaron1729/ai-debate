@@ -10,6 +10,7 @@ load_dotenv()
 api_key = os.getenv("ANTHROPIC_API_KEY")
 if not api_key:
     print("Error: ANTHROPIC_API_KEY not set")
+    #pylint:disable=consider-using-sys-exit
     exit(1)
 
 client = Anthropic(api_key=api_key)
@@ -32,11 +33,17 @@ for model_id in model_ids_to_test:
         response = client.messages.create(
             model=model_id,
             max_tokens=100,
-            messages=[{"role": "user", "content": "Say 'hello' in JSON format: {\"message\": \"hello\"}"}]
+            messages=[
+                {
+                    "role": "user",
+                    "content": 'Say \'hello\' in JSON format: {"message": "hello"}',
+                }
+            ],
         )
         print(f"  ✓ SUCCESS! Model {model_id} works!")
         print(f"  Response: {response.content[0].text}\n")
         break
+    #pylint:disable=broad-exception-caught
     except Exception as e:
         print(f"  ✗ Failed: {e}\n")
 

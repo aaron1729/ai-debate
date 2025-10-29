@@ -3,139 +3,25 @@
 AI Debate System - MVP
 A script that conducts debates between two AI agents on user-provided claims.
 """
+# pylint:disable=line-too-long, raise-missing-from, broad-exception-caught
 
 import os
 import sys
 import json
 import argparse
 import re
-from typing import Literal, Optional
+from typing import Literal
 from dotenv import load_dotenv
+
+from model_client import ModelClient, get_available_models, get_model_name
 
 # Load environment variables
 load_dotenv()
 
 # Load shared messages
-with open(os.path.join(os.path.dirname(__file__), 'shared', 'messages.json'), 'r') as f:
+# pylint:disable=unspecified-encoding
+with open(os.path.join(os.path.dirname(__file__), "shared", "messages.json"), "r") as f:
     MESSAGES = json.load(f)
-
-
-# Model configuration
-MODELS = {
-    "claude": {
-        "name": "Claude Sonnet 4.5",
-        "id": "claude-sonnet-4-5-20250929",
-        "provider": "anthropic"
-    },
-    "gpt4": {
-        "name": "GPT-4",
-        "id": "gpt-4-turbo-preview",
-        "provider": "openai"
-    },
-    "gemini": {
-        "name": "Gemini 2.5 Flash",
-        "id": "gemini-2.5-flash",
-        "provider": "google"
-    },
-    "grok": {
-        "name": "Grok 3",
-        "id": "grok-3",
-        "provider": "xai"
-    }
-}
-
-
-class ModelClient:
-    """Unified interface for different LLM providers."""
-
-    def __init__(self, model_key: str):
-        """
-        Initialize model client.
-
-        Args:
-            model_key: Key from MODELS dict (e.g., "claude", "gpt4")
-        """
-        if model_key not in MODELS:
-            raise ValueError(f"Unknown model: {model_key}. Available: {list(MODELS.keys())}")
-
-        self.model_config = MODELS[model_key]
-        self.model_key = model_key
-        self.provider = self.model_config["provider"]
-        self.model_id = self.model_config["id"]
-
-        # Initialize appropriate client
-        if self.provider == "anthropic":
-            from anthropic import Anthropic
-            api_key = os.getenv("ANTHROPIC_API_KEY")
-            if not api_key:
-                raise ValueError("ANTHROPIC_API_KEY not set in environment")
-            self.client = Anthropic(api_key=api_key)
-        elif self.provider == "openai":
-            from openai import OpenAI
-            api_key = os.getenv("OPENAI_API_KEY")
-            if not api_key:
-                raise ValueError("OPENAI_API_KEY not set in environment")
-            self.client = OpenAI(api_key=api_key)
-        elif self.provider == "google":
-            import google.generativeai as genai
-            api_key = os.getenv("GOOGLE_API_KEY")
-            if not api_key:
-                raise ValueError("GOOGLE_API_KEY not set in environment")
-            genai.configure(api_key=api_key)
-            self.client = genai.GenerativeModel(self.model_id)
-        elif self.provider == "xai":
-            from openai import OpenAI
-            api_key = os.getenv("XAI_API_KEY")
-            if not api_key:
-                raise ValueError("XAI_API_KEY not set in environment")
-            # Grok uses OpenAI-compatible API
-            self.client = OpenAI(
-                api_key=api_key,
-                base_url="https://api.x.ai/v1"
-            )
-
-    def generate(self, system_prompt: str, user_prompt: str, max_tokens: int = 2000) -> str:
-        """
-        Generate a response from the model.
-
-        Args:
-            system_prompt: System instructions
-            user_prompt: User message
-            max_tokens: Maximum tokens to generate
-
-        Returns:
-            Generated text response
-        """
-        try:
-            if self.provider == "anthropic":
-                response = self.client.messages.create(
-                    model=self.model_id,
-                    max_tokens=max_tokens,
-                    system=system_prompt,
-                    messages=[{"role": "user", "content": user_prompt}]
-                )
-                return response.content[0].text
-
-            elif self.provider in ["openai", "xai"]:
-                response = self.client.chat.completions.create(
-                    model=self.model_id,
-                    max_tokens=max_tokens,
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}
-                    ]
-                )
-                return response.choices[0].message.content
-
-            elif self.provider == "google":
-                # Gemini doesn't have explicit system prompt, prepend to user message
-                combined_prompt = f"{system_prompt}\n\n{user_prompt}"
-                response = self.client.generate_content(combined_prompt)
-                return response.text
-
-        except Exception as e:
-            error_type = type(e).__name__
-            raise RuntimeError(f"API error ({error_type}): {str(e)}")
 
 
 class Debater:
@@ -151,7 +37,7 @@ class Debater:
         """
         self.position = position
         self.model_client = ModelClient(model_key)
-        self.model_name = MODELS[model_key]["name"]
+        self.model_name = get_model_name(model_key)
 
     def get_system_prompt(self, claim: str) -> str:
         """Generate the system prompt for this debater."""
@@ -267,12 +153,13 @@ Example response format:
 
             user_prompt = f"Here is the debate history so far. Now make your next argument.{history_text}\n\nProvide your response in JSON format."
         else:
-            user_prompt = "Make your opening argument. Provide your response in JSON format."
+            user_prompt = (
+                "Make your opening argument. Provide your response in JSON format."
+            )
 
         # Call model API
         response_text = self.model_client.generate(
-            self.get_system_prompt(claim),
-            user_prompt
+            self.get_system_prompt(claim), user_prompt
         )
 
         # Try to extract JSON from the response
@@ -281,13 +168,15 @@ Example response format:
             result = json.loads(response_text)
         except json.JSONDecodeError:
             # If that fails, try to find JSON within the response
-            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            json_match = re.search(r"\{.*\}", response_text, re.DOTALL)
             if json_match:
                 try:
                     result = json.loads(json_match.group())
                 except json.JSONDecodeError:
                     # Malformed response - this is an error, not a refusal
-                    raise ValueError(f"Could not parse JSON from response: {response_text[:200]}")
+                    raise ValueError(
+                        f"Could not parse JSON from response: {response_text[:200]}"
+                    )
             else:
                 # No JSON found - malformed response
                 raise ValueError(f"No JSON found in response: {response_text[:200]}")
@@ -303,7 +192,7 @@ Example response format:
                 "url": "",
                 "quote": "",
                 "context": "",
-                "argument": ""
+                "argument": "",
             }
 
         # Validate the response has required fields for an argument
@@ -333,7 +222,7 @@ class Judge:
             model_key: Model to use (e.g., "claude", "gpt4")
         """
         self.model_client = ModelClient(model_key)
-        self.model_name = MODELS[model_key]["name"]
+        self.model_name = get_model_name(model_key)
 
     def get_system_prompt(self) -> str:
         """Generate the system prompt for the judge."""
@@ -394,8 +283,10 @@ Be objective and base your decision on the evidence presented in the debate."""
         for i, turn in enumerate(debate_history, 1):
             transcript += f"Turn {i} - {turn['position'].upper()} SIDE:\n"
             if turn.get("refused", False):
-                transcript += f"[REFUSED TO ARGUE]\n"
-                transcript += f"Reason: {turn.get('refusal_reason', 'No reason provided')}\n"
+                transcript += "[REFUSED TO ARGUE]\n"
+                transcript += (
+                    f"Reason: {turn.get('refusal_reason', 'No reason provided')}\n"
+                )
             else:
                 transcript += f"Source: {turn['url']}\n"
                 transcript += f"Quote: \"{turn['quote']}\"\n"
@@ -407,14 +298,14 @@ Be objective and base your decision on the evidence presented in the debate."""
         response_text = self.model_client.generate(
             self.get_system_prompt(),
             f"{transcript}\n\nProvide your verdict in JSON format.",
-            max_tokens=1500
+            max_tokens=1500,
         )
 
         # Parse the response
         try:
             result = json.loads(response_text)
         except json.JSONDecodeError:
-            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            json_match = re.search(r"\{.*\}", response_text, re.DOTALL)
             if json_match:
                 result = json.loads(json_match.group())
             else:
@@ -424,22 +315,34 @@ Be objective and base your decision on the evidence presented in the debate."""
         if "verdict" not in result or "explanation" not in result:
             raise ValueError("Judge response missing required fields")
 
-        valid_verdicts = ["supported", "contradicted", "misleading", "needs more evidence"]
+        valid_verdicts = [
+            "supported",
+            "contradicted",
+            "misleading",
+            "needs more evidence",
+        ]
         if result["verdict"] not in valid_verdicts:
             raise ValueError(f"Invalid verdict: {result['verdict']}")
 
         return result
 
 
-def format_debate_output(claim: str, debate_history: list[dict], verdict: dict,
-                        pro_model: str, con_model: str, judge_model: str) -> str:
+# pylint:disable=too-many-arguments, too-many-positional-arguments
+def format_debate_output(
+    claim: str,
+    debate_history: list[dict],
+    verdict: dict,
+    pro_model: str,
+    con_model: str,
+    judge_model: str,
+) -> str:
     """Format the debate for console output."""
     output = "\n" + "=" * 80 + "\n"
     output += "AI DEBATE SYSTEM\n"
     output += "=" * 80 + "\n\n"
 
     output += f"CLAIM: {claim}\n\n"
-    output += f"MODELS:\n"
+    output += "MODELS:\n"
     output += f"  Pro: {pro_model}\n"
     output += f"  Con: {con_model}\n"
     output += f"  Judge: {judge_model}\n\n"
@@ -449,8 +352,10 @@ def format_debate_output(claim: str, debate_history: list[dict], verdict: dict,
     output += "=" * 80 + "\n\n"
 
     for i, turn in enumerate(debate_history, 1):
-        side_label = "PRO (Supporting)" if turn['position'] == "pro" else "CON (Opposing)"
-        model_name = turn.get('model', 'Unknown')
+        side_label = (
+            "PRO (Supporting)" if turn["position"] == "pro" else "CON (Opposing)"
+        )
+        model_name = turn.get("model", "Unknown")
         output += f"Turn {i} - {side_label} [{model_name}]\n"
         output += "-" * 80 + "\n"
         if turn.get("refused", False):
@@ -472,7 +377,10 @@ def format_debate_output(claim: str, debate_history: list[dict], verdict: dict,
     return output
 
 
-def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_model: str) -> None:
+# pylint:disable=too-many-locals, too-many-branches, too-many-statements
+def run_debate(
+    claim: str, turns: int, pro_model: str, con_model: str, judge_model: str
+) -> None:
     """
     Run a complete debate on the given claim.
 
@@ -485,7 +393,9 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
     """
     print(f"\n{MESSAGES['start'].replace('{turns}', str(turns))}")
     print(f"Claim: {claim}")
-    print(f"Pro: {MODELS[pro_model]['name']}, Con: {MODELS[con_model]['name']}, Judge: {MODELS[judge_model]['name']}\n")
+    print(
+        f"Pro: {get_model_name(pro_model)}, Con: {get_model_name(con_model)}, Judge: {get_model_name(judge_model)}\n"
+    )
 
     # Initialize agents
     try:
@@ -501,10 +411,14 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
     debate_shortened = False
 
     for turn in range(turns):
-        print(MESSAGES['turn'].replace('{turn}', str(turn + 1)).replace('{total_turns}', str(turns)))
+        print(
+            MESSAGES["turn"]
+            .replace("{turn}", str(turn + 1))
+            .replace("{total_turns}", str(turns))
+        )
 
         # Pro side argues
-        print(MESSAGES['pro_turn'].replace('{model_name}', MODELS[pro_model]['name']))
+        print(MESSAGES["pro_turn"].replace("{model_name}", get_model_name(pro_model)))
         try:
             pro_arg = pro_debater.make_argument(claim, debate_history)
             debate_history.append(pro_arg)
@@ -513,7 +427,9 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
             print(f"\n  {'='*60}")
             if pro_arg.get("refused", False):
                 print("  PRO SIDE DECLINED TO ARGUE")
-                print(f"  Reason: {pro_arg.get('refusal_reason', 'No reason provided')}")
+                print(
+                    f"  Reason: {pro_arg.get('refusal_reason', 'No reason provided')}"
+                )
                 debate_shortened = True
             else:
                 print(f"  Source: {pro_arg['url']}")
@@ -529,7 +445,9 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
         except ValueError as e:
             # Malformed response - inform user and exit
             print(f"\n  Response Error from Pro debater: {e}", file=sys.stderr)
-            print("  Cannot continue debate due to malformed response.\n", file=sys.stderr)
+            print(
+                "  Cannot continue debate due to malformed response.\n", file=sys.stderr
+            )
             sys.exit(1)
         except Exception as e:
             # Unexpected error
@@ -537,7 +455,7 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
             sys.exit(1)
 
         # Con side argues
-        print(MESSAGES['con_turn'].replace('{model_name}', MODELS[con_model]['name']))
+        print(MESSAGES["con_turn"].replace("{model_name}", get_model_name(con_model)))
         try:
             con_arg = con_debater.make_argument(claim, debate_history)
             debate_history.append(con_arg)
@@ -546,7 +464,9 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
             print(f"\n  {'='*60}")
             if con_arg.get("refused", False):
                 print("  CON SIDE DECLINED TO ARGUE")
-                print(f"  Reason: {con_arg.get('refusal_reason', 'No reason provided')}")
+                print(
+                    f"  Reason: {con_arg.get('refusal_reason', 'No reason provided')}"
+                )
                 debate_shortened = True
             else:
                 print(f"  Source: {con_arg['url']}")
@@ -562,7 +482,9 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
         except ValueError as e:
             # Malformed response - inform user and exit
             print(f"\n  Response Error from Con debater: {e}", file=sys.stderr)
-            print("  Cannot continue debate due to malformed response.\n", file=sys.stderr)
+            print(
+                "  Cannot continue debate due to malformed response.\n", file=sys.stderr
+            )
             sys.exit(1)
         except Exception as e:
             # Unexpected error
@@ -571,11 +493,13 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
 
         # If either side refused, stop the debate after allowing opponent one response
         if debate_shortened:
-            print(MESSAGES['debate_shortened'])
+            print(MESSAGES["debate_shortened"])
             break
 
     # Judge the debate
-    print(f"\n{MESSAGES['judge_deliberating'].replace('{model_name}', MODELS[judge_model]['name'])}")
+    print(
+        f"\n{MESSAGES['judge_deliberating'].replace('{model_name}', get_model_name(judge_model))}"
+    )
     try:
         verdict = judge.judge_debate(claim, debate_history)
     except Exception as e:
@@ -583,32 +507,36 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
         sys.exit(1)
 
     # Output the results
-    output = format_debate_output(claim, debate_history, verdict,
-                                  MODELS[pro_model]['name'],
-                                  MODELS[con_model]['name'],
-                                  MODELS[judge_model]['name'])
+    output = format_debate_output(
+        claim,
+        debate_history,
+        verdict,
+        get_model_name(pro_model),
+        get_model_name(con_model),
+        get_model_name(judge_model),
+    )
     print(output)
 
 
 def main():
     """Main entry point for the debate script."""
+    available_models = get_available_models()
+
     parser = argparse.ArgumentParser(
         description="AI Debate System - Conduct structured debates on factual claims",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
-Available models: {', '.join(MODELS.keys())}
+Available models: {', '.join(available_models)}
 
 Examples:
   python debate.py "Electric vehicles produce less CO2 than gas cars" --turns 2
   python debate.py "Coffee is good for your health" --pro-model gpt4 --con-model claude
   python debate.py "Climate change is real" --pro-model gemini --con-model grok --judge-model gpt4
-        """
+        """,
     )
 
     parser.add_argument(
-        "claim",
-        type=str,
-        help="The claim to debate (should be a factual statement)"
+        "claim", type=str, help="The claim to debate (should be a factual statement)"
     )
 
     parser.add_argument(
@@ -616,38 +544,40 @@ Examples:
         type=int,
         default=2,
         choices=[1, 2, 3, 4, 5, 6],
-        help="Number of turns per side (default: 2)"
+        help="Number of turns per side (default: 2)",
     )
 
     parser.add_argument(
         "--pro-model",
         type=str,
         default="claude",
-        choices=list(MODELS.keys()),
-        help="Model for pro side (default: claude)"
+        choices=list(available_models),
+        help="Model for pro side (default: claude)",
     )
 
     parser.add_argument(
         "--con-model",
         type=str,
         default="claude",
-        choices=list(MODELS.keys()),
-        help="Model for con side (default: claude)"
+        choices=list(available_models),
+        help="Model for con side (default: claude)",
     )
 
     parser.add_argument(
         "--judge-model",
         type=str,
         default="claude",
-        choices=list(MODELS.keys()),
-        help="Model for judge (default: claude)"
+        choices=list(available_models),
+        help="Model for judge (default: claude)",
     )
 
     args = parser.parse_args()
 
     # Run the debate
     try:
-        run_debate(args.claim, args.turns, args.pro_model, args.con_model, args.judge_model)
+        run_debate(
+            args.claim, args.turns, args.pro_model, args.con_model, args.judge_model
+        )
     except KeyboardInterrupt:
         print("\n\nDebate interrupted by user.", file=sys.stderr)
         sys.exit(1)
