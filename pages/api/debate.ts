@@ -3,14 +3,18 @@ import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { runDebate, ModelKey, APIKeys, MODELS } from '../../lib/debate-engine';
 
-// Rate limiter: 5 requests per 24 hours per IP per model
+// Rate limiter: 5 requests per 24 hours per IP per model (500 for admin)
 const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
   ? Redis.fromEnv()
   : null;
 
-const createRateLimiter = () => redis ? new Ratelimit({
+const ADMIN_IP = process.env.ADMIN_IP;
+const ADMIN_RATE_LIMIT = parseInt(process.env.ADMIN_RATE_LIMIT || '500', 10);
+const DEFAULT_RATE_LIMIT = 5;
+
+const createRateLimiter = (limit: number) => redis ? new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(5, '24 h'),
+  limiter: Ratelimit.slidingWindow(limit, '24 h'),
   analytics: true,
 }) : null;
 
@@ -51,13 +55,22 @@ export default async function handler(
       const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
       const identifier = Array.isArray(ip) ? ip[0] : ip;
 
+      // Determine rate limit based on IP
+      // For localhost (::1, 127.0.0.1, ::ffff:127.0.0.1), treat as admin if ADMIN_IP is set
+      const isLocalhost = identifier === '::1' || identifier === '127.0.0.1' || identifier === '::ffff:127.0.0.1';
+      const isAdmin = ADMIN_IP && (identifier === ADMIN_IP || isLocalhost);
+      const rateLimit = isAdmin ? ADMIN_RATE_LIMIT : DEFAULT_RATE_LIMIT;
+
+      // Debug logging
+      console.log(`[Rate Limit] IP: ${identifier}, isLocalhost: ${isLocalhost}, isAdmin: ${isAdmin}, limit: ${rateLimit}`);
+
       // Get unique models used in this debate
-      const modelsUsed = new Set([proModel, conModel, judgeModel]);
+      const modelsUsed = Array.from(new Set([proModel, conModel, judgeModel]));
       const modelLimits: Record<string, any> = {};
 
       // Check rate limit for each model
       for (const modelKey of modelsUsed) {
-        const ratelimit = createRateLimiter();
+        const ratelimit = createRateLimiter(rateLimit);
         if (ratelimit) {
           const modelIdentifier = `${identifier}:${modelKey}`;
           const result = await ratelimit.limit(modelIdentifier);
@@ -67,7 +80,7 @@ export default async function handler(
             // Return which model(s) are rate limited
             return res.status(429).json({
               error: 'Rate limit exceeded',
-              message: `You have used your 5 free uses for ${MODELS[modelKey as ModelKey].name}. Please provide your own API keys to continue.`,
+              message: `You have used your ${rateLimit} free uses for ${MODELS[modelKey as ModelKey].name}. Please provide your own API keys to continue.`,
               model: modelKey,
               resetAt: new Date(result.reset * 1000).toISOString()
             });
@@ -80,7 +93,7 @@ export default async function handler(
         Object.fromEntries(
           Object.entries(modelLimits).map(([model, data]) => [
             model,
-            { remaining: data.remaining, reset: data.reset }
+            { remaining: data.remaining, reset: data.reset, limit: rateLimit }
           ])
         )
       ));

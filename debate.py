@@ -15,6 +15,10 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Load shared messages
+with open(os.path.join(os.path.dirname(__file__), 'shared', 'messages.json'), 'r') as f:
+    MESSAGES = json.load(f)
+
 
 # Model configuration
 MODELS = {
@@ -26,11 +30,6 @@ MODELS = {
     "gpt4": {
         "name": "GPT-4",
         "id": "gpt-4-turbo-preview",
-        "provider": "openai"
-    },
-    "gpt35": {
-        "name": "GPT-3.5 Turbo",
-        "id": "gpt-3.5-turbo",
         "provider": "openai"
     },
     "gemini": {
@@ -484,7 +483,7 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
         con_model: Model key for con debater
         judge_model: Model key for judge
     """
-    print(f"\nStarting debate with {turns} turns per side...")
+    print(f"\n{MESSAGES['start'].replace('{turns}', str(turns))}")
     print(f"Claim: {claim}")
     print(f"Pro: {MODELS[pro_model]['name']}, Con: {MODELS[con_model]['name']}, Judge: {MODELS[judge_model]['name']}\n")
 
@@ -502,10 +501,10 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
     debate_shortened = False
 
     for turn in range(turns):
-        print(f"Turn {turn + 1}/{turns}...")
+        print(MESSAGES['turn'].replace('{turn}', str(turn + 1)).replace('{total_turns}', str(turns)))
 
         # Pro side argues
-        print(f"  Pro side ({MODELS[pro_model]['name']}) is arguing...")
+        print(MESSAGES['pro_turn'].replace('{model_name}', MODELS[pro_model]['name']))
         try:
             pro_arg = pro_debater.make_argument(claim, debate_history)
             debate_history.append(pro_arg)
@@ -538,7 +537,7 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
             sys.exit(1)
 
         # Con side argues
-        print(f"  Con side ({MODELS[con_model]['name']}) is arguing...")
+        print(MESSAGES['con_turn'].replace('{model_name}', MODELS[con_model]['name']))
         try:
             con_arg = con_debater.make_argument(claim, debate_history)
             debate_history.append(con_arg)
@@ -572,11 +571,11 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
 
         # If either side refused, stop the debate after allowing opponent one response
         if debate_shortened:
-            print("  Debate shortened due to refusal. Proceeding to judgment.\n")
+            print(MESSAGES['debate_shortened'])
             break
 
     # Judge the debate
-    print(f"\n{MODELS[judge_model]['name']} is deliberating...")
+    print(f"\n{MESSAGES['judge_deliberating'].replace('{model_name}', MODELS[judge_model]['name'])}")
     try:
         verdict = judge.judge_debate(claim, debate_history)
     except Exception as e:

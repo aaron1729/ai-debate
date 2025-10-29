@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import { MODELS, ModelKey, DebateResult, DebateTurn } from '../lib/debate-engine';
+import messages from '../shared/messages.json';
 
 export default function Home() {
   const [claim, setClaim] = useState('');
@@ -21,8 +22,9 @@ export default function Home() {
     google: '',
     xai: ''
   });
-  const [modelLimits, setModelLimits] = useState<Record<string, { remaining: number }>>({});
+  const [modelLimits, setModelLimits] = useState<Record<string, { remaining: number; limit?: number }>>({});
   const [hasLoadedLimits, setHasLoadedLimits] = useState(false);
+  const [rateLimit, setRateLimit] = useState(5);
 
   const modelKeys = Object.keys(MODELS) as ModelKey[];
 
@@ -43,7 +45,7 @@ export default function Home() {
     setDebateHistory([]);
     setVerdict(null);
     setProgress(0);
-    setProgressText('Starting debate...');
+    setProgressText(messages.start.replace('{turns}', turns.toString()) + ' Please wait...');
 
     try {
       // Determine which API keys to send
@@ -84,10 +86,15 @@ export default function Home() {
       const rateLimitModels = response.headers.get('X-RateLimit-Models');
       if (rateLimitModels) {
         const limits = JSON.parse(rateLimitModels);
+        // Get the rate limit from first model (all models share the same limit per IP)
+        const firstLimit = Object.values(limits)[0] as any;
+        const totalLimit = firstLimit?.limit || 5;
+        setRateLimit(totalLimit);
+
         // Ensure all models are shown with their limits
-        const allLimits: Record<string, { remaining: number }> = {};
+        const allLimits: Record<string, { remaining: number; limit?: number }> = {};
         modelKeys.forEach(key => {
-          allLimits[key] = limits[key] || { remaining: 5 };
+          allLimits[key] = limits[key] || { remaining: totalLimit, limit: totalLimit };
         });
         setModelLimits(allLimits);
         setHasLoadedLimits(true);
@@ -106,17 +113,26 @@ export default function Home() {
         setDebateHistory(prev => [...prev, data.debate_history[i]]);
         currentStep++;
         setProgress(90 + (currentStep / totalSteps) * 8); // 90-98%
+
         const turnNum = Math.floor(i / 2) + 1;
-        const side = data.debate_history[i].position === 'pro' ? 'Pro' : 'Con';
-        setProgressText(`Turn ${turnNum}: ${side} arguing...`);
+        const position = data.debate_history[i].position;
+        const model = data.debate_history[i].model;
+
+        // Format: "Turn {turn}/{total_turns}... {Side} side ({model}) is arguing..."
+        const turnMsg = messages.turn
+          .replace('{turn}', turnNum.toString())
+          .replace('{total_turns}', turns.toString());
+        const sideMsg = messages[position === 'pro' ? 'pro_turn' : 'con_turn']
+          .replace('{model_name}', model);
+        setProgressText(`${turnMsg}\n${sideMsg}`);
       }
 
-      setProgressText('Judge deliberating...');
+      const judgeMsg = messages.judge_deliberating.replace('{model_name}', MODELS[judgeModel].name);
+      setProgressText(judgeMsg);
       setProgress(98);
       await new Promise(resolve => setTimeout(resolve, 500));
       setVerdict(data.verdict);
       setProgress(100);
-      setProgressText('Complete!');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -146,7 +162,7 @@ export default function Home() {
           A modernization of <a href="https://arxiv.org/abs/1805.00899" target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3', textDecoration: 'none' }}>AI safety via debate</a> (Irving et al., 2018)
         </p>
         <p style={{ textAlign: 'center', fontSize: '13px', color: '#999', marginBottom: '40px' }}>
-          Judge evaluation based on <a href="http://www.paulgraham.com/disagree.html" target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3', textDecoration: 'none' }}>Paul Graham's disagreement hierarchy</a>
+          Judge evaluation based on <a href="http://www.paulgraham.com/disagree.html" target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3', textDecoration: 'none' }}>Paul Graham&apos;s disagreement hierarchy</a>
         </p>
 
         <form onSubmit={handleSubmit} style={{ marginBottom: '40px' }}>
@@ -288,7 +304,7 @@ export default function Home() {
             </div>
           </div>
 
-          {!showApiKeys && hasLoadedLimits && (
+          {!showApiKeys && (
             <div style={{
               padding: '12px',
               background: '#f9fafb',
@@ -301,10 +317,10 @@ export default function Home() {
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px' }}>
                 {modelKeys.map(key => {
-                  const remaining = modelLimits[key]?.remaining ?? 5;
+                  const remaining = modelLimits[key]?.remaining ?? rateLimit;
                   return (
                     <div key={key} style={{ fontSize: '12px', color: remaining === 0 ? '#ef4444' : '#6b7280' }}>
-                      <strong>{MODELS[key].name}:</strong> {remaining}/5
+                      <strong>{MODELS[key].name}:</strong> {remaining}/{rateLimit}
                     </div>
                   );
                 })}
@@ -338,7 +354,7 @@ export default function Home() {
                 borderRadius: '4px'
               }}>
                 <p style={{ fontSize: '13px', color: '#666', marginBottom: '10px' }}>
-                  You get 5 free uses per model per day. To unlock unlimited usage, add your own API keys:
+                  You get {rateLimit} free uses per model per day. To unlock unlimited usage, add your own API keys:
                 </p>
                 <div style={{ display: 'grid', gap: '10px' }}>
                   <input
@@ -443,7 +459,7 @@ export default function Home() {
                 {Math.round(progress)}%
               </div>
             </div>
-            <p style={{ textAlign: 'center', marginTop: '8px', color: '#666', fontSize: '14px' }}>
+            <p style={{ textAlign: 'center', marginTop: '8px', color: '#666', fontSize: '14px', whiteSpace: 'pre-line' }}>
               {progressText}
             </p>
           </div>
@@ -515,7 +531,7 @@ export default function Home() {
                 ) : (
                   <div>
                     <p><strong>Source:</strong> <a href={turn.url} target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3' }}>{turn.url}</a></p>
-                    <p><strong>Quote:</strong> "{turn.quote}"</p>
+                    <p><strong>Quote:</strong> &quot;{turn.quote}&quot;</p>
                     <p><strong>Context:</strong> {turn.context}</p>
                     <p><strong>Argument:</strong> {turn.argument}</p>
                   </div>

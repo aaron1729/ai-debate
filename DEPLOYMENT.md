@@ -97,10 +97,19 @@ GOOGLE_API_KEY=AIzaSyxxxxx
 XAI_API_KEY=xai-xxxxx
 ```
 
+**Optional (admin rate limiting):**
+```
+ADMIN_IP=your.ip.address.here
+ADMIN_RATE_LIMIT=500
+```
+
 Notes:
 - You only need to add keys for models you want users to access for free
 - If you don't add any LLM API keys, users must provide their own
 - Consider your budget: each free debate consumes API tokens
+- To find your IP address: `curl https://api.ipify.org`
+- The ADMIN_IP will get ADMIN_RATE_LIMIT uses per model per day (default: 500)
+- Other IPs get 5 uses per model per day
 
 #### 4.3 Deploy
 
