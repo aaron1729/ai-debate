@@ -1,0 +1,892 @@
+{
+  "fetched_at": "2025-10-29T13:38:43.957053",
+  "count": 50,
+  "claims": [
+    {
+      "text": "The eSafety commissioner has issued a directive banning social media posts about Netflix and climate change.",
+      "claimant": "Social media users.",
+      "claimDate": "2025-10-08T11:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AAP",
+            "site": "aap.com.au"
+          },
+          "url": "https://www.aap.com.au/factcheck/watchdog-did-not-label-climate-change-netflix-posts-hate-speech/",
+          "title": "Watchdog did not label climate change, Netflix posts 'hate speech'",
+          "reviewDate": "2025-10-21T15:10:08Z",
+          "textualRating": "False. The regulator has not issued any such directive.",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Atmospheric carbon dioxide can't warm the earth's surface because heat only goes up.",
+      "claimant": "A Facebook user.",
+      "claimDate": "2025-10-01T10:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AAP",
+            "site": "aap.com.au"
+          },
+          "url": "https://www.aap.com.au/factcheck/false-heat-only-rises-claim-defies-climate-science/",
+          "title": "False 'heat only rises' claim defies climate science",
+          "reviewDate": "2025-10-27T10:10:05Z",
+          "textualRating": "False. CO2 transfers heat in all directions, including downwards, through radiation.",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Climate not to blame for houses collapsing in North Carolina",
+      "claimant": "Steve Milloy",
+      "claimDate": "2025-09-18T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AFP Fact Check",
+            "site": "factcheck.afp.com"
+          },
+          "url": "https://factcheck.afp.com/doc.afp.com.76TC4G3",
+          "title": "US homes collapse into sea, sparking climate debate online",
+          "reviewDate": "2025-09-29T22:41:00Z",
+          "textualRating": "Misleading",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Podcaster claims that 50% of Australia's climate agency CSIRO funding comes from private industry.",
+      "claimant": "Viral Social Media Post",
+      "claimDate": "2025-07-30T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "DigitEye India",
+            "site": "digiteye.in"
+          },
+          "url": "https://digiteye.in/does-50-of-australia-climate-agency-csiro-funding-come-from-private-industries-fact-check/",
+          "title": "Does 50% of Australia climate agency CSIRO funding come from private industries? Fact Check",
+          "reviewDate": "2025-09-01T00:00:00Z",
+          "textualRating": "Misleading. Evidence from CSIRO's audited annual report shows that the 50% of its funding is not from private agencies.",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "An established scientific theory shows a key driver of climate change is impossible.",
+      "claimant": "Social media users",
+      "claimDate": "2025-07-17T10:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AAP",
+            "site": "aap.com.au"
+          },
+          "url": "https://www.aap.com.au/factcheck/no-ideal-gas-law-doesnt-debunk-climate-change/",
+          "title": "No, ideal gas law doesn't debunk climate change",
+          "reviewDate": "2025-08-20T10:10:04Z",
+          "textualRating": "False. Experts say the theory does not disprove climate change, and has been misunderstood.",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "An ocean temperature decrease between 2013-2022 proves global warming is a hoax.",
+      "claimant": "Facebook users",
+      "claimDate": "2025-07-20T10:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Australian Associated Press",
+            "site": "aap.com.au"
+          },
+          "url": "https://www.aap.com.au/factcheck/cherry-picked-ocean-data-does-not-prove-climate-change-is-a-hoax/",
+          "title": "Cherry-picked ocean data does not prove climate change is a hoax ...",
+          "reviewDate": "2025-09-01T15:40:05Z",
+          "textualRating": "Misleading. The claim is based on cherry-picked data and evidence shows global warming is real.",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "CO2's role in recent warming is not well-established; CO2 is beneficial because it can increase agriculture productivity; climate change has not impacted U.S. wildfire activity",
+      "claimDate": "2025-07-31T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Science Feedback",
+            "site": "science.feedback.org"
+          },
+          "url": "https://science.feedback.org/review/misleading-u-s-department-energy-climate-report-chooses-bias-over-science-climate-scientists-say/",
+          "title": "Misleading U.S. Department of Energy climate report chooses bias over science, climate scientists say",
+          "reviewDate": "2025-08-05T00:00:00Z",
+          "textualRating": "Incorrect",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "DoE document reassesses accuretaly role of CO2, US emissions in climate change",
+      "claimant": "US Department of Energy",
+      "claimDate": "2025-07-29T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AFP Fact Check",
+            "site": "factcheck.afp.com"
+          },
+          "url": "https://factcheck.afp.com/doc.afp.com.68KV7WE",
+          "title": "US Energy Department misrepresents climate science in new report",
+          "reviewDate": "2025-08-01T23:42:00Z",
+          "textualRating": "Misleading",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Storing rainwater in tanks provides a climate-resilient source of drinking water.",
+      "claimant": "Social Media User",
+      "claimDate": "2025-07-29T01:45:03Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Telugu Post",
+            "site": "telugupost.com"
+          },
+          "url": "https://www.telugupost.com/climatechange-factcheck/is-rainwater-safe-to-drink-only-after-proper-filtration-and-treatment-1586495",
+          "title": "Fact Check: Is Rainwater Safe to Drink? Only After Proper Filtration and Treatment | Is Rainwater Safe to Drink? Only After Proper Filtration and Treatment",
+          "reviewDate": "2025-07-29T01:45:03Z",
+          "textualRating": "Misleading",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Study proves that GDP will slow down by 62 percent by 2100",
+      "claimant": "Multiple authors",
+      "claimDate": "2024-04-17T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AFP Fact Check",
+            "site": "factcheck.afp.com"
+          },
+          "url": "https://factcheck.afp.com/doc.afp.com.692F9CW",
+          "title": "Major climate-GDP study under review after facing challenge",
+          "reviewDate": "2025-08-08T23:18:00Z",
+          "textualRating": "Missing context",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "The Club of Rome admitted making up climate change in a 1991 report.",
+      "claimant": "Facebook user",
+      "claimDate": "2025-06-14T10:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AAP",
+            "site": "aap.com.au"
+          },
+          "url": "https://aap.com.au/factcheck/no-think-tank-did-not-invent-climate-change-in-1991/",
+          "title": "No, think tank did not 'invent' climate change in 1991",
+          "reviewDate": "2025-07-11T17:10:05Z",
+          "textualRating": "False. Evidence of climate change existed prior to 1991 and quotes from the organisation's report have been cherry-picked.",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "U.S. Rep. Marjorie Taylor Greene posted on X about prohibiting \u201cweather modification and geoengineering\u201d by \u201cintroducing a bill that prohibits the injection, release, or dispersion of chemicals or substances into the atmosphere for the express purpose of altering weather, temperature, climate, or sunlight intensity. It will be a felony offense.\"",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Snopes.com",
+            "site": "snopes.com"
+          },
+          "url": "https://www.snopes.com/fact-check/marjorie-taylor-greene-weather-modification-bill/",
+          "title": "Marjorie Taylor Greene said she's introducing bill to end 'weather modification and geoengineering'?",
+          "reviewDate": "2025-07-07T15:25:38Z",
+          "textualRating": "Correct Attribution",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Scientists have had to pause the Climate Change Hoax Scam",
+      "claimDate": "2025-05-05T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "DW",
+            "site": "dw.com"
+          },
+          "url": "https://www.dw.com/en/fact-check-climate-deniers-misinterpret-antarctic-ice-study/a-73044336",
+          "title": "Fact check: Climate deniers misinterpret Antarctic ice study \u2013 DW \u2013 06/26/2025",
+          "reviewDate": "2025-06-26T00:00:00Z",
+          "textualRating": "Misleading: One post even featured a GIF that the user believed showed new land emerging off the coast of Dubai due to falling sea levels \u2014 apparently unaware of the artificial Palm Islands constructed there between 2001 and 2007. The findings in the Chinese study are based on publicly available data from NASA's Gravity Recovery and Climate Experiment satellites, which have been measuring the Earth's gravitational field since 2002 and have documented changes in the planet's ice and water masses. The data may be correct, but its interpretation by conspiratorial social media users is not \u2014 a situation not helped by the researchers' decision to insert an increasing average trend curve next to the preceding decreasing curve depicting ice mass.  \"This is perfect fodder for people who are intentionally looking to spread disinformation,\" said Johannes Feldmann, a physicist at the Potsdam Institute for Climate Impact Research near Berlin.  Feldmann emphasized that climate science relies on long-term data \u2014 typically over 20 to 30 years \u2014 to identify meaningful trends. \"Two, three or even five years are far too little to identify a long-term trend,\" he explained.  Cherry-picking short-term data is a common tactic among climate change deniers. \"There are always phases where the increase [in temperature] levels off a bit, which people suddenly take to mean: global warming has stopped, the trend is reversing,\" Feldmann added. \"But it's never turned out to be true.\"",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Earth is in a cooling phase, which questions scientific proof behind human-driven global warming",
+      "claimant": "Joe Rogan",
+      "claimDate": "2025-06-24T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AFP Fact Check",
+            "site": "factcheck.afp.com"
+          },
+          "url": "https://factcheck.afp.com/doc.afp.com.64Q68ZT",
+          "title": "Joe Rogan misleads on 'climate cooling' in Bernie Sanders interview",
+          "reviewDate": "2025-07-09T17:27:00Z",
+          "textualRating": "Misleading",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "\"Human-caused\" wildfires eliminates climate change's impact on spread",
+      "claimant": "Multiple people",
+      "claimDate": "2025-06-02T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AFP Fact Check",
+            "site": "factcheck.afp.com"
+          },
+          "url": "https://factcheck.afp.com/doc.afp.com.49A439D",
+          "title": "'Human caused' Manitoba wildfire data misused to downplay climate ...",
+          "reviewDate": "2025-06-06T23:10:00Z",
+          "textualRating": "Unsubstantiated",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Antarctica's ice gain shows climate change has no impact on continent",
+      "claimant": "Multiple people",
+      "claimDate": "2025-05-28T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AFP Fact Check",
+            "site": "factcheck.afp.com"
+          },
+          "url": "https://factcheck.afp.com/doc.afp.com.48FM4ZP",
+          "title": "Antarctica's brief gain in ice mass fuels climate denial",
+          "reviewDate": "2025-06-02T19:02:00Z",
+          "textualRating": "Misleading",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Cocoa production in West and Central Africa is increasing, there is no impact of climate change",
+      "claimant": "Website Article",
+      "claimDate": "2025-04-16T10:09:36Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Telugu Post",
+            "site": "telugupost.com"
+          },
+          "url": "https://www.telugupost.com/climatechange-factcheck/cocoa-production-has-decreased-due-to-climate-change-article-in-climate-realism-is-misleading-1574356",
+          "title": "Fact Check: Cocoa production has decreased due to climate change, article in Climate Realism is misleading",
+          "reviewDate": "2025-04-16T10:09:36Z",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Whether all that additional carbon dioxide is a function of human activity, that\u2019s still debatable.",
+      "claimant": "Jordan Peterson",
+      "claimDate": "2025-04-22T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Science Feedback",
+            "site": "science.feedback.org"
+          },
+          "url": "https://science.feedback.org/review/no-doubt-on-co2s-role-despite-peterson-rogans-claims-2/",
+          "title": "There's no doubt on CO2's role in climate change, despite Jordan ...",
+          "reviewDate": "2025-05-07T00:00:00Z",
+          "textualRating": "Incorrect",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "The first-ever artificial intelligence-led peer-reviewed climate science paper has confirmed that climate change is a hoax.",
+      "claimant": "Science of Climate Change",
+      "claimDate": "2025-03-21T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Science Feedback",
+            "site": "science.feedback.org"
+          },
+          "url": "https://science.feedback.org/review/why-peer-reviewed-grok-written-paper-doesnt-disprove-climate-change/",
+          "title": "What is peer-review? Why one Grok-written paper doesn\u2019t disprove climate change",
+          "reviewDate": "2025-04-09T00:00:00Z",
+          "textualRating": "Incorrect",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Unbiased Grok-written scientific paper proves absence of anthropogenic climate change",
+      "claimant": "Grok 3, Jonathan Cohler, David Legates, Franklin Soon, Willie Soon",
+      "claimDate": "2025-03-18T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AFP Fact Check",
+            "site": "factcheck.afp.com"
+          },
+          "url": "https://factcheck.afp.com/doc.afp.com.39798G2",
+          "title": "Experts warn 'AI-written' paper is latest spin on climate change denial",
+          "reviewDate": "2025-04-04T20:35:00Z",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Canada can rely on CCS and electrification to compensate emissions from oil and gas",
+      "claimant": "Mark Carney",
+      "claimDate": "2025-04-18T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AFP Fact Check",
+            "site": "factcheck.afp.com"
+          },
+          "url": "https://factcheck.afp.com/doc.afp.com.42JU262",
+          "title": "Canada's Liberals offer contradicting messages on energy, climate ...",
+          "reviewDate": "2025-04-22T20:01:00Z",
+          "textualRating": "Misleading",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "The Maldives have not been submerged under rising seas, meaning that climate change isn't a threat to the islands.",
+      "claimant": "Wide Awake Media",
+      "claimDate": "2025-03-09T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Science Feedback",
+            "site": "science.feedback.org"
+          },
+          "url": "https://science.feedback.org/why-are-the-maldives-still-above-water/",
+          "title": "If sea levels are rising, why are the Maldives still above water?",
+          "reviewDate": "2025-03-28T00:00:00Z",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Cocoa production is improving, not impacted by climate change",
+      "claimant": "H Sterling Burnett",
+      "claimDate": "2025-02-14T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AFP Fact Check",
+            "site": "factcheck.afp.com"
+          },
+          "url": "https://factcheck.afp.com/doc.afp.com.372Z3W6",
+          "title": "Article misleadingly dismisses climate stressors on African cocoa",
+          "reviewDate": "2025-03-24T17:44:00Z",
+          "textualRating": "Missing context",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Vehicle emissions don't impact human health or the environment.",
+      "claimant": "Steve Milloy",
+      "claimDate": "2025-04-02T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Science Feedback",
+            "site": "science.feedback.org"
+          },
+          "url": "https://science.feedback.org/vehicle-pollution-still-problem-yes-heres-why-still-harms-health-climate/",
+          "title": "Is vehicle pollution still a problem? Yes, here\u2019s why it still harms ...",
+          "reviewDate": "2025-04-09T00:00:00Z",
+          "textualRating": "Incorrect",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Common spring allergy myths make claims about pollen, honey and climate.",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "WCNC",
+            "site": "wcnc.com"
+          },
+          "url": "https://www.wcnc.com/article/news/verify/spring-allergy-myths-3-12-2025/275-0331ad40-80a2-4a64-a4ef-627fd8a93e13",
+          "title": "Verifying the truth behind 3 common spring allergy myths | WCNC Charlotte",
+          "reviewDate": "2025-03-13T09:46:00Z",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "CO2 is not correlated with global temperatures",
+      "claimant": "CO2 Coalition",
+      "claimDate": "2025-03-18T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Science Feedback",
+            "site": "science.feedback.org"
+          },
+          "url": "https://science.feedback.org/global-warming-doesnt-mean-everywhere-is-warming-same-rate-heres-why/",
+          "title": "Global warming doesn\u2019t mean everywhere is warming at the same ...",
+          "reviewDate": "2025-03-28T00:00:00Z",
+          "textualRating": "Inaccurate",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "\u2018Video footage shows giant tree stump in Antarctica that grew when Earth\u2019s climate was different\u2019",
+      "claimant": "Social media user",
+      "claimDate": "2025-02-17T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Science Feedback",
+            "site": "science.feedback.org"
+          },
+          "url": "https://science.feedback.org/review/no-evidence-of-giant-stump-in-helicopter-footage-from-antarctica-just-a-normal-rock-outcrop/",
+          "title": "No evidence of \u2018giant stump\u2019 in helicopter footage from Antarctica, just a normal rock outcrop",
+          "reviewDate": "2025-02-25T00:00:00Z",
+          "textualRating": "Incorrect",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Sea ice and temperature data show climate change is a hoax",
+      "claimant": "social media",
+      "claimDate": "2025-01-29T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "USA Today",
+            "site": "usatoday.com"
+          },
+          "url": "https://www.usatoday.com/story/news/factcheck/2025/02/14/global-temperature-sea-ice-fact-check/78389070007/",
+          "title": "Extensive evidence shows Earth is warming | Fact check",
+          "reviewDate": "2025-02-14T17:08:31Z",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Past climate change shows modern climate change is not caused by humans",
+      "claimant": "Social media",
+      "claimDate": "2025-01-17T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "USA Today",
+            "site": "usatoday.com"
+          },
+          "url": "https://www.usatoday.com/story/news/factcheck/2025/01/30/climate-change-caused-by-humans-fact-check/77959793007/",
+          "title": "Evidence shows modern climate change is caused by humans | Fact check",
+          "reviewDate": "2025-01-30T17:31:09Z",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Climate change had no influence on wildfires in Los Angeles",
+      "claimDate": "2025-01-11T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Science Feedback",
+            "site": "science.feedback.org"
+          },
+          "url": "https://science.feedback.org/review/wildfires-in-la-influenced-by-santa-ana-winds-and-dry-vegetation-climate-change-a-likely-factor-contrary-to-viral-misinformation/",
+          "title": "Wildfires in LA influenced by Santa Ana winds and dry vegetation; climate change a likely factor, contrary to viral misinformation",
+          "reviewDate": "2025-01-22T00:00:00Z",
+          "textualRating": "Misleading",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Antarctic sea ice extent is 17 per cent higher today compared to 1979.",
+      "claimant": "Social media users",
+      "claimDate": "2024-12-26T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Australian Associated Press",
+            "site": "aap.com.au"
+          },
+          "url": "https://www.aap.com.au/factcheck/climate-lies-claim-misrepresents-antarctic-sea-ice-loss/",
+          "title": "Climate 'lies' claim misrepresents Antarctic sea ice loss | AAP",
+          "reviewDate": "2025-02-07T00:51:49Z",
+          "textualRating": "Misleading. The claim cherry-picks dates and ignores long-term trends.",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Polar sea ice extents show climate change is a 'scam'",
+      "claimant": "Social media",
+      "claimDate": "2024-12-23T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "USA Today",
+            "site": "usatoday.com"
+          },
+          "url": "https://www.usatoday.com/story/news/factcheck/2025/01/10/sea-ice-data-climate-research-fact-check/77583623007/",
+          "title": "Sea ice data consistent with existing climate research | Fact check",
+          "reviewDate": "2025-01-10T20:09:42Z",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "New study shows that climate change is greatly overestimated because oceans are cooling Earth far more than we thought",
+      "claimant": "Social media users",
+      "claimDate": "2024-11-23T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Science Feedback",
+            "site": "science.feedback.org"
+          },
+          "url": "https://science.feedback.org/review/tire-fires-in-kuwait-have-a-much-smaller-climate-influence-than-methane-emissions-from-cows-contrary-to-claims/",
+          "title": "Tire fires in Kuwait have a much smaller climate influence than methane emissions from cows, contrary to claims",
+          "reviewDate": "2025-01-06T00:00:00Z",
+          "textualRating": "Inaccurate",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Antarctic sea ice area maps show climate change is a hoax",
+      "claimant": "social media",
+      "claimDate": "2024-12-26T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "USA Today",
+            "site": "usatoday.com"
+          },
+          "url": "https://www.usatoday.com/story/news/factcheck/2025/01/06/2024-antarctic-sea-ice-climate-hoax-fact-check/77440285007/",
+          "title": "No, 2024 Antarctic sea ice doesn't expose climate hoax | Fact check",
+          "reviewDate": "2025-01-06T19:10:15Z",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "A Status Red weather warning issued during Storm \u00c9owyn was a form of climate lockdown",
+      "claimant": "Rise Up \u00c9ireann",
+      "claimDate": "2025-01-23T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "The Journal",
+            "site": "thejournal.ie"
+          },
+          "url": "https://www.thejournal.ie/debunked-was-there-a-climate-lockdown-in-ireland-during-storm-eowyn-6608459-Jan2025/",
+          "title": "Debunked: The Status Red warning during Storm \u00c9owyn was not a ...",
+          "reviewDate": "2025-01-30T00:00:00Z",
+          "textualRating": "False. Met \u00c9ireann issued Status Red weather warnings for the whole country, advising that extremely high winds would present a danger to life. These warnings did not have legal force and could not compel people to stay indoors.",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Coal plant construction shows CO2 doesn't cause climate change",
+      "claimant": "Social media",
+      "claimDate": "2025-01-14T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "USA Today",
+            "site": "usatoday.com"
+          },
+          "url": "https://www.usatoday.com/story/news/factcheck/2025/01/02/co2-changes-climate-coal-plants-fact-check/77187551007/",
+          "title": "Buildout of new coal plants doesn't prove CO2 has no impact on climate | Fact check",
+          "reviewDate": "2025-01-02T22:31:51Z",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Higher Amount of Carbon Dioxide Good for the Planet !!",
+      "claimant": "Social Media Users",
+      "claimDate": "2025-01-26T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Fact Crescendo Sri Lanka",
+            "site": "srilanka.factcrescendo.com"
+          },
+          "url": "https://srilanka.factcrescendo.com/english/is-a-higher-amount-of-carbon-dioxide-good-for-the-world/",
+          "title": "Is a Higher Amount of Carbon Dioxide Good for the World?",
+          "reviewDate": "2025-01-26T00:00:00Z",
+          "textualRating": "Missing Context",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "It is not too hot now. Temperatures and CO2 are lower now than they have been throughout nearly the entire history of the Earth.",
+      "claimant": "Patrick Moore",
+      "claimDate": "2025-01-07T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Science Feedback",
+            "site": "science.feedback.org"
+          },
+          "url": "https://science.feedback.org/review/earth-was-hotter-in-the-past-but-that-doesnt-make-humans-safer-from-modern-climate-change/",
+          "title": "Earth was hotter in the past, but that doesn\u2019t make humans safer ...",
+          "reviewDate": "2025-01-16T00:00:00Z",
+          "textualRating": "Misleading",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "US Climate Reference Network data shows 'no obvious warming' since 2005",
+      "claimant": "Social media",
+      "claimDate": "2024-11-29T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "USA Today",
+            "site": "usatoday.com"
+          },
+          "url": "https://www.usatoday.com/story/news/factcheck/2024/12/13/noaa-data-us-warming-2005-fact-check/76929222007/",
+          "title": "NOAA data shows US warming since 2005 | Fact check",
+          "reviewDate": "2024-12-13T19:18:53Z",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Critics love to drag almond milk, but the science says it\u2019s still a climate-friendlier sip than dairy",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "FoodFacts.org",
+            "site": "foodfacts.org"
+          },
+          "url": "https://www.foodfacts.org/articles/almond-milk-veggie-burgers-harm-environment-media-oxford-university-study",
+          "title": "\u201cAlmond milk and veggie burgers can harm the environment\u201d Says media on new Oxford University Study; are plant-based foods worse for the environment? | Fact Check | Foodfacts.org",
+          "textualRating": "Misleading",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Even the smartest minds can get it wrong\u2014especially when they sidestep the science on food and climate",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "FoodFacts.org",
+            "site": "foodfacts.org"
+          },
+          "url": "https://www.foodfacts.org/articles/elon-musk-claims-animal-agriculture-no-difference-global-warming",
+          "title": "Elon Musk claims animal agriculture makes no difference to global warming | Fact Check | Foodfacts.org",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Climate change has only had 'positive effects' on global food production",
+      "claimant": "social media",
+      "claimDate": "2024-10-20T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "USA Today",
+            "site": "usatoday.com"
+          },
+          "url": "https://www.usatoday.com/story/news/factcheck/2024/12/02/climate-change-effect-crops-fact-check/76211021007/",
+          "title": "False claim climate change only positive for crops | Fact check",
+          "reviewDate": "2024-12-02T21:34:48Z",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Impact of human-induced CO2 is insignificant when compared to natural climate variations",
+      "claimant": "Multiple people",
+      "claimDate": "2024-11-10T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AFP Fact Check",
+            "site": "factcheck.afp.com"
+          },
+          "url": "https://factcheck.afp.com/doc.afp.com.36N447C",
+          "title": "Paleoclimate graph misused to deny global warming",
+          "reviewDate": "2024-11-25T21:54:00Z",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "First-ever snowfall on record in the Al-Jouf (or Al-Jawf) desert in Saudi Arabia occurred in early November 2024. This can be used as evidence either 'for' or 'against' the existence of climate change.",
+      "claimant": "Social media user",
+      "claimDate": "2024-11-03T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Science Feedback",
+            "site": "science.feedback.org"
+          },
+          "url": "https://science.feedback.org/hailstorm-in-saudi-arabian-desert-mistaken-for-snow-sparking-misleading-climate-claims-online/",
+          "title": "Hailstorm in Saudi Arabian desert mistaken for snow, sparking misleading climate claims online",
+          "reviewDate": "2024-11-22T00:00:00Z",
+          "textualRating": "Incorrect.",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "The United Kingdom Meteorological Office (the Met Office) is fabricating data/making up numbers for weather stations that are closed.",
+      "claimant": "Ray Sanders and Chris Morrison",
+      "claimDate": "2024-10-31T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Science Feedback",
+            "site": "science.feedback.org"
+          },
+          "url": "https://science.feedback.org/review/no-the-uk-met-office-is-not-fabricating-climate-data-contrary-to-a-bloggers-claims/",
+          "title": "No, the UK Met Office is not fabricating climate data, contrary to a ...",
+          "reviewDate": "2024-10-31T00:00:00Z",
+          "textualRating": "Misleading",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Antarctica hasn't warmed for over 70 years; humans contributed 40 ppm CO2",
+      "claimant": "Social media",
+      "claimDate": "2024-12-01T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "USA Today",
+            "site": "usatoday.com"
+          },
+          "url": "https://www.usatoday.com/story/news/factcheck/2024/12/12/antarctica-temperatures-rising-fact-check/76873869007/",
+          "title": "Significant evidence shows Antarctic temperatures rising | Fact check",
+          "reviewDate": "2024-12-12T22:13:06Z",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "\u201cHot and cold weather periods happened in the past, so recent climate change is normal\u201d; \u201cIf we can\u2019t even predict the weather 100% over days to weeks, how could we possibly predict future climate change?\u201d",
+      "claimDate": "2024-08-09T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Science Feedback",
+            "site": "science.feedback.org"
+          },
+          "url": "https://science.feedback.org/climate-vs-weather-a-deep-dive-on-the-key-differences/",
+          "title": "Climate vs. weather: a deep dive on the key differences",
+          "reviewDate": "2024-11-13T00:00:00Z",
+          "textualRating": "Misleading",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Greenhouse CO2 supplementation shows climate change is a 'scam'",
+      "claimant": "Social media",
+      "claimDate": "2024-10-29T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "USA Today",
+            "site": "usatoday.com"
+          },
+          "url": "https://www.usatoday.com/story/news/factcheck/2024/11/08/greenhouse-co2-climate-change-fact-check/76053137007/",
+          "title": "False claim greenhouse CO2 shows climate change a 'scam' | Fact check",
+          "reviewDate": "2024-11-08T22:52:30Z",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "An Oxfam report found $41 billion missing from the World Bank\u2019s climate fund.",
+      "claimant": "Social media posts.",
+      "claimDate": "2024-10-29T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Australian Associated Press",
+            "site": "aap.com.au"
+          },
+          "url": "https://www.aap.com.au/factcheck/charity-report-did-not-find-world-bank-climate-change-fund-was-missing-41-billion/",
+          "title": "Charity report did not find World Bank climate change fund was missing $41 billion | AAP",
+          "reviewDate": "2025-02-07T06:09:01Z",
+          "textualRating": "False. The World Bank does not have a single \u201cclimate fund\u201d, and Oxfam did not find funds were \u201cmissing\u201d.",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "A staggering $41 billion has gone missing from the globalist World Bank\u2019s Climate Change fund under the watch of Ajay Banga",
+      "claimant": "Viral Social Media Post",
+      "claimDate": "2024-10-28T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "DigitEye India",
+            "site": "digiteye.in"
+          },
+          "url": "https://digiteye.in/has-41-billion-climate-fund-gone-missing-from-world-bank-under-ajay-banga-fact-check/",
+          "title": "Has $41 billion climate fund gone missing from World Bank under Ajay Banga? Fact Check",
+          "reviewDate": "2024-11-06T00:00:00Z",
+          "textualRating": "Totally False. Oxfam\u2019s Climate Finance Unchecked report covered the 2017/18 to 2022/23 financial years, much before Ajay Banga's tenure started at the World Bank.",
+          "languageCode": "en"
+        }
+      ]
+    }
+  ]
+}

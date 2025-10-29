@@ -43,6 +43,13 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 - ✅ Localhost detection for development (treated as admin)
 - ❌ **BUG**: Rate limit counts reset to max on page refresh (see Known Issues)
 
+**Test Data Integration:**
+- ✅ Google Fact Check Tools API integration
+- ✅ Script to fetch real fact-checked claims (fetch_claims.py)
+- ✅ Three test datasets: recent politics (6 claims), health (50 claims), climate (50 claims)
+- ✅ API key authentication (simpler than service accounts)
+- ✅ Documentation for fetching custom datasets
+
 ### Not Yet Implemented
 - ⏳ Web scraping/verification of cited sources
 - ⏳ Persistent storage/database for debate history
@@ -57,6 +64,7 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 ```
 /
 ├── debate.py                      # Python CLI script
+├── fetch_claims.py                # Fetch claims from Google Fact Check API
 ├── requirements.txt               # Python dependencies
 ├── package.json                   # Node.js dependencies
 ├── pages/
@@ -71,11 +79,16 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 │   └── debate-engine.ts          # TypeScript debate logic (shared with API)
 ├── shared/
 │   └── messages.json             # Progress messages (shared between CLI & UI)
+├── claims_recent_30days.json      # Test data: 6 recent political claims
+├── claims_historical_health_50.json   # Test data: 50 health claims
+├── claims_historical_climate_50.json  # Test data: 50 climate claims
+├── docs/
+│   ├── CLAUDE.md                 # This file - implementation context
+│   ├── DEPLOYMENT.md             # Vercel deployment guide
+│   └── FACTCHECK_SETUP.md        # Google Fact Check API setup guide
 ├── .env                          # Environment variables (gitignored)
 ├── .env.example                  # Environment variable template
-├── DEPLOYMENT.md                 # Vercel deployment guide
-├── README.md                     # Project vision and roadmap
-└── claude.md                     # This file
+└── README.md                     # Project vision and roadmap
 ```
 
 ### Core Components
@@ -130,6 +143,90 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 - Called on page load to show initial rate limits
 - Uses Lua script to read Redis sorted sets without consuming tokens
 - ⚠️ **BUG**: Not correctly persisting/reading usage across refreshes
+
+### Test Data Integration (Google Fact Check Tools API)
+
+**Purpose**: Fetch real fact-checked claims to test the debate system's accuracy by comparing verdicts with professional fact-checker ratings.
+
+**Implementation** (fetch_claims.py):
+- Uses Google Fact Check Tools API with API key authentication
+- **No service account needed** (API key only for `claims:search` endpoint)
+- Fetches claims with customizable parameters: query, date range, language
+- Saves structured JSON with claim text, claimant, fact-checker ratings, and source URLs
+
+**Authentication Discovery**:
+- Initially tried service account approach (doesn't work for read-only endpoint)
+- Service accounts are only for `pages.*` write endpoints (creating ClaimReview pages)
+- The `claims:search` endpoint requires API key authentication
+- Can reuse existing `GOOGLE_API_KEY` (same key used for Gemini)
+
+**API Parameters** (fetch_claims.py:12-61):
+- `query`: Required search term (e.g., "health", "climate", "the")
+- `languageCode`: Recommended ('en' for English results)
+- `maxAgeDays`: Time range for claims (default 30, can go up to 365+)
+- `pageSize`: Results per page (keep at 10-20, larger values trigger errors)
+- Automatic pagination handling with exponential backoff
+
+**Current Test Datasets**:
+
+1. **claims_recent_30days.json** (6 claims)
+   - Recent political claims from last 30 days
+   - Query: "the" (broad search)
+   - Fetched: 2025-10-29
+
+2. **claims_historical_health_50.json** (50 claims)
+   - Health-related claims from last year
+   - Query: "health"
+   - Date range: 365 days
+   - Diverse fact-checkers (AFP, PolitiFact, FactCheck.org, etc.)
+
+3. **claims_historical_climate_50.json** (50 claims)
+   - Climate-related claims from last year
+   - Query: "climate"
+   - Date range: 365 days
+   - Mix of environmental and scientific claims
+
+**Data Structure**:
+```json
+{
+  "fetched_at": "2025-10-29T12:34:56",
+  "count": 50,
+  "claims": [
+    {
+      "text": "Claim text here",
+      "claimant": "Source or person",
+      "claimDate": "2025-10-15T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {"name": "AFP Fact Check", "site": "factcheck.afp.com"},
+          "url": "https://factcheck.afp.com/...",
+          "textualRating": "False",
+          "reviewDate": "2025-10-20T00:00:00Z"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Common Ratings**:
+- False, Mostly False, Partly False
+- True, Mostly True, Partly True
+- Misleading, Needs Context, Unproven
+- Mix of True and False (for complex claims)
+
+**Usage for Testing**:
+1. Load claims from JSON files
+2. Run debates on each claim using `debate.py`
+3. Map fact-checker ratings to debate verdicts:
+   - "False" → should get "contradicted" or "misleading"
+   - "True" → should get "supported"
+   - "Misleading/Needs Context" → should get "misleading" or "needs more evidence"
+4. Analyze agreement rates and identify patterns/biases
+
+**Key Learning**: Service account confusion wasted significant time. The API documentation is unclear about authentication methods. API key is simpler and correct for read-only access.
+
+**See**: docs/FACTCHECK_SETUP.md for complete setup guide and troubleshooting.
 
 ### Environment Variables
 

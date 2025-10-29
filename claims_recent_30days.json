@@ -1,0 +1,107 @@
+{
+  "fetched_at": "2025-10-29T13:23:35.767774",
+  "count": 6,
+  "claims": [
+    {
+      "text": "\"In Portland, Oregon, antifa thugs have repeatedly attacked our offices and laid siege to federal property in an attempt to violently stop the execution of federal law.\u201d",
+      "claimant": "social media users",
+      "claimDate": "2025-10-10T01:11:21Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AP News",
+            "site": "apnews.com"
+          },
+          "url": "https://apnews.com/article/fact-check-trump-portland-oregon-protests-antifa-203826406efb7420911ae756b4331f60",
+          "title": "Trump, administration\u2019s portrayal of Portland as conflict zone debated",
+          "textualRating": "There have been <a href=\"https://apnews",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "CLAIM",
+      "claimant": "social media users",
+      "claimDate": "2025-10-01T18:30:34Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AP News",
+            "site": "apnews.com"
+          },
+          "url": "https://apnews.com/article/fact-check-government-shutdown-health-care-immigrant-11b3ec0066407a17b407bc8e43962fd9",
+          "title": "Republicans make false claim about free health care to 'illegal ...",
+          "textualRating": "This is false",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "The government has detained and removed over 35,000 people with no right to be here.",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Full Fact",
+            "site": "fullfact.org"
+          },
+          "url": "https://fullfact.org/immigration/shabana-mahmood-removed-detained/",
+          "title": "Have 35,000 people been 'detained and removed' from the UK ...",
+          "reviewDate": "2025-10-22T00:00:00Z",
+          "textualRating": "This is misleading. While there were around 35,000 immigration returns during Labour\u2019s first year in government, most were not detained or forcibly removed. Government data shows that only around a quarter of these departures were \u201cenforced\u201d returns.",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Keir Starmer has announced that from 1 November the government will reduce internet speeds from midnight until 6am.",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "Full Fact",
+            "site": "fullfact.org"
+          },
+          "url": "https://fullfact.org/technology/government-slowing-internet-midnight-november-false/",
+          "title": "The government isn't going to slow the internet at night from ...",
+          "reviewDate": "2025-10-28T00:00:00Z",
+          "textualRating": "False. No such policy has been announced. Social media videos claiming this feature fake audio, which was almost certainly AI-generated, over old footage of Mr Starmer.",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Is the ongoing government shutdown impacting homeowners\u2019 flood insurance?",
+      "claimant": "Recipients",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "WCNC",
+            "site": "wcnc.com"
+          },
+          "url": "https://www.wcnc.com/article/news/verify/government-shutdown-homeowner-flood-insurance/275-1f6c3b34-4089-4e1d-a2e6-8d1cc2bbe84a",
+          "title": "Does the ongoing government shutdown impact homeowners' flood ...",
+          "reviewDate": "2025-10-21T19:55:00Z",
+          "textualRating": "Needs Context",
+          "languageCode": "en"
+        }
+      ]
+    },
+    {
+      "text": "Woman arrives in US from non-existent country Torenza",
+      "claimant": "Tunde",
+      "claimDate": "2025-10-11T00:00:00Z",
+      "claimReview": [
+        {
+          "publisher": {
+            "name": "AFP Fact Check",
+            "site": "factcheck.afp.com"
+          },
+          "url": "https://factcheck.afp.com/doc.afp.com.792N7G3",
+          "title": "Old reality TV show footage falsely linked to urban legend about ...",
+          "reviewDate": "2025-10-17T12:09:00Z",
+          "textualRating": "False",
+          "languageCode": "en"
+        }
+      ]
+    }
+  ]
+}
