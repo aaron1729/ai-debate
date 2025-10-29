@@ -12,9 +12,10 @@ const ADMIN_IP = process.env.ADMIN_IP;
 const ADMIN_RATE_LIMIT = parseInt(process.env.ADMIN_RATE_LIMIT || '500', 10);
 const DEFAULT_RATE_LIMIT = 5;
 
-const createRateLimiter = (limit: number) => redis ? new Ratelimit({
+// Use admin rate limit as the max for tracking, then check against user's actual limit
+const ratelimiter = redis ? new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(limit, '24 h'),
+  limiter: Ratelimit.slidingWindow(ADMIN_RATE_LIMIT, '24 h'),
   analytics: true,
 }) : null;
 
@@ -70,19 +71,21 @@ export default async function handler(
 
       // Check rate limit for each model
       for (const modelKey of modelsUsed) {
-        const ratelimit = createRateLimiter(rateLimit);
-        if (ratelimit) {
+        if (ratelimiter) {
           const modelIdentifier = `${identifier}:${modelKey}`;
-          const result = await ratelimit.limit(modelIdentifier);
+          const result = await ratelimiter.limit(modelIdentifier);
           modelLimits[modelKey] = result;
 
-          if (!result.success) {
+          // Check if user has exceeded THEIR limit (not the admin limit)
+          const used = ADMIN_RATE_LIMIT - result.remaining;
+          if (used >= rateLimit) {
             // Return which model(s) are rate limited
             return res.status(429).json({
               error: 'Rate limit exceeded',
               message: `You have used your ${rateLimit} free uses for ${MODELS[modelKey as ModelKey].name}. Please provide your own API keys to continue.`,
               model: modelKey,
-              resetAt: new Date(result.reset * 1000).toISOString()
+              resetAt: new Date(result.reset * 1000).toISOString(),
+              remaining: Math.max(0, rateLimit - used)
             });
           }
         }
@@ -91,10 +94,14 @@ export default async function handler(
       // Return rate limit info for all models in headers
       res.setHeader('X-RateLimit-Models', JSON.stringify(
         Object.fromEntries(
-          Object.entries(modelLimits).map(([model, data]) => [
-            model,
-            { remaining: data.remaining, reset: data.reset, limit: rateLimit }
-          ])
+          Object.entries(modelLimits).map(([model, data]) => {
+            const used = ADMIN_RATE_LIMIT - data.remaining;
+            const actualRemaining = Math.max(0, rateLimit - used);
+            return [
+              model,
+              { remaining: actualRemaining, reset: data.reset, limit: rateLimit }
+            ];
+          })
         )
       ));
     }

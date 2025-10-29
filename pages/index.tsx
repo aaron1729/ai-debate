@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { MODELS, ModelKey, DebateResult, DebateTurn } from '../lib/debate-engine';
 import messages from '../shared/messages.json';
@@ -27,6 +27,29 @@ export default function Home() {
   const [rateLimit, setRateLimit] = useState(5);
 
   const modelKeys = Object.keys(MODELS) as ModelKey[];
+
+  // Fetch initial rate limit and usage on page load
+  useEffect(() => {
+    const fetchRateLimit = async () => {
+      try {
+        const response = await fetch('/api/check-rate-limit');
+        if (response.ok) {
+          const data = await response.json();
+          setRateLimit(data.limit);
+
+          // Set model limits from the API response
+          if (data.modelLimits) {
+            setModelLimits(data.modelLimits);
+            setHasLoadedLimits(true);
+          }
+        }
+      } catch (err) {
+        // If check fails, keep default of 5
+        console.error('Failed to check rate limit:', err);
+      }
+    };
+    fetchRateLimit();
+  }, []);
 
   const getVerdictColor = (verdictType: string) => {
     switch (verdictType) {
