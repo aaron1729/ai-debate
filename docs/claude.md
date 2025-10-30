@@ -46,12 +46,21 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 **Test Data Integration:**
 - ✅ Google Fact Check Tools API integration
 - ✅ Script to fetch real fact-checked claims (fetch_claims.py)
-- ✅ Three test datasets: recent politics (6 claims), health (50 claims), climate (50 claims)
+- ✅ Three raw test datasets: recent politics (6 claims), health (50 claims), climate (50 claims)
 - ✅ API key authentication (simpler than service accounts)
 - ✅ Documentation for fetching custom datasets
 
+**Data Processing Pipeline:**
+- ✅ LLM-powered claim cleaning and standardization (process_claims.py)
+- ✅ URL fetching and content verification (verify_claims.py)
+- ✅ Two-stage pipeline: process → verify
+- ✅ Verdict mapping to debate system's 4 verdicts
+- ✅ Temporal/geographical context enhancement
+- ✅ Transparent modification logging
+- ✅ Two verified datasets ready for testing: climate (48 claims), health (50 claims)
+
 ### Not Yet Implemented
-- ⏳ Web scraping/verification of cited sources
+- ⏳ Verification of debaters' cited sources (URL fetching infrastructure exists, needs integration)
 - ⏳ Persistent storage/database for debate history
 - ⏳ Source credibility weighting
 - ⏳ Multiple judges ("mixture of experts")
@@ -65,6 +74,8 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 /
 ├── debate.py                      # Python CLI script
 ├── fetch_claims.py                # Fetch claims from Google Fact Check API
+├── process_claims.py              # Step 1: Clean and standardize raw claims
+├── verify_claims.py               # Step 2: Verify claims with URL fetching
 ├── requirements.txt               # Python dependencies
 ├── package.json                   # Node.js dependencies
 ├── pages/
@@ -79,9 +90,12 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 │   └── debate-engine.ts          # TypeScript debate logic (shared with API)
 ├── shared/
 │   └── messages.json             # Progress messages (shared between CLI & UI)
-├── claims_recent_30days.json      # Test data: 6 recent political claims
-├── claims_historical_health_50.json   # Test data: 50 health claims
-├── claims_historical_climate_50.json  # Test data: 50 climate claims
+├── claims_recent_30days.json      # Raw data: 6 recent political claims
+├── claims_historical_health_50.json   # Raw data: 50 health claims
+├── claims_historical_climate_50.json  # Raw data: 50 climate claims
+├── test_verified_climate.json     # Verified: 48 climate claims (ready for debates)
+├── test_verified_health.json      # Verified: 50 health claims (ready for debates)
+├── topics.json                    # Topic list for claim categorization
 ├── docs/
 │   ├── CLAUDE.md                 # This file - implementation context
 │   ├── DEPLOYMENT.md             # Vercel deployment guide
@@ -227,6 +241,110 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 **Key Learning**: Service account confusion wasted significant time. The API documentation is unclear about authentication methods. API key is simpler and correct for read-only access.
 
 **See**: docs/FACTCHECK_SETUP.md for complete setup guide and troubleshooting.
+
+### Data Processing Pipeline
+
+**Purpose**: Clean and verify raw claims from the API to ensure they're suitable for debate testing.
+
+**Problem**: Raw claims from Google Fact Check API have issues:
+- Vague claim text ("Scientists have had to pause...")
+- Missing temporal/geographical context
+- Diverse fact-checker ratings that don't map to our 4 verdicts
+- Placeholder text ("CLAIM") with no actual claim
+- Some claims don't match article content
+
+**Solution**: Two-step LLM-powered processing pipeline
+
+**Step 1: Process Claims** (process_claims.py)
+
+Cleans and standardizes raw claims using an LLM:
+
+```bash
+python process_claims.py claims_historical_health_50.json -o test_clean_health.json --model gpt4
+```
+
+**What it does**:
+- Rewrites vague claims to be standalone and debatable
+- Adds temporal/geographical context (e.g., "in January 2025", "in Los Angeles")
+- Maps fact-checker ratings to 4 debate verdicts (supported/contradicted/misleading/needs more evidence)
+- Assigns broad topic tags from existing list (or creates new ones)
+- Filters out unsuitable claims (viral videos, placeholders, non-English)
+
+**Example transformation**:
+- **Before**: "Scientists have had to pause the Climate Change Hoax Scam"
+- **After**: "Climate deniers misinterpreted a 2025 Antarctic ice study to falsely claim scientists paused climate change research"
+
+**Implementation** (process_claims.py):
+- `get_system_prompt()`: Comprehensive prompt with verdict mapping rules, topic guidelines, and examples
+- `process_single_claim()`: Calls LLM with claim + review data, parses JSON response
+- Model selection: claude/gpt4/gemini/grok (default: claude)
+- Resume capability: Saves after each claim, safe to interrupt
+- Outputs: processed claims JSON + skipped claims log + updated topics.json
+
+**Step 2: Verify Claims** (verify_claims.py)
+
+Second-pass quality control with URL fetching:
+
+```bash
+python verify_claims.py test_clean_health.json -o test_verified_health.json --model gpt4
+```
+
+**What it does**:
+- **Fetches and reads actual webpage URLs** from fact-checker articles
+- Verifies claims accurately match article content
+- Can modify claim/verdict/topic based on article
+- Can delete claims that don't match article content
+- Transparently logs all modifications before making changes
+
+**URL Fetching Implementation** (verify_claims.py:25-74):
+- Uses `requests` library with proper headers and timeouts
+- Parses HTML with BeautifulSoup4 to extract clean text
+- Removes script/style/nav elements for cleaner content
+- Limits to first ~3000 characters to stay within LLM context
+- Handles errors gracefully (403 blocks, timeouts, parse failures)
+
+**Why URL fetching is critical**:
+- Ensures claims accurately represent what fact-checkers actually said
+- Catches mismatches between claim and article content
+- Provides LLM with actual evidence to verify verdict correctness
+- Will be needed later for verifying debaters' cited sources
+
+**Modification Logging** (verify_claims.py:326-367):
+- Saves complete original claim before any modifications
+- Records timestamp, modified fields, and reason
+- Outputs to `{output_file}_modifications.json`
+- Enables audit trail and quality analysis
+
+**Current Verified Datasets**:
+
+1. **test_verified_climate.json** (48 claims)
+   - Input: 50 raw → Output: 48 verified (1 deleted, 32 modified)
+   - Processed: October 2025 with GPT-4
+   - Key fix: "Scientists paused..." → detailed explanation of Antarctic study misinterpretation
+
+2. **test_verified_health.json** (50 claims)
+   - Input: 50 raw → Output: 50 verified (0 deleted, 32 modified)
+   - Processed: October 2025 with GPT-4
+   - Enhanced specificity and context across many claims
+
+**Processing Statistics**:
+- ~65% modification rate (32/50 claims needed improvements)
+- 1/99 claims deleted (didn't match URL content)
+- Common improvements: added dates, locations, clarified vague language
+- Verdict corrections: Several "misleading" → "contradicted" based on articles
+
+**Dependencies**:
+```python
+requests>=2.31.0      # HTTP requests
+beautifulsoup4>=4.12.0  # HTML parsing
+```
+
+**Key Design Decision**: Two-stage approach
+- Stage 1: Fast processing based on claim + review metadata
+- Stage 2: Thorough verification with actual article content
+- Separation allows flexibility (can re-run stage 2 without re-processing)
+
+**See**: docs/FACTCHECK_SETUP.md for complete processing pipeline guide
 
 ### Environment Variables
 

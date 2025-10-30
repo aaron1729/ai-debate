@@ -89,15 +89,38 @@ Guidelines:
 - Common new topics might be: "vaccines", "energy", "food", "environment", etc.
 
 ## CLAIM REWRITING:
-Make claims standalone and debatable:
+Make claims standalone and debatable by including all necessary context.
 
-**Good rewrites:**
+**Guidelines for standalone claims:**
+- Include specific dates/years when the claim is about a particular time period or event
+- Add location specificity when relevant (city, country, region)
+- Ensure someone reading ONLY the claim text (without any other context) can fully understand what's being asserted
+- Use information from the review title, claim date, and review date to add necessary temporal/geographical context
+- Make claims precise enough to debate without requiring additional background
+
+**Good rewrites with temporal/geographical context:**
+
+- "Antarctic sea ice extent is 17 per cent higher today compared to 1979"
+  + Claim date: December 2024
+  → "Antarctic sea ice extent in December 2024 is 17 percent higher than it was in 1979"
+
+- "The first-ever snowfall in the Al-Jouf desert" (incomplete)
+  + Claim date: November 2024
+  → "The first-ever snowfall in the Al-Jouf desert in Saudi Arabia occurred in November 2024"
+
+- "Climate change had no influence on wildfires"
+  + Review title mentions Los Angeles, claim date January 2025
+  → "Climate change had no influence on the Los Angeles wildfires in January 2025"
+
 - "An established scientific theory shows a key driver of climate change is impossible"
   + Review title: "No, ideal gas law doesn't debunk climate change"
   → "The ideal gas law proves that human-caused climate change is impossible"
 
 - "CLAIM" (with review about coffee and longevity)
   → "Coffee consumption increases human lifespan"
+
+- "US Climate Reference Network data shows 'no obvious warming' since 2005"
+  → (Already good - includes the timeframe "since 2005")
 
 **Skip these (return null):**
 - Viral video claims without clear text ("CLAIM:" with just video description)

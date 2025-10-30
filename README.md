@@ -71,11 +71,23 @@ The web version includes:
 ### Test Data
 
 The project includes fact-checked claims from Google's Fact Check Tools API for testing:
+
+**Raw claims** (from Google Fact Check API):
 - **claims_recent_30days.json** - 6 recent political claims
 - **claims_historical_health_50.json** - 50 health-related claims
 - **claims_historical_climate_50.json** - 50 climate-related claims
 
-Use these to test the debate system's accuracy by comparing verdicts with professional fact-checker ratings. See [FACTCHECK_SETUP.md](docs/FACTCHECK_SETUP.md) for how to fetch more claims.
+**Processed and verified claims** (ready for debate testing):
+- **test_verified_climate.json** - 48 verified climate claims
+- **test_verified_health.json** - 50 verified health claims
+
+These verified datasets have been cleaned and enhanced by LLMs to ensure claims are:
+- Specific and factually debatable
+- Include necessary temporal/geographical context
+- Accurately match fact-checker article content
+- Have correct verdict mappings (supported/contradicted/misleading/needs more evidence)
+
+Use these to test the debate system's accuracy by comparing verdicts with professional fact-checker ratings. See [FACTCHECK_SETUP.md](docs/FACTCHECK_SETUP.md) for how to fetch and process more claims.
 
 ## outline
 

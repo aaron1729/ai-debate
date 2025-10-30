@@ -1,0 +1,402 @@
+[
+  {
+    "claim": "The Department of Health announced a temporary lockdown and masking mandate from Oct. 19 to 31, 2025 in some areas of the Philippines due to a flu outbreak.",
+    "claimDate": "2025-10-18T00:00:00Z",
+    "publisher": "VERA Files",
+    "url": "https://verafiles.org/articles/fact-check-no-flu-outbreak-mask-mandate-nor-lockdowns-this-october",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "The Trump administration declared erecting a ballroom as the president's main priority over issues such as the cost of living and health care.",
+    "claimDate": "2025-10-23T00:00:00Z",
+    "publisher": "PolitiFact",
+    "url": "https://www.politifact.com/factchecks/2025/oct/24/hakeem-jeffries/democrats-leavitt-priority-ballroom-white-house/",
+    "verdict": "contradicted",
+    "topic": "politics"
+  },
+  {
+    "claim": "'Karte seksalice' will be used in health classes in Zagreb primary schools",
+    "claimDate": "2025-09-13T00:00:00Z",
+    "publisher": "AFP Fact Check",
+    "url": "https://factcheck.afp.com/doc.afp.com.74RT9NR",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "The Malaysian Minister of Health endorsed a joint pain cream as medicine",
+    "claimDate": "2025-10-10T00:00:00Z",
+    "publisher": "AFP Fact Check",
+    "url": "https://factcheck.afp.com/doc.afp.com.78X26G3",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "Democrats demanded $3.6 million for cooking classes and dance focus groups for 'Haitian male prostitutes' as a condition for reopening the U.S. government in the fall of 2025.",
+    "claimDate": "2025-10-10T00:00:00Z",
+    "publisher": "Snopes.com",
+    "url": "https://www.snopes.com/fact-check/government-democrats-haitian-male-prostitutes/",
+    "verdict": "contradicted",
+    "topic": "politics"
+  },
+  {
+    "claim": "35% of children experience stress-related health problems",
+    "claimDate": "",
+    "publisher": "WCNC",
+    "url": "https://www.wcnc.com/article/news/health/spot-stress-kids-expert-advice-everyday-impact/275-5b0c3039-7698-414f-9c11-395f53835a96",
+    "verdict": "supported",
+    "topic": "health"
+  },
+  {
+    "claim": "Democrats forced a U.S. government shutdown because they want to fund free health care for people without legal immigration status in the United States.",
+    "claimDate": "2025-10-03T11:35:26Z",
+    "publisher": "Snopes.com",
+    "url": "https://www.snopes.com/fact-check/government-shutdown-health-care/",
+    "verdict": "contradicted",
+    "topic": "politics"
+  },
+  {
+    "claim": "Fibremaxxing has science-backed benefits for gut health and disease prevention, and there are ways to avoid its common side effects.",
+    "claimDate": "2025-10-15T00:00:00Z",
+    "publisher": "FoodFacts.org",
+    "url": "https://www.foodfacts.org/articles/fibremaxxing-explained-benefits-side-effects",
+    "verdict": "supported",
+    "topic": "health"
+  },
+  {
+    "claim": "National Health Service King's College Hospital displays an informational poster showing pregnant men.",
+    "claimDate": "2025-09-18T01:19:14Z",
+    "publisher": "Lead Stories",
+    "url": "https://leadstories.com/hoax-alert/2025/09/fact-check-nhs-kings-college-does-not-display-poster-showing-pregnant-men.html",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "Failure to extend enhanced Affordable Care Act subsidies by Republicans could increase health insurance premiums by 75% for everyday Americans",
+    "claimDate": "2025-09-12T00:00:00Z",
+    "publisher": "PolitiFact",
+    "url": "https://www.politifact.com/factchecks/2025/sep/17/katherine-clark/aca-enhanced-subsidies-renewal-government-shutdown/",
+    "verdict": "supported",
+    "topic": "health"
+  },
+  {
+    "claim": "Republicans falsely claimed that immigrants in the U.S. illegally receive free healthcare during government shutdowns",
+    "claimDate": "2025-10-01T18:30:34Z",
+    "publisher": "AP News",
+    "url": "https://apnews.com/article/fact-check-government-shutdown-health-care-immigrant-11b3ec0066407a17b407bc8e43962fd9",
+    "verdict": "contradicted",
+    "topic": "politics"
+  },
+  {
+    "claim": "A study suggests that coffee consumption may help Americans live longer",
+    "claimDate": "2025-09-30T00:00:00Z",
+    "publisher": "WCNC",
+    "url": "https://www.wcnc.com/article/news/health/study-finds-coffee-drinking-boost-longevity-americans/275-78973e6a-6bd6-4b16-9c32-7cce291f020d",
+    "verdict": "misleading",
+    "topic": "health"
+  },
+  {
+    "claim": "Supplementary data from a Danish study on aluminum-containing vaccines shows calamitous evidence of harm, including autism.",
+    "claimDate": "2025-08-01T00:00:00Z",
+    "publisher": "FactCheck.org",
+    "url": "https://www.factcheck.org/2025/09/rfk-jr-cherry-picks-and-misuses-data-on-aluminum-containing-vaccines/",
+    "verdict": "misleading",
+    "topic": "health"
+  },
+  {
+    "claim": "A healthy lifestyle can reverse type 1 diabetes",
+    "claimDate": "2025-09-03T18:30:00Z",
+    "publisher": "THIP Media",
+    "url": "https://www.thip.media/ayush/fact-check-can-a-healthy-lifestyle-help-reverse-type-1-diabetes/126737/",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "Jim O'Neill, acting director of the U.S. Centers for Disease Control and Prevention, once stated that 'There are plenty of healthy, spare kidneys walking around unused.'",
+    "claimDate": "2025-09-03T00:00:00Z",
+    "publisher": "Snopes.com",
+    "url": "https://www.snopes.com/fact-check/cdc-jim-oneill-kidneys/",
+    "verdict": "supported",
+    "topic": "health"
+  },
+  {
+    "claim": "A Henry Ford study shows that vaccinated children are more prone to chronic diseases than unvaccinated children",
+    "claimDate": "2025-09-09T00:00:00Z",
+    "publisher": "Science Feedback",
+    "url": "https://science.feedback.org/review/significant-flaws-henry-ford-study-childhood-vaccines-harm/",
+    "verdict": "misleading",
+    "topic": "health"
+  },
+  {
+    "claim": "A non-surgical arthritis treatment cured three million Filipinos with the certification and endorsement of the Department of Health (DOH) and the Philippine Orthopedic Center (POC)",
+    "claimDate": "2025-08-22T11:00:00Z",
+    "publisher": "Rappler",
+    "url": "https://rappler.com/newsbreak/fact-check/viral-video-arthritis-cure-promotion-endorse-poc-filipino-doctor-fake/",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "As of August 2025, the CDC lists abortion as one of the 10 greatest advances in medical science on their website.",
+    "claimDate": "2025-08-28T00:00:00Z",
+    "publisher": "FactCheck.org",
+    "url": "https://www.factcheck.org/2025/08/rfk-jr-defends-ouster-of-cdc-director-by-distorting-list-of-public-health-achievements/",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "Trisodium phosphate found in cereal is dangerous because it is also used in paint thinner",
+    "claimDate": "2025-02-08T00:00:00Z",
+    "publisher": "AFP Fact Check",
+    "url": "https://factcheck.afp.com/doc.afp.com.722Y2KF",
+    "verdict": "misleading",
+    "topic": "health"
+  },
+  {
+    "claim": "Eating watermelon cleans the kidneys",
+    "claimDate": "2025-06-04T00:00:00Z",
+    "publisher": "Medical Dialogues",
+    "url": "https://medicaldialogues.in/fact-check/fact-check-can-eating-watermelon-clean-kidneys-153312",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "Labor has handed control of Australia's health policy to the WHO by approving amendments to the International Health Regulations.",
+    "claimDate": "2025-07-14T10:00:00Z",
+    "publisher": "Australian Associated Press",
+    "url": "https://www.aap.com.au/factcheck/claim-who-controls-australian-health-policy-not-accurate-experts/",
+    "verdict": "misleading",
+    "topic": "health"
+  },
+  {
+    "claim": "Seed oils in infant formula harm the health of infants.",
+    "claimDate": "2025-06-04T00:00:00Z",
+    "publisher": "FactCheck.org",
+    "url": "https://www.factcheck.org/2025/07/fda-commissioner-spreads-unsubstantiated-concerns-about-seed-oils-in-baby-formula/",
+    "verdict": "needs more evidence",
+    "topic": "health"
+  },
+  {
+    "claim": "Nations that accept the updated WHO International Health Regulations are ceding their sovereignty in health emergencies to the WHO, allowing it to mandate lockdowns, travel restrictions, or other measures.",
+    "claimDate": "2025-07-18T00:00:00Z",
+    "publisher": "FactCheck.org",
+    "url": "https://www.factcheck.org/2025/07/rfk-jr-hhs-wrong-about-who-power-under-updated-global-health-regulations/",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "Text messages about Atrium Health are legitimate",
+    "claimDate": "2025-08-13T00:00:00Z",
+    "publisher": "WCNC",
+    "url": "https://www.wcnc.com/article/news/verify/atrium-health-8-13-2025/275-50be70ff-f051-4d56-ada9-bb2c5009e4f3",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "The One Big Beautiful Bill Act will not cause death and will keep people alive due to its changes to health insurance coverage",
+    "claimDate": "2025-07-12T00:00:00Z",
+    "publisher": "FactCheck.org",
+    "url": "https://www.factcheck.org/2025/07/big-beautiful-bill-projected-to-lead-to-preventable-deaths/",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "Bernie Sanders claimed that 51,000 Americans will die each year as a result of the One Big Beautiful Bill Act's changes to health insurance.",
+    "claimDate": "2025-07-03T00:00:00Z",
+    "publisher": "FactCheck.org",
+    "url": "https://www.factcheck.org/2025/07/big-beautiful-bill-projected-to-lead-to-preventable-deaths/",
+    "verdict": "misleading",
+    "topic": "health"
+  },
+  {
+    "claim": "The Health Ministry has issued warnings on samosa and jalebi similar to those for cigarettes.",
+    "claimDate": "2025-07-15T00:00:00Z",
+    "publisher": "Medical Dialogues",
+    "url": "https://medicaldialogues.in/fact-check/fact-check-has-the-health-ministry-issued-warnings-on-samosa-and-jalebi-like-it-does-for-cigarettes-151835",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "Eating grains enriched with folic acid is harmful to human health",
+    "claimDate": "2025-06-27T00:00:00Z",
+    "publisher": "AFP Fact Check",
+    "url": "https://factcheck.afp.com/doc.afp.com.64G4264",
+    "verdict": "misleading",
+    "topic": "health"
+  },
+  {
+    "claim": "The average salary of NSW public health psychiatrists is $438,000.",
+    "claimDate": "2025-07-03T00:00:00Z",
+    "publisher": "Australian Associated Press",
+    "url": "https://www.aap.com.au/factcheck/nsw-health-minister-overstates-average-psychiatrist-salary/",
+    "verdict": "contradicted",
+    "topic": "economics"
+  },
+  {
+    "claim": "A recent photo from an awards ceremony indicates that Ariana Grande is suffering from a life-threatening health crisis.",
+    "claimDate": "2025-06-28T00:00:00Z",
+    "publisher": "Fact Crescendo Sri Lanka",
+    "url": "https://srilanka.factcrescendo.com/english/viral-image-of-ariana-grande-is-digitally-altered/",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "Maggi noodles can cause anemia, joint pain, memory and hearing loss, kidney and liver swelling, and other health issues",
+    "claimDate": "2025-06-30T00:00:00Z",
+    "publisher": "Medical Dialogues",
+    "url": "https://medicaldialogues.in/fact-check/fact-check-can-maggi-noodles-cause-anemia-joint-pain-memory-and-hearing-loss-kidney-and-liver-swelling-and-other-health-issues-150891",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "Nicotine cures Parkinson's, Alzheimer's, hypothyroidism, and brain tumors",
+    "claimDate": "2025-05-19T00:00:00Z",
+    "publisher": "AFP Fact Check",
+    "url": "https://factcheck.afp.com/doc.afp.com.66V8364",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "U.S. President Donald Trump's One Big Beautiful Bill Act would end health insurance coverage for 13.7 million people.",
+    "claimDate": "2025-05-27T00:00:00Z",
+    "publisher": "Snopes",
+    "url": "https://www.snopes.com/fact-check/14-million-lose-insurance-medicaid/",
+    "verdict": "needs more evidence",
+    "topic": "health"
+  },
+  {
+    "claim": "The UK has the largest 'female health gap' in the G20 and the 12th largest globally",
+    "claimDate": "2025-05-21T00:00:00Z",
+    "publisher": "Full Fact",
+    "url": "https://fullfact.org/health/does-uk-have-12th-largest-female-health-gap/",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "Ethiopia's health minister and deputy resigned over a medical strike",
+    "claimDate": "2025-07-05T00:00:00Z",
+    "publisher": "AFP Fact Check",
+    "url": "https://factcheck.afp.com/doc.afp.com.47EC8CQ",
+    "verdict": "contradicted",
+    "topic": "politics"
+  },
+  {
+    "claim": "The Republican 'big, beautiful bill' will remove Medicaid and health insurance from 13.7 million Americans.",
+    "claimDate": "2025-05-12T00:00:00Z",
+    "publisher": "PolitiFact",
+    "url": "https://www.politifact.com/factchecks/2025/may/16/bernie-sanders/medicaid-cut-house-republicans-trump/",
+    "verdict": "misleading",
+    "topic": "health"
+  },
+  {
+    "claim": "Mike Johnson claimed that there are no Medicaid cuts in the Big Beautiful Bill, only reductions in fraud, waste, and abuse to ensure the program remains essential for the most vulnerable.",
+    "claimDate": "2025-06-01T00:00:00Z",
+    "publisher": "FactCheck.org",
+    "url": "https://www.factcheck.org/2025/06/assessing-medicaid-coverage-losses-under-house-reconciliation-bill/",
+    "verdict": "misleading",
+    "topic": "health"
+  },
+  {
+    "claim": "The vaccine for measles, mumps and rubella contains 'a lot of aborted fetus debris,' as U.S. Health Secretary Robert F. Kennedy, Jr. asserted on April 30, 2025.",
+    "claimDate": "2025-04-30T00:00:00Z",
+    "publisher": "Snopes",
+    "url": "https://www.snopes.com/fact-check/mmr-vaccine-aborted-fetus-debris/",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "The WHO's Pandemic Agreement removes national sovereignty.",
+    "claimDate": "2025-05-21T10:00:00Z",
+    "publisher": "Australian Associated Press",
+    "url": "https://www.aap.com.au/factcheck/pandemic-agreement-falsehoods-resurface-following-who-vote/",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "There is no scientific way to remove a vaccine once it is inside the body, according to Nigerian pastor Chris Oyakhilome.",
+    "claimDate": "2025-03-01T12:00:00Z",
+    "publisher": "Africa Check",
+    "url": "https://africacheck.org/fact-checks/reports/table-salt-vatican-unpacking-popular-nigerian-pastor-chris-oyakhilomes-new",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "A lockdown policy will be enforced starting June 6 and 10, 2025, due to mpox in the Philippines",
+    "claimDate": "2025-05-31T00:00:00Z",
+    "publisher": "AFP Fact Check",
+    "url": "https://factcheck.afp.com/doc.afp.com.48RT662",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "Pope Francis died as a result of the Covid vaccine according to Nigerian pastor Chris Oyakhilome",
+    "claimDate": "2025-03-01T12:00:00Z",
+    "publisher": "Africa Check",
+    "url": "https://africacheck.org/fact-checks/reports/table-salt-vatican-unpacking-popular-nigerian-pastor-chris-oyakhilomes-new",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "No vaccine is effective; they have never worked, according to Nigerian pastor Chris Oyakhilome.",
+    "claimDate": "2025-03-01T12:00:00Z",
+    "publisher": "Africa Check",
+    "url": "https://africacheck.org/fact-checks/reports/table-salt-vatican-unpacking-popular-nigerian-pastor-chris-oyakhilomes-new",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "Sodium fluoride, which is used in rat poison, is deadly to humans because it kills people.",
+    "claimDate": "2025-03-01T12:00:00Z",
+    "publisher": "Africa Check",
+    "url": "https://africacheck.org/fact-checks/reports/table-salt-vatican-unpacking-popular-nigerian-pastor-chris-oyakhilomes-new",
+    "verdict": "misleading",
+    "topic": "health"
+  },
+  {
+    "claim": "Fluoride is one of the main causes of cancer, according to Nigerian pastor Chris Oyakhilome",
+    "claimDate": "2025-03-01T12:00:00Z",
+    "publisher": "Africa Check",
+    "url": "https://africacheck.org/fact-checks/reports/table-salt-vatican-unpacking-popular-nigerian-pastor-chris-oyakhilomes-new",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "Nigerian pastor Chris Oyakhilome stated that people need more salt than less, and hospitals secretly administer it in different forms without patient knowledge.",
+    "claimDate": "2025-03-01T12:00:00Z",
+    "publisher": "Africa Check",
+    "url": "https://africacheck.org/fact-checks/reports/table-salt-vatican-unpacking-popular-nigerian-pastor-chris-oyakhilomes-new",
+    "verdict": "misleading",
+    "topic": "health"
+  },
+  {
+    "claim": "Drinking urine cures health problems",
+    "claimDate": "2025-04-30T06:56:39Z",
+    "publisher": "The Quint",
+    "url": "https://www.thequint.com/news/webqoof/paresh-rawal-drinking-urine-solves-disease-health-problem-fact-check",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "A video of the Kenyan president's healthcare PR stunt with a patient was falsely linked to a new health insurance scheme",
+    "claimDate": "2025-04-19T00:00:00Z",
+    "publisher": "AFP Fact Check",
+    "url": "https://factcheck.afp.com/doc.afp.com.43RC99D",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "Cinnamon, black pepper, cardamom, and clove can miraculously cure diabetes",
+    "claimDate": "2025-04-05T00:00:00Z",
+    "publisher": "Health Dialogues - Medical Dialogues",
+    "url": "https://health.medicaldialogues.in/fact-check/diabetes-and-metabolic-health-fact-check/fact-check-can-cinnamon-black-pepper-cardamom-and-clove-miraculously-cure-diabetes-149224",
+    "verdict": "contradicted",
+    "topic": "health"
+  },
+  {
+    "claim": "1 in 10 patients experience a serious adverse event following the use of an abortion pill",
+    "claimDate": "2025-04-28T00:00:00Z",
+    "publisher": "AFP Fact Check",
+    "url": "https://factcheck.afp.com/doc.afp.com.444Z863",
+    "verdict": "misleading",
+    "topic": "health"
+  }
+]

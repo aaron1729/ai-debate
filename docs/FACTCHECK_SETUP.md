@@ -226,19 +226,108 @@ You might see references to service accounts in Google Cloud docs. **Don't use t
 | API Key | Reading claims | ✅ Yes (use this!) |
 | Service Account | Writing ClaimReview pages | ❌ No (not needed) |
 
+## Data Processing Pipeline
+
+After fetching raw claims, they need to be cleaned and verified before use in debates. This is done using LLMs in a two-step pipeline:
+
+### Step 1: Process Claims
+
+Clean and standardize raw claims using `process_claims.py`:
+
+```bash
+source venv/bin/activate
+python process_claims.py claims_historical_health_50.json -o test_clean_health.json --model gpt4
+```
+
+**What it does:**
+- Rewrites vague claims to be standalone and debatable
+- Adds temporal/geographical context (dates, locations)
+- Maps diverse fact-checker ratings to 4 standard verdicts:
+  - `supported` - Well-supported by evidence
+  - `contradicted` - Contradicted by evidence
+  - `misleading` - Technically true but misleading or lacks context
+  - `needs more evidence` - Insufficient evidence to determine
+- Assigns topic tags from existing list (or creates new broad topics)
+- Filters out unsuitable claims (viral videos, placeholders, non-English)
+
+**Example transformations:**
+- Before: "Scientists have had to pause the Climate Change Hoax Scam"
+- After: "Climate deniers misinterpreted a 2025 Antarctic ice study to falsely claim scientists paused climate change research"
+
+**Options:**
+- `--model`: LLM to use (claude/gpt4/gemini/grok, default: claude)
+- `--topics-file`: Topics list to reference (default: topics.json)
+- Resume capability: Saves after each claim, safe to interrupt
+
+**Output:**
+- `test_clean_health.json` - Processed claims
+- `test_clean_health.json.skipped.json` - Skipped claims with reasons
+- `topics.json` - Updated topic list
+
+### Step 2: Verify Claims
+
+Second-pass quality control using `verify_claims.py`:
+
+```bash
+source venv/bin/activate
+python verify_claims.py test_clean_health.json -o test_verified_health.json --model gpt4
+```
+
+**What it does:**
+- **Fetches and reads webpage URLs** from fact-checker articles
+- Verifies claims match the article content
+- Checks claim quality (specificity, context, accuracy)
+- Can modify claim text, verdict, or topic
+- Can delete claims that don't match article content
+- Transparently logs all modifications before making changes
+
+**URL Fetching:**
+- Uses `requests` and `BeautifulSoup4` to fetch and parse HTML
+- Extracts clean text from article body
+- Passes first ~3000 characters to LLM for verification
+- Handles errors gracefully (403, timeouts, parsing issues)
+
+**Options:**
+- `--model`: LLM to use (claude/gpt4/gemini/grok, default: claude)
+- `--topics-file`: Topics list to reference (default: topics.json)
+- Resume capability: Saves after each claim, safe to interrupt
+
+**Output:**
+- `test_verified_health.json` - Verified claims
+- `test_verified_health.json_modifications.json` - Transparent log of all changes
+
+### Current Verified Datasets
+
+**Climate dataset** (processed October 2025):
+- Input: 50 raw climate claims
+- Output: 48 verified claims (1 deleted, 32 modified)
+- File: `test_verified_climate.json`
+
+**Health dataset** (processed October 2025):
+- Input: 50 raw health claims
+- Output: 50 verified claims (0 deleted, 32 modified)
+- File: `test_verified_health.json`
+
+**Key improvements from processing:**
+- Claims now standalone with full temporal/geographical context
+- Verdicts verified against actual article content
+- Vague claims rewritten with specific details
+- All modifications transparently logged
+
 ## Next Steps
 
-After fetching claims, you can:
+After processing and verifying claims, you can:
 
-1. **Run debates** on a subset of claims using `debate.py`
+1. **Run debates** on verified claims using `debate.py`
 2. **Compare verdicts** between your system and professional fact-checkers
 3. **Analyze patterns:**
    - Which types of claims are harder to evaluate?
    - Do certain models perform better on certain topics?
    - Where does your system agree/disagree with fact-checkers?
+   - How does verdict mapping accuracy compare before/after verification?
 4. **Test your hypothesis:** Does debate length affect verdict accuracy?
 
-See [claude.md](claude.md) for the full research roadmap.
+See [CLAUDE.md](CLAUDE.md) for the full research roadmap.
 
 ## Resources
 
