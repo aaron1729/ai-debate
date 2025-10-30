@@ -9,8 +9,10 @@ import sys
 import json
 import argparse
 import re
+from datetime import datetime
 from typing import Literal, Optional
 from dotenv import load_dotenv
+from experiment_store import SQLiteExperimentStore
 
 # Load environment variables
 load_dotenv()
@@ -19,6 +21,20 @@ load_dotenv()
 with open(os.path.join(os.path.dirname(__file__), 'shared', 'messages.json'), 'r') as f:
     MESSAGES = json.load(f)
 
+# Load valid topics
+def load_topics():
+    """Load valid topics from topics.json"""
+    topics_file = os.path.join(os.path.dirname(__file__), 'topics.json')
+    try:
+        with open(topics_file, 'r') as f:
+            topics = json.load(f)
+            if isinstance(topics, list):
+                return topics
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+    return []
+
+VALID_TOPICS = load_topics()
 
 # Model configuration
 MODELS = {
@@ -347,6 +363,20 @@ You must choose ONE of these four labels:
 3. "misleading" - The claim is technically true but misleading or lacks important context
 4. "needs more evidence" - The debate did not provide sufficient evidence to make a determination
 
+You must also provide a SCORE from 0 to 10 (or -1):
+- 0 = Completely contradicted (strongest evidence against the claim)
+- 1-4 = Contradicted with varying strength (1=very strong contradiction, 4=weak contradiction)
+- 5 = Misleading/ambiguous (evidence on both sides, or technically true but missing context)
+- 6-9 = Supported with varying strength (6=weak support, 9=very strong support)
+- 10 = Completely supported (strongest evidence for the claim)
+- -1 = Needs more evidence (insufficient information to determine)
+
+The score provides nuance within each verdict category:
+- "contradicted" typically maps to scores 0-4
+- "misleading" typically maps to scores 3-7 (depending on which way it leans)
+- "supported" typically maps to scores 6-10
+- "needs more evidence" must use score -1
+
 EVALUATING ARGUMENT QUALITY (Paul Graham's Hierarchy of Disagreement):
 Give more weight to higher-quality arguments:
 - DH6 (Strongest): Refutes central point with evidence and reasoning
@@ -364,6 +394,7 @@ IMPORTANT: Do NOT explicitly reference DH numbers in your verdict explanation. T
 Respond in valid JSON format:
 {
     "verdict": "one of the four labels above",
+    "score": integer from 0-10 or -1,
     "explanation": "A brief explanation of your reasoning (2-3 sentences)"
 }
 
@@ -421,12 +452,22 @@ Be objective and base your decision on the evidence presented in the debate."""
                 raise ValueError(f"Could not parse JSON from response: {response_text}")
 
         # Validate the response
-        if "verdict" not in result or "explanation" not in result:
-            raise ValueError("Judge response missing required fields")
+        if "verdict" not in result or "score" not in result or "explanation" not in result:
+            raise ValueError("Judge response missing required fields (verdict, score, explanation)")
 
         valid_verdicts = ["supported", "contradicted", "misleading", "needs more evidence"]
         if result["verdict"] not in valid_verdicts:
             raise ValueError(f"Invalid verdict: {result['verdict']}")
+
+        # Validate score
+        if not isinstance(result["score"], int):
+            raise ValueError(f"Score must be an integer, got: {type(result['score'])}")
+        if result["score"] not in range(-1, 11):
+            raise ValueError(f"Score must be -1 or 0-10, got: {result['score']}")
+
+        # Validate score matches verdict
+        if result["verdict"] == "needs more evidence" and result["score"] != -1:
+            raise ValueError(f"Verdict 'needs more evidence' must have score -1, got: {result['score']}")
 
         return result
 
@@ -465,14 +506,112 @@ def format_debate_output(claim: str, debate_history: list[dict], verdict: dict,
     output += "=" * 80 + "\n"
     output += f"JUDGE'S VERDICT [{judge_model}]\n"
     output += "=" * 80 + "\n\n"
-    output += f"Verdict: {verdict['verdict'].upper()}\n\n"
+    output += f"Verdict: {verdict['verdict'].upper()}\n"
+    output += f"Score: {verdict['score']} "
+    if verdict['score'] == -1:
+        output += "(needs more evidence)\n\n"
+    elif verdict['score'] == 0:
+        output += "(completely contradicted)\n\n"
+    elif verdict['score'] == 10:
+        output += "(completely supported)\n\n"
+    else:
+        output += f"(on scale from 0=contradicted to 10=supported)\n\n"
     output += f"Explanation: {verdict['explanation']}\n\n"
     output += "=" * 80 + "\n"
 
     return output
 
 
-def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_model: str) -> None:
+def create_experiment_json(claim: str, topic: Optional[str], claim_id: Optional[str],
+                          gt_verdict: Optional[str], gt_source: Optional[str], gt_url: Optional[str],
+                          debate_history: list[dict], verdict: dict, turns: int,
+                          pro_model_key: str, con_model_key: str, judge_model_key: str,
+                          pro_went_first: bool, timestamp: str, errors: list[dict]) -> dict:
+    """
+    Create experiment results in the standardized JSON format.
+
+    Returns:
+        Dictionary following the experiment schema
+    """
+    # Convert debate_history to transcript format
+    transcript = []
+    turn_num = 1
+    for entry in debate_history:
+        # Determine actual turn number (two debaters per turn)
+        if entry['position'] == 'pro':
+            if not pro_went_first:
+                # If con went first, pro entries are second in each turn
+                turn_for_entry = turn_num
+            else:
+                # If pro went first, increment turn after con's response
+                turn_for_entry = (turn_num + 1) // 2 if turn_num > 1 else 1
+        else:  # con
+            if pro_went_first:
+                turn_for_entry = turn_num
+            else:
+                turn_for_entry = (turn_num + 1) // 2 if turn_num > 1 else 1
+
+        # Simplified: just use sequential turn numbers
+        transcript_entry = {
+            "turn": (turn_num + 1) // 2,
+            "debater": entry['position'],
+            "argument": entry.get('argument', ''),
+            "source_url": entry.get('url', ''),
+            "source_quote": entry.get('quote', '')
+        }
+
+        # Add refusal info if present
+        if entry.get('refused', False):
+            transcript_entry['refused'] = True
+            transcript_entry['refusal_reason'] = entry.get('refusal_reason', '')
+
+        transcript.append(transcript_entry)
+        turn_num += 1
+
+    result = {
+        "claim_data": {
+            "claim": claim
+        },
+        "ground_truth": {},
+        "experiment_config": {
+            "timestamp": timestamp,
+            "models": {
+                "pro": MODELS[pro_model_key]['id'],
+                "con": MODELS[con_model_key]['id'],
+                "judge": MODELS[judge_model_key]['id']
+            },
+            "turns": turns,
+            "pro_went_first": pro_went_first
+        },
+        "debate_transcript": transcript,
+        "judge_decision": {
+            "verdict": verdict['verdict'],
+            "score": verdict['score'],
+            "reasoning": verdict['explanation']
+        },
+        "errors_or_refusals": errors
+    }
+
+    # Add optional fields if provided
+    if topic:
+        result["claim_data"]["topic"] = topic
+    if claim_id:
+        result["claim_data"]["claim_id"] = claim_id
+
+    if gt_verdict:
+        result["ground_truth"]["verdict"] = gt_verdict
+    if gt_source:
+        result["ground_truth"]["source"] = gt_source
+    if gt_url:
+        result["ground_truth"]["url"] = gt_url
+
+    return result
+
+
+def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_model: str,
+               pro_went_first: bool = True, topic: Optional[str] = None, claim_id: Optional[str] = None,
+               gt_verdict: Optional[str] = None, gt_source: Optional[str] = None,
+               gt_url: Optional[str] = None) -> int:
     """
     Run a complete debate on the given claim.
 
@@ -482,7 +621,18 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
         pro_model: Model key for pro debater
         con_model: Model key for con debater
         judge_model: Model key for judge
+        pro_went_first: Whether pro debater goes first (default: True)
+        topic: Optional topic category for the claim
+        claim_id: Optional claim ID in format 'filename:index'
+        gt_verdict: Optional ground truth verdict
+        gt_source: Optional ground truth source
+        gt_url: Optional ground truth URL
+
+    Returns:
+        Experiment ID in database
     """
+    timestamp = datetime.utcnow().isoformat() + "Z"
+    errors = []
     print(f"\n{MESSAGES['start'].replace('{turns}', str(turns))}")
     print(f"Claim: {claim}")
     print(f"Pro: {MODELS[pro_model]['name']}, Con: {MODELS[con_model]['name']}, Judge: {MODELS[judge_model]['name']}\n")
@@ -500,76 +650,58 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
     debate_history = []
     debate_shortened = False
 
+    # Determine order of debaters
+    if pro_went_first:
+        first_debater = ("pro", pro_debater, pro_model, "pro_turn")
+        second_debater = ("con", con_debater, con_model, "con_turn")
+    else:
+        first_debater = ("con", con_debater, con_model, "con_turn")
+        second_debater = ("pro", pro_debater, pro_model, "pro_turn")
+
     for turn in range(turns):
         print(MESSAGES['turn'].replace('{turn}', str(turn + 1)).replace('{total_turns}', str(turns)))
 
-        # Pro side argues
-        print(MESSAGES['pro_turn'].replace('{model_name}', MODELS[pro_model]['name']))
-        try:
-            pro_arg = pro_debater.make_argument(claim, debate_history)
-            debate_history.append(pro_arg)
+        # Loop through both debaters in order
+        for position_label, debater_obj, model_key, message_key in [first_debater, second_debater]:
+            side_label = "PRO" if position_label == "pro" else "CON"
+            print(MESSAGES[message_key].replace('{model_name}', MODELS[model_key]['name']))
 
-            # Display the argument immediately
-            print(f"\n  {'='*60}")
-            if pro_arg.get("refused", False):
-                print("  PRO SIDE DECLINED TO ARGUE")
-                print(f"  Reason: {pro_arg.get('refusal_reason', 'No reason provided')}")
-                debate_shortened = True
-            else:
-                print(f"  Source: {pro_arg['url']}")
-                print(f"  Quote: \"{pro_arg['quote']}\"")
-                print(f"  Context: {pro_arg['context']}")
-                print(f"  Argument: {pro_arg['argument']}")
-            print(f"  {'='*60}\n")
-        except RuntimeError as e:
-            # API errors - inform user and exit
-            print(f"\n  API Error from Pro debater: {e}", file=sys.stderr)
-            print("  Cannot continue debate due to API issues.\n", file=sys.stderr)
-            sys.exit(1)
-        except ValueError as e:
-            # Malformed response - inform user and exit
-            print(f"\n  Response Error from Pro debater: {e}", file=sys.stderr)
-            print("  Cannot continue debate due to malformed response.\n", file=sys.stderr)
-            sys.exit(1)
-        except Exception as e:
-            # Unexpected error
-            print(f"\n  Unexpected error from Pro debater: {e}", file=sys.stderr)
-            sys.exit(1)
+            try:
+                arg = debater_obj.make_argument(claim, debate_history)
+                debate_history.append(arg)
 
-        # Con side argues
-        print(MESSAGES['con_turn'].replace('{model_name}', MODELS[con_model]['name']))
-        try:
-            con_arg = con_debater.make_argument(claim, debate_history)
-            debate_history.append(con_arg)
+                # Display the argument immediately
+                print(f"\n  {'='*60}")
+                if arg.get("refused", False):
+                    print(f"  {side_label} SIDE DECLINED TO ARGUE")
+                    print(f"  Reason: {arg.get('refusal_reason', 'No reason provided')}")
+                    debate_shortened = True
+                else:
+                    print(f"  Source: {arg['url']}")
+                    print(f"  Quote: \"{arg['quote']}\"")
+                    print(f"  Context: {arg['context']}")
+                    print(f"  Argument: {arg['argument']}")
+                print(f"  {'='*60}\n")
+            except RuntimeError as e:
+                # API errors - inform user and exit
+                print(f"\n  API Error from {side_label} debater: {e}", file=sys.stderr)
+                print("  Cannot continue debate due to API issues.\n", file=sys.stderr)
+                sys.exit(1)
+            except ValueError as e:
+                # Malformed response - inform user and exit
+                print(f"\n  Response Error from {side_label} debater: {e}", file=sys.stderr)
+                print("  Cannot continue debate due to malformed response.\n", file=sys.stderr)
+                sys.exit(1)
+            except Exception as e:
+                # Unexpected error
+                print(f"\n  Unexpected error from {side_label} debater: {e}", file=sys.stderr)
+                sys.exit(1)
 
-            # Display the argument immediately
-            print(f"\n  {'='*60}")
-            if con_arg.get("refused", False):
-                print("  CON SIDE DECLINED TO ARGUE")
-                print(f"  Reason: {con_arg.get('refusal_reason', 'No reason provided')}")
-                debate_shortened = True
-            else:
-                print(f"  Source: {con_arg['url']}")
-                print(f"  Quote: \"{con_arg['quote']}\"")
-                print(f"  Context: {con_arg['context']}")
-                print(f"  Argument: {con_arg['argument']}")
-            print(f"  {'='*60}\n")
-        except RuntimeError as e:
-            # API errors - inform user and exit
-            print(f"\n  API Error from Con debater: {e}", file=sys.stderr)
-            print("  Cannot continue debate due to API issues.\n", file=sys.stderr)
-            sys.exit(1)
-        except ValueError as e:
-            # Malformed response - inform user and exit
-            print(f"\n  Response Error from Con debater: {e}", file=sys.stderr)
-            print("  Cannot continue debate due to malformed response.\n", file=sys.stderr)
-            sys.exit(1)
-        except Exception as e:
-            # Unexpected error
-            print(f"\n  Unexpected error from Con debater: {e}", file=sys.stderr)
-            sys.exit(1)
+            # If this side refused, allow opponent one response then stop
+            if debate_shortened:
+                break
 
-        # If either side refused, stop the debate after allowing opponent one response
+        # If either side refused, stop the debate
         if debate_shortened:
             print(MESSAGES['debate_shortened'])
             break
@@ -588,6 +720,20 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
                                   MODELS[con_model]['name'],
                                   MODELS[judge_model]['name'])
     print(output)
+
+    # Save to database
+    experiment_data = create_experiment_json(
+        claim, topic, claim_id, gt_verdict, gt_source, gt_url,
+        debate_history, verdict, turns,
+        pro_model, con_model, judge_model,
+        pro_went_first, timestamp, errors
+    )
+
+    store = SQLiteExperimentStore()
+    experiment_id = store.save(experiment_data)
+    print(f"\nExperiment saved to database (ID: {experiment_id})")
+
+    return experiment_id
 
 
 def main():
@@ -643,11 +789,67 @@ Examples:
         help="Model for judge (default: claude)"
     )
 
+    parser.add_argument(
+        "--pro-first",
+        action="store_true",
+        default=True,
+        help="Pro debater goes first (default: True)"
+    )
+
+    parser.add_argument(
+        "--con-first",
+        action="store_true",
+        help="Con debater goes first (overrides --pro-first)"
+    )
+
+    parser.add_argument(
+        "--topic",
+        type=str,
+        choices=VALID_TOPICS if VALID_TOPICS else None,
+        help=f"Topic category for the claim (optional){f': {', '.join(VALID_TOPICS)}' if VALID_TOPICS else ''}"
+    )
+
+    parser.add_argument(
+        "--gt-verdict",
+        type=str,
+        choices=["supported", "contradicted", "misleading", "needs more evidence"],
+        help="Ground truth verdict (optional)"
+    )
+
+    parser.add_argument(
+        "--gt-source",
+        type=str,
+        help="Ground truth source (e.g., 'gpt5' or publisher name)"
+    )
+
+    parser.add_argument(
+        "--gt-url",
+        type=str,
+        help="Ground truth URL (optional)"
+    )
+
+    parser.add_argument(
+        "--claim-id",
+        type=str,
+        help="Claim ID in format 'filename:index' (e.g., 'claims_gpt5_01.json:0')"
+    )
+
     args = parser.parse_args()
+
+    # Determine who goes first
+    pro_went_first = not args.con_first
 
     # Run the debate
     try:
-        run_debate(args.claim, args.turns, args.pro_model, args.con_model, args.judge_model)
+        run_debate(
+            args.claim, args.turns, args.pro_model, args.con_model, args.judge_model,
+            pro_went_first=pro_went_first,
+            topic=args.topic,
+            claim_id=args.claim_id,
+            gt_verdict=args.gt_verdict,
+            gt_source=args.gt_source,
+            gt_url=args.gt_url
+        )
     except KeyboardInterrupt:
         print("\n\nDebate interrupted by user.", file=sys.stderr)
         sys.exit(1)

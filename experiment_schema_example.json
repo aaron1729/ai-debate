@@ -1,0 +1,57 @@
+{
+  "claim_data": {
+    "claim": "As of January 2024, the global average atmospheric CO₂ concentration exceeded 420 parts per million for the first time in recorded history.",
+    "topic": "climate"
+  },
+  "ground_truth": {
+    "verdict": "supported",
+    "source": "gpt5",
+    "url": null
+  },
+  "experiment_config": {
+    "timestamp": "2025-10-30T14:23:45.123Z",
+    "models": {
+      "pro": "claude-sonnet-4-5-20250929",
+      "con": "gpt-4-turbo-preview",
+      "judge": "claude-sonnet-4-5-20250929"
+    },
+    "turns": 2,
+    "pro_went_first": true
+  },
+  "debate_transcript": [
+    {
+      "turn": 1,
+      "debater": "pro",
+      "argument": "The claim is accurate. NOAA's Mauna Loa Observatory recorded...",
+      "source_url": "https://gml.noaa.gov/ccgg/trends/",
+      "source_quote": "The monthly average for January 2024 was 422.57 ppm"
+    },
+    {
+      "turn": 1,
+      "debater": "con",
+      "argument": "While CO2 levels are high, the 'first time in recorded history' claim is misleading...",
+      "source_url": "https://example.com/co2-data",
+      "source_quote": "Ice core data shows similar levels 800,000 years ago"
+    },
+    {
+      "turn": 2,
+      "debater": "pro",
+      "argument": "My opponent conflates 'recorded history' with geological time...",
+      "source_url": "https://example.com/definition",
+      "source_quote": "Recorded history refers to instrumental measurements"
+    },
+    {
+      "turn": 2,
+      "debater": "con",
+      "argument": "The claim should specify 'instrumental record' for clarity...",
+      "source_url": "https://example.com/precision",
+      "source_quote": "Scientific claims require precise terminology"
+    }
+  ],
+  "judge_decision": {
+    "verdict": "supported",
+    "score": 8,
+    "reasoning": "While the con side raises valid points about terminology, the claim is substantially accurate. When climatologists refer to 'recorded history,' they typically mean the instrumental record dating back to 1958 for atmospheric CO2 measurements. The pro side effectively defended this interpretation with authoritative sources. The score of 8 reflects strong support with minor ambiguity around terminology."
+  },
+  "errors_or_refusals": []
+}

@@ -1,0 +1,432 @@
+[
+{
+"claim": "As of 2024, nuclear power remains the largest source of carbon-free electricity in the United States.",
+"verdict": "supported",
+"topic": "environment"
+},
+{
+"claim": "Homeopathic remedies have been shown in double-blind studies to outperform placebo for treating viral infections.",
+"verdict": "contradicted",
+"topic": "health"
+},
+{
+"claim": "Renewable energy subsidies cost taxpayers more per kilowatt-hour than fossil fuel subsidies.",
+"verdict": "misleading",
+"topic": "economics"
+},
+{
+"claim": "As of 2025, global mean sea level is rising at an average rate of approximately 3 millimeters per year.",
+"verdict": "supported",
+"topic": "climate"
+},
+{
+"claim": "Electric vehicles produce more lifetime CO₂ emissions than gasoline cars when manufacturing and electricity generation are considered.",
+"verdict": "contradicted",
+"topic": "environment"
+},
+{
+"claim": "The Affordable Care Act led to a reduction in the number of uninsured Americans after its implementation in 2010.",
+"verdict": "supported",
+"topic": "health"
+},
+{
+"claim": "Eating a diet high in saturated fat causes heart disease in every individual.",
+"verdict": "misleading",
+"topic": "health"
+},
+{
+"claim": "As of 2025, atmospheric methane concentrations are more than double their preindustrial levels.",
+"verdict": "supported",
+"topic": "climate"
+},
+{
+"claim": "Artificial intelligence systems today have human-like understanding of language and reasoning.",
+"verdict": "contradicted",
+"topic": "technology"
+},
+{
+"claim": "Wearing masks during the COVID-19 pandemic was proven to have no effect on transmission rates.",
+"verdict": "contradicted",
+"topic": "health"
+},
+{
+"claim": "Cryptocurrency mining accounts for more annual electricity use than Argentina.",
+"verdict": "supported",
+"topic": "technology"
+},
+{
+"claim": "The ozone hole over Antarctica has fully healed.",
+"verdict": "contradicted",
+"topic": "environment"
+},
+{
+"claim": "As of late 2024, China emits more total CO₂ than any other country.",
+"verdict": "supported",
+"topic": "climate"
+},
+{
+"claim": "Eating genetically modified foods causes autism in children.",
+"verdict": "contradicted",
+"topic": "health"
+},
+{
+"claim": "Fusion power plants are currently generating electricity for commercial grids.",
+"verdict": "contradicted",
+"topic": "science"
+},
+{
+"claim": "The 2020 U.S. presidential election was proven to have widespread voter fraud affecting the outcome.",
+"verdict": "contradicted",
+"topic": "politics"
+},
+{
+"claim": "As of 2024, about one-fifth of global electricity generation comes from renewable sources.",
+"verdict": "supported",
+"topic": "environment"
+},
+{
+"claim": "Higher CO₂ concentrations make plants grow faster but reduce their nutritional value.",
+"verdict": "supported",
+"topic": "science"
+},
+{
+"claim": "Vaccines contain microchips that track individuals.",
+"verdict": "contradicted",
+"topic": "health"
+},
+{
+"claim": "Solar energy has become the cheapest source of new electricity generation in many countries by 2024.",
+"verdict": "supported",
+"topic": "economics"
+},
+{
+"claim": "Bitcoin is completely anonymous and cannot be traced by law enforcement.",
+"verdict": "misleading",
+"topic": "technology"
+},
+{
+"claim": "The Great Barrier Reef is growing faster than it is bleaching.",
+"verdict": "contradicted",
+"topic": "environment"
+},
+{
+"claim": "The human brain operates entirely on electrical signals without any chemical processes.",
+"verdict": "contradicted",
+"topic": "science"
+},
+{
+"claim": "Recycling one aluminum can saves enough energy to run a television for several hours.",
+"verdict": "supported",
+"topic": "environment"
+},
+{
+"claim": "As of 2025, Earth’s global average temperature has increased roughly 1.3°C since preindustrial times.",
+"verdict": "supported",
+"topic": "climate"
+},
+{
+"claim": "Wind energy is more carbon-intensive than coal once you include manufacturing.",
+"verdict": "contradicted",
+"topic": "environment"
+},
+{
+"claim": "Quantum computing will render all current encryption obsolete within two years.",
+"verdict": "contradicted",
+"topic": "technology"
+},
+{
+"claim": "Eating more plant-based foods can reduce the risk of cardiovascular disease.",
+"verdict": "supported",
+"topic": "health"
+},
+{
+"claim": "Plastic waste in the ocean primarily originates from developed Western countries.",
+"verdict": "misleading",
+"topic": "environment"
+},
+{
+"claim": "Climate models have consistently overestimated global warming.",
+"verdict": "contradicted",
+"topic": "climate"
+},
+{
+"claim": "Deforestation in the Amazon increased significantly in the early 2020s.",
+"verdict": "supported",
+"topic": "environment"
+},
+{
+"claim": "The COVID-19 vaccines cause infertility in women.",
+"verdict": "contradicted",
+"topic": "health"
+},
+{
+"claim": "AI-generated art infringes on copyrights by directly copying existing works pixel-for-pixel.",
+"verdict": "contradicted",
+"topic": "technology"
+},
+{
+"claim": "Economic inequality in the United States has risen since the 1980s.",
+"verdict": "supported",
+"topic": "economics"
+},
+{
+"claim": "Nuclear waste remains dangerous for hundreds of thousands of years.",
+"verdict": "supported",
+"topic": "science"
+},
+{
+"claim": "Carbon offsets fully eliminate an individual’s carbon footprint.",
+"verdict": "misleading",
+"topic": "environment"
+},
+{
+"claim": "Artificial sweeteners have been definitively proven to cause cancer in humans.",
+"verdict": "needs more evidence",
+"topic": "health"
+},
+{
+"claim": "The universe is expanding at an accelerating rate.",
+"verdict": "supported",
+"topic": "science"
+},
+{
+"claim": "The majority of climate scientists disagree that humans are the main cause of recent global warming.",
+"verdict": "contradicted",
+"topic": "climate"
+},
+{
+"claim": "As of 2024, global hunger rates are higher than they were in 2010.",
+"verdict": "supported",
+"topic": "economics"
+},
+{
+"claim": "Electric car batteries cannot be recycled.",
+"verdict": "contradicted",
+"topic": "technology"
+},
+{
+"claim": "The Earth’s magnetic field is reversing within the next decade.",
+"verdict": "needs more evidence",
+"topic": "science"
+},
+{
+"claim": "The use of leaded gasoline ended worldwide in 2021.",
+"verdict": "supported",
+"topic": "environment"
+},
+{
+"claim": "Universal basic income trials have shown no measurable economic effects.",
+"verdict": "contradicted",
+"topic": "economics"
+},
+{
+"claim": "Electricity from coal plants produces more fine particulate pollution than from natural gas plants.",
+"verdict": "supported",
+"topic": "environment"
+},
+{
+"claim": "Dark matter makes up about 85% of the total matter in the universe.",
+"verdict": "supported",
+"topic": "science"
+},
+{
+"claim": "Artificial intelligence models trained on biased data can reproduce those biases in outputs.",
+"verdict": "supported",
+"topic": "technology"
+},
+{
+"claim": "Earthquakes are caused by changes in planetary alignment.",
+"verdict": "contradicted",
+"topic": "science"
+},
+{
+"claim": "As of 2025, most ocean plastic pollution consists of microplastics smaller than five millimeters.",
+"verdict": "supported",
+"topic": "environment"
+},
+{
+"claim": "Higher taxes on the wealthy always reduce economic growth.",
+"verdict": "misleading",
+"topic": "economics"
+},
+{
+"claim": "Hydroelectric dams produce significant greenhouse gas emissions comparable to coal plants.",
+"verdict": "misleading",
+"topic": "environment"
+},
+{
+"claim": "As of 2024, the United States generates more electricity from natural gas than from coal.",
+"verdict": "supported",
+"topic": "economics"
+},
+{
+"claim": "The human body loses most of its heat through the head.",
+"verdict": "contradicted",
+"topic": "health"
+},
+{
+"claim": "Organic farming always has a smaller environmental footprint than conventional farming.",
+"verdict": "misleading",
+"topic": "environment"
+},
+{
+"claim": "The human population exceeded eight billion people in 2022.",
+"verdict": "supported",
+"topic": "science"
+},
+{
+"claim": "Quantum mechanics allows information to travel faster than light.",
+"verdict": "contradicted",
+"topic": "science"
+},
+{
+"claim": "AI systems can generate realistic images and text that are difficult for humans to distinguish from authentic media.",
+"verdict": "supported",
+"topic": "technology"
+},
+{
+"claim": "As of 2025, most of the world’s energy still comes from fossil fuels.",
+"verdict": "supported",
+"topic": "economics"
+},
+{
+"claim": "Eating chocolate causes acne.",
+"verdict": "needs more evidence",
+"topic": "health"
+},
+{
+"claim": "As of 2024, the Greenland Ice Sheet is losing mass faster than it is gaining through snowfall.",
+"verdict": "supported",
+"topic": "climate"
+},
+{
+"claim": "Genetic editing using CRISPR has been approved for treating some human diseases.",
+"verdict": "supported",
+"topic": "science"
+},
+{
+"claim": "Recycling paper uses more energy than making new paper from trees.",
+"verdict": "contradicted",
+"topic": "environment"
+},
+{
+"claim": "The U.S. federal deficit was zero in 2018.",
+"verdict": "contradicted",
+"topic": "economics"
+},
+{
+"claim": "All forms of radiation exposure are dangerous at any level.",
+"verdict": "misleading",
+"topic": "science"
+},
+{
+"claim": "Carbon dioxide levels are higher today than at any time in the last 800,000 years.",
+"verdict": "supported",
+"topic": "climate"
+},
+{
+"claim": "Natural gas is primarily composed of methane.",
+"verdict": "supported",
+"topic": "science"
+},
+{
+"claim": "Electric vehicles are exempt from all road taxes worldwide.",
+"verdict": "contradicted",
+"topic": "economics"
+},
+{
+"claim": "Eating carrots significantly improves night vision.",
+"verdict": "misleading",
+"topic": "health"
+},
+{
+"claim": "The expansion of wind and solar power has led to negative electricity prices in some markets.",
+"verdict": "supported",
+"topic": "economics"
+},
+{
+"claim": "As of 2024, melting of Arctic permafrost releases methane into the atmosphere.",
+"verdict": "supported",
+"topic": "climate"
+},
+{
+"claim": "Humans share more than 98% of their DNA with chimpanzees.",
+"verdict": "supported",
+"topic": "science"
+},
+{
+"claim": "Drinking raw milk is safer than pasteurized milk.",
+"verdict": "contradicted",
+"topic": "health"
+},
+{
+"claim": "The United States has the highest corporate tax rate in the world.",
+"verdict": "contradicted",
+"topic": "economics"
+},
+{
+"claim": "The Amazon rainforest produces 20% of the world’s oxygen supply.",
+"verdict": "misleading",
+"topic": "environment"
+},
+{
+"claim": "As of 2025, more than half of the world’s population lives in urban areas.",
+"verdict": "supported",
+"topic": "science"
+},
+{
+"claim": "Carbon dioxide makes up over 10% of Earth’s atmosphere.",
+"verdict": "contradicted",
+"topic": "science"
+},
+{
+"claim": "The total global fertility rate has been declining for several decades.",
+"verdict": "supported",
+"topic": "science"
+},
+{
+"claim": "GMOs have been banned throughout the entire European Union.",
+"verdict": "contradicted",
+"topic": "politics"
+},
+{
+"claim": "As of 2024, the Arctic Ocean is ice-free in summer months.",
+"verdict": "contradicted",
+"topic": "climate"
+},
+{
+"claim": "The Earth’s core is hotter than the surface of the Sun.",
+"verdict": "contradicted",
+"topic": "science"
+},
+{
+"claim": "Wind and solar energy intermittency can be mitigated with grid-scale storage technologies.",
+"verdict": "supported",
+"topic": "technology"
+},
+{
+"claim": "Vaccination can contribute to herd immunity even when not everyone is vaccinated.",
+"verdict": "supported",
+"topic": "health"
+},
+{
+"claim": "Ocean acidification is caused by absorption of atmospheric CO₂ by seawater.",
+"verdict": "supported",
+"topic": "environment"
+},
+{
+"claim": "Eating spicy food causes stomach ulcers.",
+"verdict": "contradicted",
+"topic": "health"
+},
+{
+"claim": "Humans can see infrared light with the naked eye.",
+"verdict": "contradicted",
+"topic": "science"
+},
+{
+"claim": "As of 2025, renewable energy employment globally exceeds that of the fossil fuel sector.",
+"verdict": "supported",
+"topic": "economics"
+}
+]

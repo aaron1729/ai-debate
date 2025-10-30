@@ -1,0 +1,102 @@
+[
+{
+"claim": "As of January 2024, the global average atmospheric CO₂ concentration exceeded 420 parts per million for the first time in recorded history.",
+"verdict": "supported",
+"topic": "climate"
+},
+{
+"claim": "Vaccines containing mRNA technology alter a person’s DNA permanently.",
+"verdict": "contradicted",
+"topic": "health"
+},
+{
+"claim": "Solar power now generates more electricity in the United States than coal-fired power plants.",
+"verdict": "misleading",
+"topic": "environment"
+},
+{
+"claim": "5G mobile networks cause harmful radiation exposure beyond international safety limits.",
+"verdict": "contradicted",
+"topic": "technology"
+},
+{
+"claim": "Increasing atmospheric methane is a more potent short-term driver of warming than carbon dioxide.",
+"verdict": "supported",
+"topic": "climate"
+},
+{
+"claim": "After controlling for inflation and productivity growth, raising the federal minimum wage modestly does not consistently cause overall job losses.",
+"verdict": "supported",
+"topic": "economics"
+},
+{
+"claim": "As of December 2023, the United States unemployment rate was the lowest in fifty years.",
+"verdict": "contradicted",
+"topic": "economics"
+},
+{
+"claim": "Drinking alkaline water improves the body’s immune system by balancing blood pH.",
+"verdict": "contradicted",
+"topic": "health"
+},
+{
+"claim": "Wind turbines kill so many birds each year that they significantly threaten bird populations in North America.",
+"verdict": "misleading",
+"topic": "environment"
+},
+{
+"claim": "As of July 2024, the United States emitted more CO₂ per capita than China.",
+"verdict": "contradicted",
+"topic": "climate"
+},
+{
+"claim": "Genetically modified crops have been conclusively shown to cause cancer in humans.",
+"verdict": "contradicted",
+"topic": "science"
+},
+{
+"claim": "Quantum entanglement has been experimentally verified to violate Bell’s inequalities, confirming nonlocal correlations.",
+"verdict": "supported",
+"topic": "science"
+},
+{
+"claim": "Hydrogen fuel cell vehicles emit water vapor as their primary exhaust and no carbon dioxide during operation.",
+"verdict": "supported",
+"topic": "technology"
+},
+{
+"claim": "Global deforestation rates have declined every year since 2000.",
+"verdict": "contradicted",
+"topic": "environment"
+},
+{
+"claim": "As of March 2025, the United States federal debt exceeded 120% of GDP.",
+"verdict": "supported",
+"topic": "economics"
+},
+{
+"claim": "Eating organic food has been proven to produce significantly better health outcomes in the general population.",
+"verdict": "needs more evidence",
+"topic": "health"
+},
+{
+"claim": "As of February 2024, the homicide rate in the United States remained well below the peaks of the early 1990s.",
+"verdict": "supported",
+"topic": "politics"
+},
+{
+"claim": "Carbon capture and storage technology can currently remove more than 50% of global annual CO₂ emissions.",
+"verdict": "contradicted",
+"topic": "technology"
+},
+{
+"claim": "The Large Hadron Collider experiments have discovered evidence for supersymmetry.",
+"verdict": "contradicted",
+"topic": "science"
+},
+{
+"claim": "As of May 2023, average global surface temperatures have already increased more than 1.2°C relative to the 1850–1900 baseline.",
+"verdict": "supported",
+"topic": "climate"
+}
+]

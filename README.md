@@ -78,8 +78,10 @@ The project includes fact-checked claims from Google's Fact Check Tools API for 
 - **claims_historical_climate_50.json** - 50 climate-related claims
 
 **Processed and verified claims** (ready for debate testing):
-- **test_verified_climate.json** - 48 verified climate claims
-- **test_verified_health.json** - 50 verified health claims
+- **claims_verified_climate_48.json** - 48 verified climate claims
+- **claims_verified_health_50.json** - 50 verified health claims
+- **claims_cleaned_climate_49.json** - 49 cleaned climate claims
+- **claims_cleaned_health_50.json** - 50 cleaned health claims
 
 These verified datasets have been cleaned and enhanced by LLMs to ensure claims are:
 - Specific and factually debatable
@@ -88,6 +90,84 @@ These verified datasets have been cleaned and enhanced by LLMs to ensure claims 
 - Have correct verdict mappings (supported/contradicted/misleading/needs more evidence)
 
 Use these to test the debate system's accuracy by comparing verdicts with professional fact-checker ratings. See [FACTCHECK_SETUP.md](docs/FACTCHECK_SETUP.md) for how to fetch and process more claims.
+
+### Running Experiments
+
+The debate system automatically saves all experiment results to a SQLite database for easy querying and analysis:
+
+```bash
+python debate.py "Your claim here" \
+  --turns 2 \
+  --topic climate \
+  --claim-id "claims_gpt5_01.json:0" \
+  --gt-verdict supported \
+  --gt-source "Science Magazine"
+```
+
+Options for experiments:
+- `--topic TOPIC`: Specify claim topic (climate, health, etc.)
+- `--claim-id ID`: Claim ID in format "filename:index" (e.g., "claims_gpt5_01.json:0")
+- `--gt-verdict VERDICT`: Ground truth verdict (supported/contradicted/misleading/needs more evidence)
+- `--gt-source SOURCE`: Ground truth source (e.g., "gpt5", publisher name)
+- `--gt-url URL`: Ground truth URL
+- `--con-first`: Have con debater go first instead of pro (default: pro goes first)
+
+All experiments are saved to `experiments.db` in the repository root.
+
+#### Querying Experiments
+
+Use `query_experiments.py` to search and analyze your experiments:
+
+```bash
+# List all experiments
+python query_experiments.py --list
+
+# Show statistics
+python query_experiments.py --stats
+
+# Filter by topic and score
+python query_experiments.py --topic climate --min-score 7
+
+# Filter by verdict
+python query_experiments.py --judge-verdict supported
+
+# Get specific experiment by ID
+python query_experiments.py --get 5
+
+# Export results to JSON for sharing
+python query_experiments.py --topic health --export health_results.json
+
+# Combine filters
+python query_experiments.py --topic climate --gt-verdict supported --judge-verdict contradicted
+```
+
+Query options:
+- `--topic`: Filter by topic
+- `--judge-verdict`: Filter by judge's verdict
+- `--gt-verdict`: Filter by ground truth verdict
+- `--min-score` / `--max-score`: Filter by judge score
+- `--pro-model` / `--con-model` / `--judge-model`: Filter by models used
+- `--verbose, -v`: Show detailed information
+- `--export FILE`: Export results to JSON file
+- `--limit N`: Limit number of results (default: 50)
+
+#### Experiment Schema
+
+Each experiment includes:
+- **claim_data**: The claim text, optional topic, and optional claim_id (format: "filename:index")
+- **ground_truth**: Expected verdict, source, and URL (if known)
+- **experiment_config**: Timestamp, models used, number of turns, who went first
+- **debate_transcript**: Complete record of all arguments with sources
+- **judge_decision**: Verdict, score (0-10 or -1), and reasoning
+- **errors_or_refusals**: Any errors or model refusals during the debate
+
+The judge provides both a categorical verdict and a numeric score:
+- **Score -1**: Needs more evidence
+- **Scores 0-4**: Contradicted (0=completely contradicted, 4=weakly contradicted)
+- **Score 5**: Misleading/ambiguous
+- **Scores 6-10**: Supported (6=weakly supported, 10=completely supported)
+
+See `experiment_schema_example.json` for a complete example of the data structure.
 
 ## outline
 
@@ -112,7 +192,7 @@ for the MVP, just use API calls to claude only.
 ### extensions
 
 - [ ] save snapshots of the cited webpages.
-- [ ] verify that the cited webpages contain the claimed evidence (being careful with phishing, etc.).
+- [ ] verify that the cited webpages contain the claimed evidence.
 - [x] add chatGPT, grok, gemini, and maybe others.
 - [ ] assess how different LLMs do, perhaps depending on the nature of the debate -- particularly the political leanings of the sides that the LLMs are instructed to defend.
 - [x] integrate Google Fact Check Tools API to fetch test claims with ground truth labels.
