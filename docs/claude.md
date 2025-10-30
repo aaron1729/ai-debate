@@ -640,6 +640,65 @@ curl http://localhost:3000/api/check-usage | python3 -m json.tool
 - Run `npm run build` to check for type errors
 - Ensure ModelKey type matches MODELS object keys
 
+## Experimental Results
+
+### Initial Findings (October 2025)
+
+**Experiment Setup**:
+- Database: SQLite with full experiment tracking (experiments.db)
+- Judge: GPT-4 for all experiments
+- Debaters: Claude Sonnet 4.5 and Grok 3
+- Two claims tested with 8 experiments each (T=1,2,4,6 × 2 debater orderings)
+
+**Experiment 1: Homeopathic Remedies Claim**
+- **Claim**: "Homeopathic remedies are scientifically proven to work better than placebos"
+- **Ground Truth**: contradicted
+- **Claim ID**: claims_gpt5_01.json:1
+- **Results**: 7/8 correct (87.5% accuracy)
+  - Claude pro/Grok con: needs evidence → misleading → misleading → **contradicted**
+  - Grok pro/Claude con: misleading → contradicted → contradicted → contradicted
+- **Key Finding**: Clear convergence toward ground truth as turns increase
+- **Note**: At T=4 with Claude pro, Claude refused to argue the pro side, citing lack of credible evidence
+
+**Experiment 2: Minimum Wage Claim**
+- **Claim**: "After controlling for inflation and productivity growth, raising the federal minimum wage modestly does not consistently cause overall job losses"
+- **Ground Truth**: supported
+- **Claim ID**: claims_gpt5_01.json:5
+- **Results**: 1/8 correct (12.5% accuracy)
+  - Claude pro/Grok con: needs evidence → misleading → misleading → **supported** ✓
+  - Grok pro/Claude con: misleading → contradicted → contradicted → contradicted
+- **Key Finding**: Strong debater effect - Claude arguing con consistently won even though ground truth supports the claim
+
+**Cross-Experiment Insights**:
+
+1. **Controversy Matters**: The homeopathic claim (pseudoscience) showed 87.5% accuracy with clear convergence. The minimum wage claim (genuine economic controversy) showed only 12.5% accuracy with no convergence pattern.
+
+2. **Debater Strength Effects**: When Claude argued con on the minimum wage claim, it consistently won across all turn counts (T=1,2,4,6), suggesting the debate system can be dominated by debater skill rather than ground truth for genuinely controversial claims.
+
+3. **Turn Count Effects**:
+   - Simple claims: More turns → convergence to truth (homeopathic remedies)
+   - Controversial claims: More turns → no consistent convergence (minimum wage)
+   - The core hypothesis (longer debates favor truth) holds for clear-cut cases but not for legitimately contested topics
+
+4. **First-Mover Effects**: Limited evidence so far, but worth investigating further with more experiments.
+
+5. **Model Behavior**:
+   - Claude refused to argue pro-homeopathy at T=4 (ethical refusal)
+   - Both models found credible-sounding evidence for both sides of minimum wage debate
+   - Judge (GPT-4) struggled with claims where both sides had legitimate evidence
+
+**Implications for Research**:
+- Need to test more claims across the controversy spectrum
+- Should track which side each model prefers (potential model-specific biases)
+- The debate system works well for debunking pseudoscience but struggles with genuine academic/policy disagreements
+- Ground truth labels may be insufficient for truly controversial claims (expert consensus might disagree with label)
+
+**Next Steps**:
+- Run experiments on more claims from verified datasets (climate, health)
+- Analyze model-specific win rates and refusal patterns
+- Test whether certain topics systematically favor one side
+- Compare judge verdicts with multiple fact-checker ratings
+
 ## Future Considerations
 
 ### When Rate Limiting is Fixed

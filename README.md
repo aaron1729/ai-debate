@@ -1,5 +1,15 @@
 # ai-debate
 
+## AMG TO-DO
+
+reorganize the "claims" json files according to which is final data to be used for experiments and which is not. update all scripts accordingly, of course.
+
+and the little work that codex did, incorporate that into the docs.
+
+=====
+
+
+
 Adversarial truth-seeking through structured AI debates.
 
 ## Documentation
