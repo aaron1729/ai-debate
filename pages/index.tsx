@@ -196,7 +196,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>AI Debate System</title>
+        <title>AI Debates</title>
         <meta name="description" content="Adversarial truth-seeking through structured AI debates" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
@@ -207,7 +207,7 @@ export default function Home() {
         padding: '20px',
         fontFamily: 'system-ui, -apple-system, sans-serif'
       }}>
-        <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>AI Debate System</h1>
+        <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>AI Debates</h1>
         <p style={{ textAlign: 'center', color: '#666', marginBottom: '10px' }}>
           Adversarial truth-seeking through structured debates
         </p>
