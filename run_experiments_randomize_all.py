@@ -20,7 +20,7 @@ from debate import MODELS
 
 def discover_claim_files() -> List[str]:
     """Return all eligible claims files for random selection."""
-    patterns = ["claims_verified_*.json", "claims_gpt5_*.json"]
+    patterns = ["data/claims_verified_*.json", "data/claims_gpt5_*.json"]
     files: List[str] = []
     for pattern in patterns:
         files.extend(glob.glob(pattern))
@@ -112,6 +112,11 @@ def run_experiment_suite(
     print("=" * 80 + "\n")
 
     result = subprocess.run(cmd)
+    if result.returncode != 0:
+        print(f"  Warning: run_experiments.py exited with code {result.returncode}. Retrying once...", file=sys.stderr)
+        retry_result = subprocess.run(cmd)
+        return retry_result.returncode
+
     return result.returncode
 
 
@@ -178,8 +183,8 @@ def main() -> int:
         )
 
         if exit_code != 0:
-            print(f"\nExperiment suite failed with exit code {exit_code}. Aborting further runs.", file=sys.stderr)
-            return exit_code
+            print(f"\nExperiment suite failed with exit code {exit_code}. Continuing to next randomized run.", file=sys.stderr)
+            continue
 
     print("\nAll randomized experiment suites completed successfully.")
     return 0

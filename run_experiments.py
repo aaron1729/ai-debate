@@ -186,13 +186,13 @@ Experiment Design (2x8):
 
 Examples:
   # Claude vs Grok, judged by GPT-4
-  python run_experiments.py claims_gpt5_01.json:0 --debater1 claude --debater2 grok --judge gpt4
+  python run_experiments.py data/claims_gpt5_01.json:0 --debater1 claude --debater2 grok --judge gpt4
 
   # GPT-4 vs Gemini, judged by Claude
-  python run_experiments.py claims_verified_health_50.json:5 --debater1 gpt4 --debater2 gemini --judge claude
+  python run_experiments.py data/claims_verified_health_50.json:5 --debater1 gpt4 --debater2 gemini --judge claude
 
   # Test homeopathy claim (as documented in claude.md)
-  python run_experiments.py claims_gpt5_01.json:1 --debater1 claude --debater2 grok --judge gpt4
+  python run_experiments.py data/claims_gpt5_01.json:1 --debater1 claude --debater2 grok --judge gpt4
 """
     )
 

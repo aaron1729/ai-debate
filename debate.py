@@ -285,28 +285,37 @@ Example response format:
         else:
             user_prompt = "Make your opening argument. Provide your response in JSON format."
 
-        # Call model API
-        response_text = self.model_client.generate(
-            self.get_system_prompt(claim),
-            user_prompt
-        )
+        result = None
+        last_error: Optional[Exception] = None
+        for attempt in range(2):
+            response_text = self.model_client.generate(
+                self.get_system_prompt(claim),
+                user_prompt
+            )
 
-        # Try to extract JSON from the response
-        try:
-            # First, try parsing the entire response as JSON
-            result = json.loads(response_text)
-        except json.JSONDecodeError:
-            # If that fails, try to find JSON within the response
-            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
-            if json_match:
-                try:
-                    result = json.loads(json_match.group())
-                except json.JSONDecodeError:
-                    # Malformed response - this is an error, not a refusal
-                    raise ValueError(f"Could not parse JSON from response: {response_text[:200]}")
-            else:
-                # No JSON found - malformed response
-                raise ValueError(f"No JSON found in response: {response_text[:200]}")
+            try:
+                result = json.loads(response_text)
+            except json.JSONDecodeError:
+                json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+                if json_match:
+                    try:
+                        result = json.loads(json_match.group())
+                    except json.JSONDecodeError:
+                        last_error = ValueError(f"Could not parse JSON from response: {response_text[:200]}")
+                        result = None
+                    else:
+                        last_error = None
+                else:
+                    last_error = ValueError(f"No JSON found in response: {response_text[:200]}")
+                    result = None
+
+            if last_error is None and result is not None:
+                break
+
+            if attempt == 0:
+                print(f"  Warning: malformed JSON from {self.model_name} ({self.position}). Retrying once...", file=sys.stderr)
+        else:
+            raise last_error if last_error else ValueError("Unknown parsing error occurred")
 
         # Check if model explicitly refused
         if result.get("refused", False):
@@ -363,19 +372,19 @@ You must choose ONE of these four labels:
 3. "misleading" - The claim is technically true but misleading or lacks important context
 4. "needs more evidence" - The debate did not provide sufficient evidence to make a determination
 
-You must also provide a SCORE from 0 to 10 (or -1):
+You must also provide a SCORE from 0 to 10 (or null):
 - 0 = Completely contradicted (strongest evidence against the claim)
 - 1-4 = Contradicted with varying strength (1=very strong contradiction, 4=weak contradiction)
 - 5 = Misleading/ambiguous (evidence on both sides, or technically true but missing context)
 - 6-9 = Supported with varying strength (6=weak support, 9=very strong support)
 - 10 = Completely supported (strongest evidence for the claim)
-- -1 = Needs more evidence (insufficient information to determine)
+- null = Needs more evidence (insufficient information to determine - use JSON null, not a number)
 
 The score provides nuance within each verdict category:
 - "contradicted" typically maps to scores 0-4
 - "misleading" typically maps to scores 3-7 (depending on which way it leans)
 - "supported" typically maps to scores 6-10
-- "needs more evidence" must use score -1
+- "needs more evidence" must use score null (not -1)
 
 EVALUATING ARGUMENT QUALITY (Paul Graham's Hierarchy of Disagreement):
 Give more weight to higher-quality arguments:
@@ -394,7 +403,7 @@ IMPORTANT: Do NOT explicitly reference DH numbers in your verdict explanation. T
 Respond in valid JSON format:
 {
     "verdict": "one of the four labels above",
-    "score": integer from 0-10 or -1,
+    "score": integer from 0-10 or null,
     "explanation": "A brief explanation of your reasoning (2-3 sentences)"
 }
 
@@ -434,22 +443,38 @@ Be objective and base your decision on the evidence presented in the debate."""
                 transcript += f"Argument: {turn['argument']}\n"
             transcript += "\n" + "-" * 80 + "\n\n"
 
-        # Call model API
-        response_text = self.model_client.generate(
-            self.get_system_prompt(),
-            f"{transcript}\n\nProvide your verdict in JSON format.",
-            max_tokens=1500
-        )
+        result = None
+        last_error: Optional[Exception] = None
+        for attempt in range(2):
+            response_text = self.model_client.generate(
+                self.get_system_prompt(),
+                f"{transcript}\n\nProvide your verdict in JSON format.",
+                max_tokens=1500
+            )
 
-        # Parse the response
-        try:
-            result = json.loads(response_text)
-        except json.JSONDecodeError:
-            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
-            if json_match:
-                result = json.loads(json_match.group())
-            else:
-                raise ValueError(f"Could not parse JSON from response: {response_text}")
+            try:
+                result = json.loads(response_text)
+            except json.JSONDecodeError:
+                json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+                if json_match:
+                    try:
+                        result = json.loads(json_match.group())
+                    except json.JSONDecodeError:
+                        last_error = ValueError(f"Could not parse JSON from response: {response_text[:200]}")
+                        result = None
+                    else:
+                        last_error = None
+                else:
+                    last_error = ValueError(f"Could not parse JSON from response: {response_text[:200]}")
+                    result = None
+
+            if last_error is None and result is not None:
+                break
+
+            if attempt == 0:
+                print(f"  Warning: malformed JSON from judge {self.model_name}. Retrying once...", file=sys.stderr)
+        else:
+            raise last_error if last_error else ValueError("Unknown parsing error occurred")
 
         # Validate the response
         if "verdict" not in result or "score" not in result or "explanation" not in result:
@@ -460,14 +485,14 @@ Be objective and base your decision on the evidence presented in the debate."""
             raise ValueError(f"Invalid verdict: {result['verdict']}")
 
         # Validate score
-        if not isinstance(result["score"], int):
-            raise ValueError(f"Score must be an integer, got: {type(result['score'])}")
-        if result["score"] not in range(-1, 11):
-            raise ValueError(f"Score must be -1 or 0-10, got: {result['score']}")
+        if result["score"] is not None and not isinstance(result["score"], int):
+            raise ValueError(f"Score must be an integer or null, got: {type(result['score'])}")
+        if result["score"] is not None and result["score"] not in range(0, 11):
+            raise ValueError(f"Score must be 0-10 or null, got: {result['score']}")
 
         # Validate score matches verdict
-        if result["verdict"] == "needs more evidence" and result["score"] != -1:
-            raise ValueError(f"Verdict 'needs more evidence' must have score -1, got: {result['score']}")
+        if result["verdict"] == "needs more evidence" and result["score"] is not None:
+            raise ValueError(f"Verdict 'needs more evidence' must have score null, got: {result['score']}")
 
         return result
 
@@ -507,15 +532,16 @@ def format_debate_output(claim: str, debate_history: list[dict], verdict: dict,
     output += f"JUDGE'S VERDICT [{judge_model}]\n"
     output += "=" * 80 + "\n\n"
     output += f"Verdict: {verdict['verdict'].upper()}\n"
-    output += f"Score: {verdict['score']} "
-    if verdict['score'] == -1:
-        output += "(needs more evidence)\n\n"
-    elif verdict['score'] == 0:
-        output += "(completely contradicted)\n\n"
-    elif verdict['score'] == 10:
-        output += "(completely supported)\n\n"
+    if verdict['score'] is None:
+        output += "Score: null (needs more evidence)\n\n"
     else:
-        output += f"(on scale from 0=contradicted to 10=supported)\n\n"
+        output += f"Score: {verdict['score']} "
+        if verdict['score'] == 0:
+            output += "(completely contradicted)\n\n"
+        elif verdict['score'] == 10:
+            output += "(completely supported)\n\n"
+        else:
+            output += f"(on scale from 0=contradicted to 10=supported)\n\n"
     output += f"Explanation: {verdict['explanation']}\n\n"
     output += "=" * 80 + "\n"
 

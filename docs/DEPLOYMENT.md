@@ -75,7 +75,8 @@ git push origin main
 2. Sign in with GitHub
 3. Click **"New Project"**
 4. Find and import your repository: `ai-debate`
-5. Vercel will auto-detect it's a Next.js project
+5. Leave the **Project Root** set to `/` (the same directory as `package.json`)
+6. Vercel will auto-detect it's a Next.js project (we ship a `vercel.json` with `framework` and `buildCommand` preconfigured)
 
 #### 4.2 Configure Environment Variables
 
@@ -101,6 +102,11 @@ XAI_API_KEY=xai-xxxxx
 ```
 ADMIN_IP=your.ip.address.here
 ADMIN_RATE_LIMIT=500
+```
+
+**Optional (global backstop; defaults to 200 if unset):**
+```
+GLOBAL_MODEL_LIMIT=200
 ```
 
 Notes:

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { runDebate, ModelKey, APIKeys, MODELS } from '../../lib/debate-engine';
+import { getClientIp, isLocalhostIp } from '../../lib/request-ip';
 
 // Rate limiter: 5 requests per 24 hours per IP per model (500 for admin)
 const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
@@ -11,12 +12,20 @@ const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_RE
 const ADMIN_IP = process.env.ADMIN_IP;
 const ADMIN_RATE_LIMIT = parseInt(process.env.ADMIN_RATE_LIMIT || '500', 10);
 const DEFAULT_RATE_LIMIT = 5;
+const GLOBAL_MODEL_LIMIT = parseInt(process.env.GLOBAL_MODEL_LIMIT || '200', 10);
 
 // Use admin rate limit as the max for tracking, then check against user's actual limit
 const ratelimiter = redis ? new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(ADMIN_RATE_LIMIT, '24 h'),
   analytics: true,
+}) : null;
+
+const globalLimiter = redis ? new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(GLOBAL_MODEL_LIMIT, '24 h'),
+  analytics: true,
+  prefix: 'global-model-limit'
 }) : null;
 
 interface DebateRequest {
@@ -53,57 +62,100 @@ export default async function handler(
 
     // If using server keys, apply per-model rate limiting
     if (usingServerKeys && redis) {
-      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
-      const identifier = Array.isArray(ip) ? ip[0] : ip;
-
-      // Determine rate limit based on IP
-      // For localhost (::1, 127.0.0.1, ::ffff:127.0.0.1), treat as admin if ADMIN_IP is set
-      const isLocalhost = identifier === '::1' || identifier === '127.0.0.1' || identifier === '::ffff:127.0.0.1';
-      const isAdmin = ADMIN_IP && (identifier === ADMIN_IP || isLocalhost);
+      const identifier = getClientIp(req);
+      const isLocalhost = isLocalhostIp(identifier);
+      const isAdmin = Boolean(ADMIN_IP && (identifier === ADMIN_IP || isLocalhost));
       const rateLimit = isAdmin ? ADMIN_RATE_LIMIT : DEFAULT_RATE_LIMIT;
 
-      // Debug logging
       console.log(`[Rate Limit] IP: ${identifier}, isLocalhost: ${isLocalhost}, isAdmin: ${isAdmin}, limit: ${rateLimit}`);
 
-      // Get unique models used in this debate
-      const modelsUsed = Array.from(new Set([proModel, conModel, judgeModel]));
-      const modelLimits: Record<string, any> = {};
+      const usageCounts: Partial<Record<ModelKey, number>> = {};
+      usageCounts[proModel] = (usageCounts[proModel] || 0) + turns;
+      usageCounts[conModel] = (usageCounts[conModel] || 0) + turns;
+      usageCounts[judgeModel] = (usageCounts[judgeModel] || 0) + 1;
 
-      // Check rate limit for each model
-      for (const modelKey of modelsUsed) {
+      const perModelStatus: Record<string, { remaining: number; limit: number; reset: number | null }> = {};
+      const globalStatus: Record<string, { remaining: number; limit: number; reset: number | null }> = {};
+
+      for (const [modelKeyStr, count] of Object.entries(usageCounts)) {
+        const modelKey = modelKeyStr as ModelKey;
+        if (!count || count <= 0) continue;
+
+        if (globalLimiter) {
+          const globalIdentifier = `global:${modelKey}`;
+          let globalResult;
+          for (let i = 0; i < count; i++) {
+            globalResult = await globalLimiter.limit(globalIdentifier);
+            if (!globalResult.success) break;
+          }
+
+          if (globalResult) {
+            const globalUsed = GLOBAL_MODEL_LIMIT - globalResult.remaining;
+            const globalRemaining = Math.max(0, GLOBAL_MODEL_LIMIT - globalUsed);
+
+            globalStatus[modelKey] = {
+              remaining: globalRemaining,
+              limit: GLOBAL_MODEL_LIMIT,
+              reset: globalResult.reset ?? null
+            };
+
+            const globalUsageKey = `ratelimit:usage-global:${modelKey}`;
+            await redis.set(globalUsageKey, JSON.stringify({
+              used: globalUsed,
+              reset: globalResult.reset ?? null
+            }), { ex: 60 * 60 * 24 });
+
+            if (!globalResult.success || globalRemaining <= 0) {
+              return res.status(429).json({
+                error: 'Rate limit exceeded',
+                message: `The free tier for ${MODELS[modelKey].name} is exhausted. Provide your own API key or wait for the 24-hour window to reset.`,
+                model: modelKey,
+                type: 'global',
+                resetAt: globalResult.reset ? new Date(globalResult.reset * 1000).toISOString() : null,
+                remaining: 0
+              });
+            }
+          }
+        }
+
         if (ratelimiter) {
           const modelIdentifier = `${identifier}:${modelKey}`;
-          const result = await ratelimiter.limit(modelIdentifier);
-          modelLimits[modelKey] = result;
+          let result;
+          for (let i = 0; i < count; i++) {
+            result = await ratelimiter.limit(modelIdentifier);
+            if (!result.success) break;
+          }
 
-          // Check if user has exceeded THEIR limit (not the admin limit)
-          const used = ADMIN_RATE_LIMIT - result.remaining;
-          if (used >= rateLimit) {
-            // Return which model(s) are rate limited
-            return res.status(429).json({
-              error: 'Rate limit exceeded',
-              message: `You have used your ${rateLimit} free uses for ${MODELS[modelKey as ModelKey].name}. Please provide your own API keys to continue.`,
-              model: modelKey,
-              resetAt: new Date(result.reset * 1000).toISOString(),
-              remaining: Math.max(0, rateLimit - used)
-            });
+          if (result) {
+            const used = ADMIN_RATE_LIMIT - result.remaining;
+            const remaining = Math.max(0, rateLimit - used);
+
+            perModelStatus[modelKey] = {
+              remaining,
+              limit: rateLimit,
+              reset: result.reset ?? null
+            };
+
+            const usageKey = `ratelimit:usage:${modelIdentifier}`;
+            await redis.set(usageKey, JSON.stringify({
+              used,
+              reset: result.reset ?? null
+            }), { ex: 60 * 60 * 24 });
+
+            if (used >= rateLimit || !result.success) {
+              return res.status(429).json({
+                error: 'Rate limit exceeded',
+                message: `You have used your ${rateLimit} free uses for ${MODELS[modelKey].name}. Please provide your own API keys to continue.`,
+                model: modelKey,
+                type: 'per-user',
+                resetAt: result.reset ? new Date(result.reset * 1000).toISOString() : null,
+                remaining: Math.max(0, rateLimit - used)
+              });
+            }
           }
         }
       }
 
-      // Return rate limit info for all models in headers
-      res.setHeader('X-RateLimit-Models', JSON.stringify(
-        Object.fromEntries(
-          Object.entries(modelLimits).map(([model, data]) => {
-            const used = ADMIN_RATE_LIMIT - data.remaining;
-            const actualRemaining = Math.max(0, rateLimit - used);
-            return [
-              model,
-              { remaining: actualRemaining, reset: data.reset, limit: rateLimit }
-            ];
-          })
-        )
-      ));
     }
 
     // Prepare API keys

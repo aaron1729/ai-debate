@@ -315,7 +315,14 @@ def verify_claims_file(input_file: str, output_file: str, model_key: str, topics
     modifications_log = []
     start_index = 0
 
-    modifications_file = f"{output_file}_modifications.json"
+    # Save modifications to google-fact-check/verification-mods/ if output is in data/
+    if output_file.startswith("data/") and not output_file.startswith("data/google-fact-check/"):
+        # Output file is in data/ root, save mods to verification-mods/
+        output_basename = os.path.basename(output_file)
+        modifications_file = f"data/google-fact-check/verification-mods/{output_basename}.modifications.json"
+    else:
+        # Keep modifications next to output file
+        modifications_file = f"{output_file}.modifications.json"
 
     if os.path.exists(output_file):
         print(f"\nFound existing output file, resuming from where we left off...")
@@ -416,8 +423,8 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
 Examples:
-  python verify_claims.py test_clean_climate.json -o climate_verified.json
-  python verify_claims.py clean_health.json --model gpt4 -o health_verified.json
+  python verify_claims.py data/google-fact-check/cleaned/test_clean_climate.json -o data/claims_verified_climate.json
+  python verify_claims.py data/google-fact-check/cleaned/clean_health.json --model gpt4 -o data/claims_verified_health.json
 
 Available models: {', '.join(MODELS.keys())}
 

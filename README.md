@@ -1,12 +1,39 @@
 # ai-debate
 
-## AMG TO-DO
+## TO-DO
 
 reorganize the "claims" json files according to which is final data to be used for experiments and which is not. update all scripts accordingly, of course.
 
-and the little work that codex did, incorporate that into the docs.
+fix or remove the text below the progress bar in the UI.
 
-=====
+use claims and results from debate podcasts as data.
+
+## possible experiments
+
+- different models from the same provider (e.g. gpt-4 vs. gpt-5)
+
+- different judges of the same debates [already done some of this]
+
+- have the two debaters switch sides and see how it goes [this is already happening in `run_experiments.py`]
+
+- same matchup with same debaters, but in reverse order: CON argues before PRO.
+
+- label claims by how controversial they are, and by their political polarity (if any).
+
+## possible ways of slicing the data
+
+- trajectory of judgments through debate turns, plotted for each judge separately.
+
+## things to note in writeup
+
+- data sources
+
+- functionality
+
+
+
+
+====================================
 
 
 
@@ -72,9 +99,11 @@ npm run dev
    - Add environment variables in Vercel dashboard:
      - `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, etc. (for free tier)
      - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (required)
+      - `GLOBAL_MODEL_LIMIT` (optional global backstop, defaults to 200 free debates per model/day)
 
 The web version includes:
 - 5 free debates per IP per 24 hours
+- Global backstop of 200 free debates per model per 24 hours (shared across all IPs)
 - Option for users to provide their own API keys for unlimited usage
 - Support for 4 models (Claude, GPT-4, Gemini, Grok)
 
@@ -82,16 +111,18 @@ The web version includes:
 
 The project includes fact-checked claims from Google's Fact Check Tools API for testing:
 
-**Raw claims** (from Google Fact Check API):
-- **claims_recent_30days.json** - 6 recent political claims
-- **claims_historical_health_50.json** - 50 health-related claims
-- **claims_historical_climate_50.json** - 50 climate-related claims
+All claims data is now organized in the `data/` directory:
 
-**Processed and verified claims** (ready for debate testing):
+**Ready-to-use claims (in `data/`):**
 - **claims_verified_climate_48.json** - 48 verified climate claims
 - **claims_verified_health_50.json** - 50 verified health claims
-- **claims_cleaned_climate_49.json** - 49 cleaned climate claims
-- **claims_cleaned_health_50.json** - 50 cleaned health claims
+- **claims_gpt5_01.json** - GPT-5 generated claims (set 1)
+- **claims_gpt5_02.json** - GPT-5 generated claims (set 2)
+
+**Google Fact Check API data (in `data/google-fact-check/`):**
+- `raw/` - Unprocessed API responses (e.g., claims_historical_health_50.json, claims_historical_climate_50.json, claims_recent_30days.json)
+- `cleaned/` - Cleaned and standardized claims (e.g., claims_cleaned_health_50.json)
+- `verification-mods/` - Verification modification logs
 
 These verified datasets have been cleaned and enhanced by LLMs to ensure claims are:
 - Specific and factually debatable
@@ -109,20 +140,30 @@ The debate system automatically saves all experiment results to a SQLite databas
 python debate.py "Your claim here" \
   --turns 2 \
   --topic climate \
-  --claim-id "claims_gpt5_01.json:0" \
+  --claim-id "data/claims_gpt5_01.json:0" \
   --gt-verdict supported \
   --gt-source "Science Magazine"
 ```
 
 Options for experiments:
 - `--topic TOPIC`: Specify claim topic (climate, health, etc.)
-- `--claim-id ID`: Claim ID in format "filename:index" (e.g., "claims_gpt5_01.json:0")
+- `--claim-id ID`: Claim ID in format "filename:index" (e.g., "data/claims_gpt5_01.json:0")
 - `--gt-verdict VERDICT`: Ground truth verdict (supported/contradicted/misleading/needs more evidence)
 - `--gt-source SOURCE`: Ground truth source (e.g., "gpt5", publisher name)
 - `--gt-url URL`: Ground truth URL
 - `--con-first`: Have con debater go first instead of pro (default: pro goes first)
 
 All experiments are saved to `experiments.db` in the repository root.
+
+### Randomized Experiment Sweeps
+
+Use `run_experiments_randomize_all.py` to launch repeated experiment suites on randomly selected claims and model line-ups:
+
+```bash
+python run_experiments_randomize_all.py --count 10 --seed 42
+```
+
+The script samples uniformly across the `data/claims_verified_*.json` and `data/claims_gpt5_*.json` files, retries a failed suite once, and then continues so that a transient model hiccup doesn't halt the batch. Individual debates also retry once when a model returns malformed JSON.
 
 #### Querying Experiments
 
@@ -168,11 +209,11 @@ Each experiment includes:
 - **ground_truth**: Expected verdict, source, and URL (if known)
 - **experiment_config**: Timestamp, models used, number of turns, who went first
 - **debate_transcript**: Complete record of all arguments with sources
-- **judge_decision**: Verdict, score (0-10 or -1), and reasoning
+- **judge_decision**: Verdict, score (0-10 or null), and reasoning
 - **errors_or_refusals**: Any errors or model refusals during the debate
 
 The judge provides both a categorical verdict and a numeric score:
-- **Score -1**: Needs more evidence
+- **Score null**: Needs more evidence (insufficient information to determine)
 - **Scores 0-4**: Contradicted (0=completely contradicted, 4=weakly contradicted)
 - **Score 5**: Misleading/ambiguous
 - **Scores 6-10**: Supported (6=weakly supported, 10=completely supported)

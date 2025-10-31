@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { MODELS, ModelKey } from '../../lib/debate-engine';
+import { getClientIp, isLocalhostIp } from '../../lib/request-ip';
 
 const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
   ? Redis.fromEnv()
@@ -23,12 +24,9 @@ export default async function handler(
     return res.status(200).json({ error: 'Redis not configured' });
   }
 
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
-  const identifier = Array.isArray(ip) ? ip[0] : ip;
-
-  // Determine rate limit based on IP
-  const isLocalhost = identifier === '::1' || identifier === '127.0.0.1' || identifier === '::ffff:127.0.0.1';
-  const isAdmin = ADMIN_IP && (identifier === ADMIN_IP || isLocalhost);
+  const identifier = getClientIp(req);
+  const isLocalhost = isLocalhostIp(identifier);
+  const isAdmin = Boolean(ADMIN_IP && (identifier === ADMIN_IP || isLocalhost));
   const rateLimit = isAdmin ? ADMIN_RATE_LIMIT : DEFAULT_RATE_LIMIT;
 
   // Create rate limiter with the correct limit

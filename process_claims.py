@@ -373,8 +373,8 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
 Examples:
-  python process_claims.py claims_historical_climate_50.json -o clean_climate.json
-  python process_claims.py claims_historical_health_50.json --model gpt4 -o clean_health.json
+  python process_claims.py data/google-fact-check/raw/claims_historical_climate_50.json -o data/google-fact-check/cleaned/clean_climate.json
+  python process_claims.py data/google-fact-check/raw/claims_historical_health_50.json --model gpt4 -o data/google-fact-check/cleaned/clean_health.json
 
 Available models: {', '.join(MODELS.keys())}
 

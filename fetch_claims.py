@@ -154,7 +154,7 @@ if __name__ == '__main__':
         # Print summary
         print_summary(claims)
 
-        # Save to file
-        save_claims(claims)
+        # Save to file in the Google Fact Check raw data directory
+        save_claims(claims, filename='data/google-fact-check/raw/claims_data.json')
     else:
         print("No claims fetched. Check API key and try again.")

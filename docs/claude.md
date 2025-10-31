@@ -26,6 +26,7 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 - ✅ Proper API error handling vs refusal detection
 - ✅ Debate shortening when refusals occur
 - ✅ Shared message templates between CLI and UI (shared/messages.json)
+- ✅ One-shot retries when debaters or judge return malformed JSON (Python CLI + TS engine)
 
 **Web Features:**
 - ✅ Next.js 14 with TypeScript
@@ -41,7 +42,8 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 - ✅ Admin IP privileges via environment variables
 - ✅ Per-model tracking (Claude, GPT-4, Gemini, Grok)
 - ✅ Localhost detection for development (treated as admin)
-- ❌ **BUG**: Rate limit counts reset to max on page refresh (see Known Issues)
+- ✅ Redis-backed usage snapshots so the web UI shows true remaining counts across refreshes and restarts
+- ✅ Global backstop of 200 free-tier requests per model per 24h (shared across all IPs)
 
 **Test Data Integration:**
 - ✅ Google Fact Check Tools API integration
@@ -76,6 +78,8 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 ├── fetch_claims.py                # Fetch claims from Google Fact Check API
 ├── process_claims.py              # Step 1: Clean and standardize raw claims
 ├── verify_claims.py               # Step 2: Verify claims with URL fetching
+├── run_experiments.py             # Deterministic 2×8 experiment suite runner
+├── run_experiments_randomize_all.py # Randomized experiment sweeps with retry guard
 ├── requirements.txt               # Python dependencies
 ├── package.json                   # Node.js dependencies
 ├── pages/
@@ -87,7 +91,8 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 │       ├── list-redis-keys.ts    # Debug endpoint for Redis keys
 │       └── get-remaining.ts      # Debug endpoint
 ├── lib/
-│   └── debate-engine.ts          # TypeScript debate logic (shared with API)
+│   ├── debate-engine.ts          # TypeScript debate logic (shared with API)
+│   └── request-ip.ts             # Shared helpers for normalizing client IPs
 ├── shared/
 │   └── messages.json             # Progress messages (shared between CLI & UI)
 ├── claims_recent_30days.json      # Raw data: 6 recent political claims
@@ -119,12 +124,18 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 - Reviews full debate transcript (including refusals)
 - Assigns one of 4 verdicts: supported/contradicted/misleading/needs more evidence
 - Provides brief explanation
+- Retries once when JSON parsing fails before surfacing an error
 
 **3. Debate Orchestrator** (run_debate function, debate.py:231-316)
 - Alternates between Pro and Con for T turns
 - Filters refusals from debate history shown to opponents
 - Shortens debate after first refusal (allows one counter-argument)
 - Passes complete transcript to judge
+
+#### Experiment Automation
+
+- `run_experiments.py` runs the fixed 2×8 design (turn counts × debater order) for a specified claim and persists results to SQLite.
+- `run_experiments_randomize_all.py` samples random claims from the verified and GPT-5 datasets and unique model combinations. Each suite retries once on failure and the script continues to the next selection so a malformed response or transient API error does not abort the batch.
 
 #### TypeScript Web App
 
@@ -401,21 +412,20 @@ ADMIN_RATE_LIMIT=500                  # Default: 500 uses/model/day
 
 ### 3. Unified Rate Limiting Strategy
 
-**Problem**: Creating separate rate limiter instances for different limits (5 vs 500) tracked usage separately in Redis.
+**Problem**: We need per-IP limits (5/day) plus an admin override (500/day) while presenting accurate remaining counts in the UI and protecting against distributed abuse.
 
-**Solution** (pages/api/debate.ts:15-20, 72-92):
-- Use ONE rate limiter configured with maximum limit (ADMIN_RATE_LIMIT = 500)
-- Track all usage in the same Redis database
-- Calculate used: `used = 500 - remaining`
-- Check against user's actual limit: `if (used >= rateLimit)` (5 or 500)
-- Return accurate remaining: `actualRemaining = rateLimit - used`
+**Solution** (pages/api/debate.ts, pages/api/check-rate-limit.ts, lib/request-ip.ts):
+- Normalize client IPs (handles `x-forwarded-for`, IPv6, ports) so Redis buckets are consistent locally and on Vercel
+- Use a single Upstash sliding-window limiter configured with the admin ceiling (500) and derive per-user usage (`used = 500 - remaining`)
+- Persist per-IP usage snapshots to Redis (`ratelimit:usage:<ip>:<model>`) so the web UI can read true remaining counts across refreshes and restarts
+- Add a global backstop limiter (default 200 free-tier calls per model per 24h, configurable via `GLOBAL_MODEL_LIMIT`) that shares usage across all IPs (`ratelimit:usage-global:<model>`)
+- Surface both per-user and global remaining counts via `/api/check-rate-limit`
+- Disable models client-side when either quota hits zero and guide users to add their own API keys
 
 **Benefits**:
-- All usage tracked in unified database
-- Admin and non-admin users share same tracking system
-- Changing limits doesn't create separate tracking buckets
-
-**Current Issue**: See Known Issues below.
+- Accurate, persistent usage reporting in the web UI
+- Shared global guardrail to deter distributed abuse
+- Same logic powers both CLI and UI via shared storage keys
 
 ### 4. Shared Message Templates
 
@@ -438,13 +448,14 @@ ADMIN_RATE_LIMIT=500                  # Default: 500 uses/model/day
 
 **Challenge**: During local development, IP is `::1` or `127.0.0.1`, not public IP.
 
-**Solution** (pages/api/debate.ts:58-62):
+**Solution** (lib/request-ip.ts, pages/api/debate.ts):
 ```typescript
-const isLocalhost = identifier === '::1' || identifier === '127.0.0.1' || identifier === '::ffff:127.0.0.1';
-const isAdmin = ADMIN_IP && (identifier === ADMIN_IP || isLocalhost);
+const identifier = getClientIp(req); // normalizes x-forwarded-for, strips ports
+const isLocalhost = isLocalhostIp(identifier);
+const isAdmin = Boolean(ADMIN_IP && (identifier === ADMIN_IP || isLocalhost));
 ```
 
-**Result**: Admin privileges work during `npm run dev` locally.
+**Result**: Admin privileges hinge on `ADMIN_IP`, while localhost still resolves to the admin allowance in development.
 
 ## Model Configuration
 
@@ -590,9 +601,8 @@ curl http://localhost:3000/api/list-redis-keys | python3 -m json.tool
 curl http://localhost:3000/api/check-usage | python3 -m json.tool
 ```
 
-**Monitor rate limit headers**:
-- Check browser Network tab for `X-RateLimit-Models` header
-- Contains remaining counts after each debate
+- **Rate limit helper**: `python check_rate_limits.py [ip]` shows cached usage, sliding-window entry counts, and global backstop usage for each model (defaults to `127.0.0.1`). Install `python-dotenv` if you want the script to auto-load `.env`.
+- **Reset helper**: `python check_rate_limits.py [ip] --reset [--include-global]` clears the per-IP cache, the Upstash sliding window entries, and (optionally) the global backstop so you can start a fresh test run.
 
 **Test different IPs**:
 - Localhost: Should get ADMIN_RATE_LIMIT (500)

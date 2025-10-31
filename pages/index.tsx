@@ -3,6 +3,15 @@ import Head from 'next/head';
 import { MODELS, ModelKey, DebateResult, DebateTurn } from '../lib/debate-engine';
 import messages from '../shared/messages.json';
 
+type ModelLimitInfo = {
+  remaining: number;
+  limit?: number;
+  reset?: number | null;
+  globalRemaining?: number;
+  globalLimit?: number;
+  globalReset?: number | null;
+};
+
 export default function Home() {
   const [claim, setClaim] = useState('');
   const [turns, setTurns] = useState(2);
@@ -22,11 +31,29 @@ export default function Home() {
     google: '',
     xai: ''
   });
-  const [modelLimits, setModelLimits] = useState<Record<string, { remaining: number; limit?: number }>>({});
+  const [modelLimits, setModelLimits] = useState<Record<string, ModelLimitInfo>>({});
   const [hasLoadedLimits, setHasLoadedLimits] = useState(false);
   const [rateLimit, setRateLimit] = useState(5);
+  const [globalLimit, setGlobalLimit] = useState(200);
 
   const modelKeys = Object.keys(MODELS) as ModelKey[];
+  const trimmedKeysState = {
+    anthropic: apiKeys.anthropic.trim(),
+    openai: apiKeys.openai.trim(),
+    google: apiKeys.google.trim(),
+    xai: apiKeys.xai.trim()
+  };
+  const hasUserKeys = Object.values(trimmedKeysState).some(value => value.length > 0);
+  const usingServerKeys = !(showApiKeys && hasUserKeys);
+
+  const isModelExhausted = (model: ModelKey) => {
+    const info = modelLimits[model];
+    const remaining = info?.remaining ?? rateLimit;
+    const globalRemaining = info?.globalRemaining ?? globalLimit;
+    return remaining <= 0 || globalRemaining <= 0;
+  };
+
+  const allServerModelsExhausted = usingServerKeys && modelKeys.every(model => isModelExhausted(model));
 
   // Fetch initial rate limit and usage on page load
   useEffect(() => {
@@ -36,6 +63,9 @@ export default function Home() {
         if (response.ok) {
           const data = await response.json();
           setRateLimit(data.limit);
+           if (data.globalLimit) {
+             setGlobalLimit(data.globalLimit);
+           }
 
           // Set model limits from the API response
           if (data.modelLimits) {
@@ -72,14 +102,23 @@ export default function Home() {
 
     try {
       // Determine which API keys to send
-      const userApiKeys = showApiKeys && (
-        apiKeys.anthropic || apiKeys.openai || apiKeys.google || apiKeys.xai
-      ) ? {
-        ...(apiKeys.anthropic && { anthropic: apiKeys.anthropic }),
-        ...(apiKeys.openai && { openai: apiKeys.openai }),
-        ...(apiKeys.google && { google: apiKeys.google }),
-        ...(apiKeys.xai && { xai: apiKeys.xai })
+      const trimmedKeys = trimmedKeysState;
+      const hasProvidedKeys = showApiKeys && Object.values(trimmedKeys).some(value => value.length > 0);
+      const userApiKeys = hasProvidedKeys ? {
+        ...(trimmedKeys.anthropic && { anthropic: trimmedKeys.anthropic }),
+        ...(trimmedKeys.openai && { openai: trimmedKeys.openai }),
+        ...(trimmedKeys.google && { google: trimmedKeys.google }),
+        ...(trimmedKeys.xai && { xai: trimmedKeys.xai })
       } : undefined;
+
+      if (!userApiKeys) {
+        const exhaustedSelection = [proModel, conModel, judgeModel].some(model => isModelExhausted(model));
+        if (exhaustedSelection) {
+          setLoading(false);
+          setError('The selected model(s) have no free-tier runs remaining. Provide your own API keys or wait for the 24-hour window to reset.');
+          return;
+        }
+      }
 
       const totalSteps = turns * 2 + 1; // Pro + Con per turn + Judge
       let currentStep = 0;
@@ -106,23 +145,6 @@ export default function Home() {
       clearInterval(progressInterval);
 
       // Extract rate limit headers
-      const rateLimitModels = response.headers.get('X-RateLimit-Models');
-      if (rateLimitModels) {
-        const limits = JSON.parse(rateLimitModels);
-        // Get the rate limit from first model (all models share the same limit per IP)
-        const firstLimit = Object.values(limits)[0] as any;
-        const totalLimit = firstLimit?.limit || 5;
-        setRateLimit(totalLimit);
-
-        // Ensure all models are shown with their limits
-        const allLimits: Record<string, { remaining: number; limit?: number }> = {};
-        modelKeys.forEach(key => {
-          allLimits[key] = limits[key] || { remaining: totalLimit, limit: totalLimit };
-        });
-        setModelLimits(allLimits);
-        setHasLoadedLimits(true);
-      }
-
       const data = await response.json();
 
       if (!response.ok) {
@@ -227,18 +249,21 @@ export default function Home() {
                   borderRadius: '4px'
                 }}
               >
-                {modelKeys.map(key => (
-                  <option
-                    key={key}
-                    value={key}
-                    disabled={modelLimits[key]?.remaining === 0}
-                    style={{
-                      color: modelLimits[key]?.remaining === 0 ? '#ccc' : 'inherit'
-                    }}
-                  >
-                    {MODELS[key].name}
-                  </option>
-                ))}
+                {modelKeys.map(key => {
+                  const disabledOption = usingServerKeys && isModelExhausted(key);
+                  return (
+                    <option
+                      key={key}
+                      value={key}
+                      disabled={disabledOption}
+                      style={{
+                        color: disabledOption ? '#ccc' : 'inherit'
+                      }}
+                    >
+                      {MODELS[key].name}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
@@ -258,18 +283,21 @@ export default function Home() {
                   borderRadius: '4px'
                 }}
               >
-                {modelKeys.map(key => (
-                  <option
-                    key={key}
-                    value={key}
-                    disabled={modelLimits[key]?.remaining === 0}
-                    style={{
-                      color: modelLimits[key]?.remaining === 0 ? '#ccc' : 'inherit'
-                    }}
-                  >
-                    {MODELS[key].name}
-                  </option>
-                ))}
+                {modelKeys.map(key => {
+                  const disabledOption = usingServerKeys && isModelExhausted(key);
+                  return (
+                    <option
+                      key={key}
+                      value={key}
+                      disabled={disabledOption}
+                      style={{
+                        color: disabledOption ? '#ccc' : 'inherit'
+                      }}
+                    >
+                      {MODELS[key].name}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
@@ -289,18 +317,21 @@ export default function Home() {
                   borderRadius: '4px'
                 }}
               >
-                {modelKeys.map(key => (
-                  <option
-                    key={key}
-                    value={key}
-                    disabled={modelLimits[key]?.remaining === 0}
-                    style={{
-                      color: modelLimits[key]?.remaining === 0 ? '#ccc' : 'inherit'
-                    }}
-                  >
-                    {MODELS[key].name}
-                  </option>
-                ))}
+                {modelKeys.map(key => {
+                  const disabledOption = usingServerKeys && isModelExhausted(key);
+                  return (
+                    <option
+                      key={key}
+                      value={key}
+                      disabled={disabledOption}
+                      style={{
+                        color: disabledOption ? '#ccc' : 'inherit'
+                      }}
+                    >
+                      {MODELS[key].name}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
@@ -340,14 +371,35 @@ export default function Home() {
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px' }}>
                 {modelKeys.map(key => {
-                  const remaining = modelLimits[key]?.remaining ?? rateLimit;
+                  const info = modelLimits[key];
+                  const remaining = Math.max(0, info?.remaining ?? rateLimit);
+                  const color = remaining <= 0 ? '#ef4444' : '#6b7280';
                   return (
-                    <div key={key} style={{ fontSize: '12px', color: remaining === 0 ? '#ef4444' : '#6b7280' }}>
+                    <div key={key} style={{ fontSize: '12px', color }}>
                       <strong>{MODELS[key].name}:</strong> {remaining}/{rateLimit}
+                      {info?.globalRemaining !== undefined && info.globalRemaining <= 0 && (
+                        <span style={{ display: 'block', color: '#b91c1c', marginTop: '4px' }}>
+                          Global limit reached — add your own API key or come back tomorrow.
+                        </span>
+                      )}
                     </div>
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {usingServerKeys && hasLoadedLimits && allServerModelsExhausted && (
+            <div style={{
+              padding: '12px',
+              background: '#fff7ed',
+              border: '1px solid #fb923c',
+              borderRadius: '4px',
+              marginBottom: '20px',
+              color: '#9a3412',
+              fontSize: '13px'
+            }}>
+              All free-tier slots are exhausted. Add your own API keys below or wait for the 24-hour window to reset.
             </div>
           )}
 
@@ -439,17 +491,17 @@ export default function Home() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (usingServerKeys && allServerModelsExhausted)}
             style={{
               width: '100%',
               padding: '12px',
               fontSize: '16px',
               fontWeight: 'bold',
               color: 'white',
-              background: loading ? '#ccc' : '#0070f3',
+              background: loading || (usingServerKeys && allServerModelsExhausted) ? '#ccc' : '#0070f3',
               border: 'none',
               borderRadius: '4px',
-              cursor: loading ? 'not-allowed' : 'pointer'
+              cursor: loading || (usingServerKeys && allServerModelsExhausted) ? 'not-allowed' : 'pointer'
             }}
           >
             {loading ? 'Running Debate...' : 'Start Debate'}
