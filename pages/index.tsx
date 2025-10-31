@@ -40,8 +40,8 @@ export default function Home() {
   const description = 'Adversarial truth-seeking through structured AI debates';
   const rawSiteUrl = process.env.SITE_URL;
   const siteUrl = rawSiteUrl ? rawSiteUrl.replace(/\/$/, '') : '';
-  const ogImagePath = '/og-ai-debate-B-circle-1200x630.png';
-  const twitterImagePath = '/og-ai-debate-B-twitter-1200x628.png';
+  const ogImagePath = '/og/og-ai-debate-B-circle-1200x630.png';
+  const twitterImagePath = '/og/og-ai-debate-B-twitter-1200x628.png';
   const ogImageUrl = siteUrl ? `${siteUrl}${ogImagePath}` : ogImagePath;
   const twitterImageUrl = siteUrl ? `${siteUrl}${twitterImagePath}` : twitterImagePath;
 
@@ -389,10 +389,10 @@ export default function Home() {
         <title>AI Debates</title>
         <meta name="description" content={description} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/ai-debate.ico" sizes="any" />
-        <link rel="icon" type="image/png" href="/ai-debate-32x32.png" sizes="32x32" />
-        <link rel="icon" type="image/png" href="/ai-debate-16x16.png" sizes="16x16" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+        <link rel="icon" href="/icons/ai-debate.ico" sizes="any" />
+        <link rel="icon" type="image/png" href="/icons/ai-debate-32x32.png" sizes="32x32" />
+        <link rel="icon" type="image/png" href="/icons/ai-debate-16x16.png" sizes="16x16" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" sizes="180x180" />
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="theme-color" content="#ffffff" />
         <meta property="og:type" content="website" />
@@ -408,22 +408,40 @@ export default function Home() {
         <meta name="twitter:image" content={twitterImageUrl} />
       </Head>
 
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '20px',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
-      }}>
-        <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>AI Debates</h1>
-        <p style={{ textAlign: 'center', color: '#666', marginBottom: '10px' }}>
-          Adversarial truth-seeking through structured debates
-        </p>
-        <p style={{ textAlign: 'center', fontSize: '14px', color: '#888', marginBottom: '5px' }}>
-          A modernization of <a href="https://arxiv.org/abs/1805.00899" target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3', textDecoration: 'none' }}>AI safety via debate</a> (Irving et al., 2018)
-        </p>
-        <p style={{ textAlign: 'center', fontSize: '13px', color: '#999', marginBottom: '40px' }}>
-          Judge evaluation based on <a href="http://www.paulgraham.com/disagree.html" target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3', textDecoration: 'none' }}>Paul Graham&apos;s disagreement hierarchy</a>
-        </p>
+      <div className="page">
+        <section className="hero-section">
+          <div className="hero-card hero-text">
+            <h1 className="hero-title">AI Debates</h1>
+            <p className="hero-subtitle">
+              Adversarial truth-seeking through structured debates
+            </p>
+            <p className="hero-description">
+              A modernization of{' '}
+              <a href="https://arxiv.org/abs/1805.00899" target="_blank" rel="noopener noreferrer">
+                AI safety via debate
+              </a>{' '}
+              (Irving et al., 2018)
+            </p>
+            <p className="hero-description fine-print">
+              Judge evaluation based on{' '}
+              <a href="http://www.paulgraham.com/disagree.html" target="_blank" rel="noopener noreferrer">
+                Paul Graham&apos;s disagreement hierarchy
+              </a>
+            </p>
+          </div>
+
+          <div className="hero-card hero-image">
+            <picture>
+              <source srcSet="/hero/ai-debate-display-2400x1260.webp" type="image/webp" />
+              <img
+                src="/hero/ai-debate-display-2400x1260.png"
+                alt="Illustration representing AI debate participants"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
+          </div>
+        </section>
 
         <form onSubmit={handleSubmit} style={{ marginBottom: '40px' }}>
           <div style={{ marginBottom: '20px' }}>
@@ -839,6 +857,139 @@ export default function Home() {
         )}
 
         <style jsx>{`
+          .page {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 20px 24px 60px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          }
+
+          .hero-section {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 28px;
+            margin-bottom: 48px;
+          }
+
+          .hero-card {
+            flex: 1 1 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+          }
+
+          .hero-text {
+            max-width: 540px;
+            margin: 0 auto;
+            gap: 12px;
+            order: 2;
+          }
+
+          .hero-title {
+            margin: 0 0 10px;
+            font-size: clamp(2.25rem, 3vw, 2.8rem);
+            line-height: 1.1;
+          }
+
+          .hero-subtitle {
+            margin: 0 0 12px;
+            color: #555;
+            font-size: clamp(1.05rem, 2.2vw, 1.2rem);
+          }
+
+          .hero-description {
+            margin: 0 0 6px;
+            font-size: 0.9rem;
+            color: #777;
+          }
+
+          .hero-description.fine-print {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 0;
+          }
+
+          .hero-description a {
+            color: #0070f3;
+            text-decoration: none;
+          }
+
+          .hero-description a:hover,
+          .hero-description a:focus {
+            text-decoration: underline;
+          }
+
+          .hero-image {
+            max-width: clamp(320px, 38vw, 470px);
+            width: 100%;
+            margin: 0 auto;
+            order: 1;
+          }
+
+          .hero-image picture {
+            display: block;
+            width: min(100%, clamp(320px, 36vw, 450px));
+            margin: 0 auto;
+          }
+
+          .hero-image img {
+            width: 100%;
+            height: auto;
+            max-height: clamp(230px, 26vw, 300px);
+            display: block;
+            border-radius: 16px;
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+            aspect-ratio: 2400 / 1260;
+          }
+
+          @media (min-width: 960px) {
+            .hero-text {
+              order: 1;
+              min-height: clamp(260px, 28vw, 320px);
+            }
+
+            .hero-image {
+              order: 2;
+            }
+
+            .hero-image img {
+              width: 100%;
+              max-width: 100%;
+              margin: 0 auto;
+            }
+
+            .hero-section {
+              flex-direction: row;
+              justify-content: center;
+              gap: 48px;
+              padding: 0 12px;
+            }
+
+            .hero-card {
+              align-items: center;
+            }
+
+            .hero-text,
+            .hero-image {
+              margin: 0;
+            }
+          }
+
+          @media (min-width: 1280px) {
+            .page {
+              max-width: 1400px;
+            }
+
+            .hero-section {
+              gap: 56px;
+              padding: 0 32px;
+            }
+          }
+
           @keyframes fadeIn {
             from {
               opacity: 0;

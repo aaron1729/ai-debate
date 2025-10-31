@@ -126,14 +126,14 @@ Notes:
 
 The repository now ships a complete icon and Open Graph pack under `public/`:
 
-- `ai-debate.ico`, `ai-debate-16x16.png`, `ai-debate-32x32.png` (favicon coverage)
-- `apple-touch-icon.png` (iOS home-screen icon)
-- `ai-debate-192x192.png`, `ai-debate-512x512.png`, `maskable-512x512.png` (PWA icons)
-- `og-ai-debate-B-circle-1200x630.png` (Open Graph preview)
-- `og-ai-debate-B-twitter-1200x628.png` (Twitter preview)
+- `/icons/ai-debate.ico`, `/icons/ai-debate-16x16.png`, `/icons/ai-debate-32x32.png` (favicon coverage)
+- `/icons/apple-touch-icon.png` (iOS home-screen icon)
+- `/icons/ai-debate-192x192.png`, `/icons/ai-debate-512x512.png`, `/icons/maskable-512x512.png` (PWA icons)
+- `/og/og-ai-debate-B-circle-1200x630.png` (Open Graph preview)
+- `/og/og-ai-debate-B-twitter-1200x628.png` (Twitter preview)
 - `site.webmanifest` (referencing the new icon filenames)
 
-As long as `SITE_URL` is set, the Next.js `<Head>` metadata automatically references these assets. If you want to swap in your own artwork, replace the files in `public/` while keeping the same filenames.
+As long as `SITE_URL` is set, the Next.js `<Head>` metadata automatically references these assets. If you want to swap in your own artwork, replace the files under `public/icons/` and `public/og/` while keeping the same filenames.
 
 ## How It Works
 
