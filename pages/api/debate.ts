@@ -36,6 +36,7 @@ interface DebateRequest {
   proModel: ModelKey;
   conModel: ModelKey;
   judgeModel: ModelKey;
+  firstSpeaker: 'pro' | 'con';
   userApiKeys?: APIKeys;
 }
 
@@ -50,7 +51,7 @@ export default async function handler(
   const wantsStream = req.headers['x-debate-stream'] === '1';
 
   try {
-    const { claim, turns, proModel, conModel, judgeModel, userApiKeys }: DebateRequest = req.body;
+    const { claim, turns, proModel, conModel, judgeModel, firstSpeaker, userApiKeys }: DebateRequest = req.body;
 
     // Validate input
     if (!claim || !proModel || !conModel || !judgeModel) {
@@ -59,6 +60,10 @@ export default async function handler(
 
     if (turns < 1 || turns > 6) {
       return res.status(400).json({ error: 'Turns must be between 1 and 6' });
+    }
+
+    if (firstSpeaker !== 'pro' && firstSpeaker !== 'con') {
+      return res.status(400).json({ error: 'Invalid first speaker' });
     }
 
     // Determine if using server keys or user keys
@@ -193,6 +198,7 @@ export default async function handler(
         conModel,
         judgeModel,
         apiKeys,
+        firstSpeaker,
         {
           onUpdate: (update) => writeLine(update)
         }
@@ -210,7 +216,8 @@ export default async function handler(
       proModel,
       conModel,
       judgeModel,
-      apiKeys
+      apiKeys,
+      firstSpeaker
     );
 
     return res.status(200).json(result);

@@ -297,6 +297,7 @@ export async function runDebate(
   conModel: ModelKey,
   judgeModel: ModelKey,
   apiKeys: APIKeys,
+  firstSpeaker: 'pro' | 'con',
   options?: {
     onUpdate?: (update: DebateProgressUpdate) => void;
   }
@@ -322,34 +323,28 @@ export async function runDebate(
     }
   });
 
+  const sideOrder: Array<'pro' | 'con'> = firstSpeaker === 'pro' ? ['pro', 'con'] : ['con', 'pro'];
+
   // Run debate
   for (let turn = 0; turn < turns; turn++) {
-    // Pro side
-    const proResponse = await makeArgument(proClient, claim, 'pro', MODELS[proModel].name, debateHistory);
-    debateHistory.push(proResponse);
-    completedSteps += 1;
-    onUpdate?.({
-      type: 'turn',
-      index: debateHistory.length - 1,
-      turn: proResponse,
-      completedSteps,
-      totalSteps
-    });
-    if (proResponse.refused) debateShortened = true;
-
-    // Con side
-    const conResponse = await makeArgument(conClient, claim, 'con', MODELS[conModel].name, debateHistory);
-    debateHistory.push(conResponse);
-    completedSteps += 1;
-    onUpdate?.({
-      type: 'turn',
-      index: debateHistory.length - 1,
-      turn: conResponse,
-      completedSteps,
-      totalSteps
-    });
-    if (conResponse.refused) debateShortened = true;
-
+    for (const side of sideOrder) {
+      const client = side === 'pro' ? proClient : conClient;
+      const modelName = side === 'pro' ? MODELS[proModel].name : MODELS[conModel].name;
+      const response = await makeArgument(client, claim, side, modelName, debateHistory);
+      debateHistory.push(response);
+      completedSteps += 1;
+      onUpdate?.({
+        type: 'turn',
+        index: debateHistory.length - 1,
+        turn: response,
+        completedSteps,
+        totalSteps
+      });
+      if (response.refused) {
+        debateShortened = true;
+        break;
+      }
+    }
     if (debateShortened) break;
   }
 

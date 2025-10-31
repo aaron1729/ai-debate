@@ -15,6 +15,7 @@ type ModelLimitInfo = {
 export default function Home() {
   const [claim, setClaim] = useState('');
   const [turns, setTurns] = useState(2);
+  const [firstSpeaker, setFirstSpeaker] = useState<'pro' | 'con'>('pro');
   const [proModel, setProModel] = useState<ModelKey>('claude');
   const [conModel, setConModel] = useState<ModelKey>('claude');
   const [judgeModel, setJudgeModel] = useState<ModelKey>('claude');
@@ -37,7 +38,7 @@ export default function Home() {
   const [rateLimit, setRateLimit] = useState(5);
   const [globalLimit, setGlobalLimit] = useState(200);
 
-  const description = 'Adversarial truth-seeking through structured AI debates';
+  const description = 'Adversarial Truth-Seeking Through Structured AI Debates';
   const rawSiteUrl = process.env.SITE_URL;
   const siteUrl = rawSiteUrl ? rawSiteUrl.replace(/\/$/, '') : '';
   const ogImagePath = '/og/og-ai-debate-B-circle-1200x630.png';
@@ -118,9 +119,12 @@ export default function Home() {
       ? startMessageTemplate.replace('turns per side', 'turn per side')
       : startMessageTemplate;
     const cleanedStart = singularStart.replace(/\.\.\.$/, '.');
+    const startingSideLabel = firstSpeaker === 'pro' ? 'Pro' : 'Con';
+    const startingModelName = firstSpeaker === 'pro' ? proModelName : conModelName;
+
     setProgressMessage({
       primary: cleanedStart,
-      secondary: `Pro side (${proModelName}) now making an argument in turn 1/${Math.max(turns, 1)}...`
+      secondary: `${startingSideLabel} side (${startingModelName}) now making an argument in turn 1/${Math.max(turns, 1)}...`
     });
 
     try {
@@ -174,6 +178,7 @@ export default function Home() {
           proModel,
           conModel,
           judgeModel,
+          firstSpeaker,
           userApiKeys
         })
       });
@@ -203,6 +208,11 @@ export default function Home() {
       const getEffectiveTotalTurns = () =>
         Math.max(1, Math.floor(Math.max(totalSteps - 1, 1) / 2));
 
+      const getSideLabelForIndex = (index: number) => {
+        const sequence = firstSpeaker === 'pro' ? ['Pro', 'Con'] : ['Con', 'Pro'];
+        return sequence[index % 2];
+      };
+
       const buildNextActionText = (remainingSteps: number, currentHistoryLength: number) => {
         if (remainingSteps <= 0) {
           return '';
@@ -213,7 +223,7 @@ export default function Home() {
         const nextIndex = currentHistoryLength;
         const nextTurnNum = Math.floor(nextIndex / 2) + 1;
         const effectiveTotalTurns = getEffectiveTotalTurns();
-        const nextSideLabel = nextIndex % 2 === 0 ? 'Pro' : 'Con';
+        const nextSideLabel = getSideLabelForIndex(nextIndex);
         const nextModelName = nextSideLabel === 'Pro' ? proModelName : conModelName;
         return `${nextSideLabel} side (${nextModelName}) now making an argument in turn ${nextTurnNum}/${effectiveTotalTurns}...`;
       };
@@ -413,19 +423,19 @@ export default function Home() {
           <div className="hero-card hero-text">
             <h1 className="hero-title">AI Debates</h1>
             <p className="hero-subtitle">
-              Adversarial truth-seeking through structured debates
+              Adversarial Truth-Seeking Through Structured Debates
             </p>
             <p className="hero-description">
-              A modernization of{' '}
+              A Modernization Of{' '}
               <a href="https://arxiv.org/abs/1805.00899" target="_blank" rel="noopener noreferrer">
-                AI safety via debate
+                AI Safety Via Debate
               </a>{' '}
               (Irving et al., 2018)
             </p>
             <p className="hero-description fine-print">
-              Judge evaluation based on{' '}
+              Judge Evaluation Based On{' '}
               <a href="http://www.paulgraham.com/disagree.html" target="_blank" rel="noopener noreferrer">
-                Paul Graham&apos;s disagreement hierarchy
+                Paul Graham&apos;s Disagreement Hierarchy
               </a>
             </p>
           </div>
@@ -446,7 +456,7 @@ export default function Home() {
         <form onSubmit={handleSubmit} style={{ marginBottom: '40px' }}>
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-              Claim to debate:
+              Claim to Debate:
             </label>
             <textarea
               value={claim}
@@ -459,8 +469,10 @@ export default function Home() {
                 minHeight: '80px',
                 padding: '10px',
                 fontSize: '14px',
-                border: '1px solid #ddd',
-                borderRadius: '4px'
+                border: '1px solid #e7d7c7',
+                borderRadius: '6px',
+                background: '#fefaf5',
+                boxSizing: 'border-box'
               }}
             />
           </div>
@@ -478,8 +490,10 @@ export default function Home() {
                   width: '100%',
                   padding: '8px',
                   fontSize: '14px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px'
+                  border: '1px solid #e7d7c7',
+                  borderRadius: '6px',
+                  background: '#fefaf5',
+                  boxSizing: 'border-box'
                 }}
               >
                 {modelKeys.map(key => {
@@ -512,8 +526,10 @@ export default function Home() {
                   width: '100%',
                   padding: '8px',
                   fontSize: '14px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px'
+                  border: '1px solid #e7d7c7',
+                  borderRadius: '6px',
+                  background: '#fefaf5',
+                  boxSizing: 'border-box'
                 }}
               >
                 {modelKeys.map(key => {
@@ -546,8 +562,10 @@ export default function Home() {
                   width: '100%',
                   padding: '8px',
                   fontSize: '14px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px'
+                  border: '1px solid #e7d7c7',
+                  borderRadius: '6px',
+                  background: '#fefaf5',
+                  boxSizing: 'border-box'
                 }}
               >
                 {modelKeys.map(key => {
@@ -580,8 +598,10 @@ export default function Home() {
                   width: '100%',
                   padding: '8px',
                   fontSize: '14px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px'
+                  border: '1px solid #e7d7c7',
+                  borderRadius: '6px',
+                  background: '#fefaf5',
+                  boxSizing: 'border-box'
                 }}
               >
                 {[1, 2, 3, 4, 5, 6].map(n => (
@@ -594,8 +614,8 @@ export default function Home() {
           {!showApiKeys && (
             <div style={{
               padding: '12px',
-              background: '#f9fafb',
-              border: '1px solid #e5e7eb',
+              background: '#fdf9f4',
+              border: '1px solid #eddccf',
               borderRadius: '4px',
               marginBottom: '20px'
             }}>
@@ -644,7 +664,7 @@ export default function Home() {
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#0070f3',
+                color: '#18636d',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 fontSize: '14px',
                 textDecoration: 'underline',
@@ -658,7 +678,7 @@ export default function Home() {
               <div style={{
                 marginTop: '15px',
                 padding: '15px',
-                background: '#f5f5f5',
+                background: '#fefbf6',
                 borderRadius: '4px'
               }}>
                 <p style={{ fontSize: '13px', color: '#666', marginBottom: '10px' }}>
@@ -674,8 +694,10 @@ export default function Home() {
                     style={{
                       padding: '8px',
                       fontSize: '14px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
+                      border: '1px solid #e7d7c7',
+                      borderRadius: '6px',
+                      background: '#fefaf5',
+                      boxSizing: 'border-box'
                     }}
                   />
                   <input
@@ -687,8 +709,10 @@ export default function Home() {
                     style={{
                       padding: '8px',
                       fontSize: '14px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
+                      border: '1px solid #e7d7c7',
+                      borderRadius: '6px',
+                      background: '#fefaf5',
+                      boxSizing: 'border-box'
                     }}
                   />
                   <input
@@ -700,8 +724,10 @@ export default function Home() {
                     style={{
                       padding: '8px',
                       fontSize: '14px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
+                      border: '1px solid #e7d7c7',
+                      borderRadius: '6px',
+                      background: '#fefaf5',
+                      boxSizing: 'border-box'
                     }}
                   />
                   <input
@@ -713,8 +739,10 @@ export default function Home() {
                     style={{
                       padding: '8px',
                       fontSize: '14px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
+                      border: '1px solid #e7d7c7',
+                      borderRadius: '6px',
+                      background: '#fefaf5',
+                      boxSizing: 'border-box'
                     }}
                   />
                 </div>
@@ -722,31 +750,56 @@ export default function Home() {
             )}
           </div>
 
-          <button
-            type="submit"
-            disabled={loading || (usingServerKeys && allServerModelsExhausted)}
-            style={{
-              width: '100%',
-              padding: '12px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              color: 'white',
-              background: loading || (usingServerKeys && allServerModelsExhausted) ? '#ccc' : '#0070f3',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: loading || (usingServerKeys && allServerModelsExhausted) ? 'not-allowed' : 'pointer'
-            }}
-          >
-            {loading ? 'Running Debate...' : 'Start Debate'}
-          </button>
+          <div className="form-actions">
+            <div className="starting-side-toggle">
+              <span className="toggle-label">Opening Side:</span>
+              <div
+                className="toggle-control"
+                role="group"
+                aria-label="Select opening side"
+              >
+                <span
+                  className="toggle-highlight"
+                  style={{ transform: firstSpeaker === 'pro' ? 'translateX(0)' : 'translateX(100%)' }}
+                  aria-hidden="true"
+                />
+                <button
+                  type="button"
+                  className={`toggle-button${firstSpeaker === 'pro' ? ' active' : ''}`}
+                  aria-pressed={firstSpeaker === 'pro'}
+                  onClick={() => setFirstSpeaker('pro')}
+                  disabled={loading}
+                >
+                  Pro starts
+                </button>
+                <button
+                  type="button"
+                  className={`toggle-button${firstSpeaker === 'con' ? ' active' : ''}`}
+                  aria-pressed={firstSpeaker === 'con'}
+                  onClick={() => setFirstSpeaker('con')}
+                  disabled={loading}
+                >
+                  Con starts
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="start-button"
+              disabled={loading || (usingServerKeys && allServerModelsExhausted)}
+            >
+              {loading ? 'Running Debate...' : 'Start Debate!'}
+            </button>
+          </div>
         </form>
 
         {loading && (
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '20px', textAlign: 'center' }}>
             <div style={{
               width: '100%',
               height: '30px',
-              background: '#e5e7eb',
+              background: '#f1e4d8',
               borderRadius: '4px',
               overflow: 'hidden',
               position: 'relative'
@@ -767,15 +820,13 @@ export default function Home() {
                 {Math.round(progress)}%
               </div>
             </div>
-            <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'center', color: '#666' }}>
-              <div style={{ textAlign: 'left', fontSize: '14px' }}>
-                {progressMessage.primary && (
-                  <p style={{ margin: 0 }}>{progressMessage.primary}</p>
-                )}
-                {progressMessage.secondary && (
-                  <p style={{ margin: '4px 0 0 0' }}>{progressMessage.secondary}</p>
-                )}
-              </div>
+            <div style={{ marginTop: '8px', color: '#666', fontSize: '14px' }}>
+              {progressMessage.primary && (
+                <p style={{ margin: 0 }}>{progressMessage.primary}</p>
+              )}
+              {progressMessage.secondary && (
+                <p style={{ margin: '4px 0 0 0' }}>{progressMessage.secondary}</p>
+              )}
             </div>
           </div>
         )}
@@ -845,7 +896,7 @@ export default function Home() {
                   </div>
                 ) : (
                   <div>
-                    <p><strong>Source:</strong> <a href={turn.url} target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3' }}>{turn.url}</a></p>
+                    <p><strong>Source:</strong> <a href={turn.url} target="_blank" rel="noopener noreferrer" style={{ color: '#18636d' }}>{turn.url}</a></p>
                     <p><strong>Quote:</strong> &quot;{turn.quote}&quot;</p>
                     <p><strong>Context:</strong> {turn.context}</p>
                     <p><strong>Argument:</strong> {turn.argument}</p>
@@ -867,7 +918,7 @@ export default function Home() {
           .hero-section {
             display: flex;
             flex-direction: column;
-            align-items: stretch;
+            align-items: center;
             gap: 28px;
             margin-bottom: 48px;
           }
@@ -879,7 +930,9 @@ export default function Home() {
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 20px;
+            padding: clamp(12px, 4vw, 20px);
+            width: 100%;
+            box-sizing: border-box;
           }
 
           .hero-text {
@@ -914,7 +967,7 @@ export default function Home() {
           }
 
           .hero-description a {
-            color: #0070f3;
+            color: #18636d;
             text-decoration: none;
           }
 
@@ -924,26 +977,151 @@ export default function Home() {
           }
 
           .hero-image {
-            max-width: clamp(320px, 38vw, 470px);
             width: 100%;
+            max-width: 420px;
             margin: 0 auto;
             order: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
           }
 
           .hero-image picture {
             display: block;
-            width: min(100%, clamp(320px, 36vw, 450px));
+            width: clamp(240px, 75vw, 420px);
             margin: 0 auto;
           }
 
           .hero-image img {
             width: 100%;
             height: auto;
-            max-height: clamp(230px, 26vw, 300px);
+            max-height: clamp(200px, 55vw, 300px);
             display: block;
             border-radius: 16px;
             box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
             aspect-ratio: 2400 / 1260;
+            margin: 0 auto;
+          }
+
+          .form-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 32px;
+            width: 100%;
+            max-width: 540px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 0 16px;
+          }
+
+          .starting-side-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            width: auto;
+            text-align: center;
+          }
+
+          .starting-side-toggle .toggle-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #1f2937;
+            white-space: nowrap;
+          }
+
+          .starting-side-toggle .toggle-control {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            border: 1px solid #eddccf;
+            border-radius: 9999px;
+            padding: 3px;
+            background: #fdf9f4;
+            min-width: 210px;
+            overflow: hidden;
+          }
+
+          .toggle-highlight {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: calc(50% - 3px);
+            height: calc(100% - 6px);
+            background: #c46b36;
+            border-radius: 9999px;
+            box-shadow: 0 10px 22px rgba(196, 107, 54, 0.35);
+            transition: transform 0.25s ease;
+            pointer-events: none;
+            z-index: 0;
+          }
+
+          .toggle-button {
+            position: relative;
+            z-index: 1;
+            border: none;
+            background: transparent;
+            padding: 5px 12px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: #4b5563;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+          }
+
+          .toggle-button.active {
+            color: #fff7f2;
+          }
+
+          .toggle-button:focus-visible {
+            outline: 2px solid rgba(196, 107, 54, 0.65);
+            outline-offset: 2px;
+            border-radius: 9999px;
+          }
+
+          .toggle-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+          }
+
+          .start-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 36px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff8f4;
+            background: ${loading || (usingServerKeys && allServerModelsExhausted) ? '#d1d5db' : '#c46b36'};
+            border: none;
+            border-radius: 9999px;
+            box-shadow: ${loading || (usingServerKeys && allServerModelsExhausted) ? 'none' : '0 14px 28px rgba(196, 107, 54, 0.28)'};
+            cursor: ${loading || (usingServerKeys && allServerModelsExhausted) ? 'not-allowed' : 'pointer'};
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            min-width: 180px;
+            text-align: center;
+            opacity: ${loading || (usingServerKeys && allServerModelsExhausted) ? 0.85 : 1};
+          }
+
+          .start-button:hover:not(:disabled),
+          .start-button:focus-visible:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 34px rgba(196, 107, 54, 0.34);
+            background: #ba5f2b;
+          }
+
+          .start-button:focus-visible {
+            outline: 2px solid rgba(196, 107, 54, 0.55);
+            outline-offset: 3px;
           }
 
           @media (min-width: 960px) {
@@ -977,6 +1155,21 @@ export default function Home() {
             .hero-image {
               margin: 0;
             }
+
+            .form-actions {
+              flex-direction: row;
+              align-items: center;
+              justify-content: center;
+              gap: clamp(72px, 14vw, 128px);
+              padding: 0 24px;
+              margin-left: auto;
+              margin-right: auto;
+            }
+
+            .starting-side-toggle {
+              justify-content: center;
+              flex-wrap: nowrap;
+            }
           }
 
           @media (min-width: 1280px) {
@@ -999,6 +1192,11 @@ export default function Home() {
               opacity: 1;
               transform: translateY(0);
             }
+          }
+        `}</style>
+        <style jsx global>{`
+          body {
+            background: #f8efe4;
           }
         `}</style>
       </div>
