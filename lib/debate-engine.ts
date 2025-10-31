@@ -64,6 +64,42 @@ export interface DebateResult {
   };
 }
 
+export type DebateProgressUpdate =
+  | {
+      type: 'init';
+      totalSteps: number;
+      turns: number;
+      models: {
+        pro: string;
+        con: string;
+        judge: string;
+      };
+    }
+  | {
+      type: 'turn';
+      index: number;
+      turn: DebateTurn;
+      completedSteps: number;
+      totalSteps: number;
+    }
+  | {
+      type: 'total_steps';
+      totalSteps: number;
+      completedSteps: number;
+    }
+  | {
+      type: 'judge_pending';
+      model: string;
+      completedSteps: number;
+      totalSteps: number;
+    }
+  | {
+      type: 'verdict';
+      verdict: DebateResult['verdict'];
+      completedSteps: number;
+      totalSteps: number;
+    };
+
 class ModelClient {
   private client: any;
   private modelConfig: typeof MODELS[ModelKey];
@@ -260,32 +296,91 @@ export async function runDebate(
   proModel: ModelKey,
   conModel: ModelKey,
   judgeModel: ModelKey,
-  apiKeys: APIKeys
+  apiKeys: APIKeys,
+  options?: {
+    onUpdate?: (update: DebateProgressUpdate) => void;
+  }
 ): Promise<DebateResult> {
   const proClient = new ModelClient(proModel, apiKeys);
   const conClient = new ModelClient(conModel, apiKeys);
   const judgeClient = new ModelClient(judgeModel, apiKeys);
+  const onUpdate = options?.onUpdate;
 
   const debateHistory: DebateTurn[] = [];
   let debateShortened = false;
+  let completedSteps = 0;
+  let totalSteps = turns * 2 + 1;
+
+  onUpdate?.({
+    type: 'init',
+    totalSteps,
+    turns,
+    models: {
+      pro: MODELS[proModel].name,
+      con: MODELS[conModel].name,
+      judge: MODELS[judgeModel].name
+    }
+  });
 
   // Run debate
   for (let turn = 0; turn < turns; turn++) {
     // Pro side
     const proResponse = await makeArgument(proClient, claim, 'pro', MODELS[proModel].name, debateHistory);
     debateHistory.push(proResponse);
+    completedSteps += 1;
+    onUpdate?.({
+      type: 'turn',
+      index: debateHistory.length - 1,
+      turn: proResponse,
+      completedSteps,
+      totalSteps
+    });
     if (proResponse.refused) debateShortened = true;
 
     // Con side
     const conResponse = await makeArgument(conClient, claim, 'con', MODELS[conModel].name, debateHistory);
     debateHistory.push(conResponse);
+    completedSteps += 1;
+    onUpdate?.({
+      type: 'turn',
+      index: debateHistory.length - 1,
+      turn: conResponse,
+      completedSteps,
+      totalSteps
+    });
     if (conResponse.refused) debateShortened = true;
 
     if (debateShortened) break;
   }
 
+  const updatedTotalSteps = completedSteps + 1; // include judge step
+  if (updatedTotalSteps !== totalSteps) {
+    totalSteps = updatedTotalSteps;
+    onUpdate?.({
+      type: 'total_steps',
+      totalSteps,
+      completedSteps
+    });
+  } else {
+    totalSteps = updatedTotalSteps;
+  }
+
+  onUpdate?.({
+    type: 'judge_pending',
+    model: MODELS[judgeModel].name,
+    completedSteps,
+    totalSteps
+  });
+
   // Judge
   const verdict = await judgeDebate(judgeClient, claim, debateHistory);
+  completedSteps += 1;
+  onUpdate?.({
+    type: 'verdict',
+    verdict,
+    completedSteps,
+    totalSteps
+  });
 
   return {
     claim,

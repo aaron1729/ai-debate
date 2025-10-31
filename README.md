@@ -2,9 +2,9 @@
 
 ## TO-DO
 
-reorganize the "claims" json files according to which is final data to be used for experiments and which is not. update all scripts accordingly, of course.
-
 fix or remove the text below the progress bar in the UI.
+
+run debates on the debate podcast motions! do them with or without a judge, but in any case do a bunch of after-the-fact judging per-round. probably just run the debates for 6 rounds, rather than 1,2,4,6.
 
 ## possible experiments
 
@@ -27,8 +27,6 @@ fix or remove the text below the progress bar in the UI.
 - data sources
 
 - functionality
-
-
 
 
 ====================================
@@ -153,10 +151,56 @@ A debate "won" by the For side doesn't necessarily mean the claim is true—it m
 - Test whether AI debates produce similar vote swings
 - Benchmark persuasion strategies against real-world data
 
-To process new debate podcast data:
+##### Processing and Cleaning Debate Motions
+
+**1. Process raw CSV data from debate podcasts:**
 ```bash
-python process_debate_podcasts.py data/debate-podcasts/raw/ -o data/debate_motions.json --model claude
+python process_debate_podcasts.py data/debate-podcasts/raw/ -o data/debate-podcasts/debate_motions_collated.json --model claude
 ```
+
+**2. Clean motions to be standalone and unambiguous:**
+```bash
+python clean_debate_motions.py data/debate-podcasts/debate_motions_collated.json --model claude
+```
+
+The cleaning script (`clean_debate_motions.py`) uses an LLM to rewrite debate motions with:
+- **Temporal context**: All motions include year/date references (e.g., "As of 2019", "In 2016", "In the context of 2013")
+- **Correct verb tenses**: Past tense for historical events, past conditional for then-future possibilities
+- **Clarified references**: Ambiguous terms like "we" are replaced with specific entities (e.g., "the United States")
+- **Complete sentences**: All motions end with proper punctuation
+- **Statement format**: Questions converted to statements (e.g., "Is war inevitable?" → "War is inevitable.")
+
+The cleaning process:
+- Takes `data/debate-podcasts/debate_motions_collated.json` (raw motions from CSV processing)
+- Outputs `data/debate_motions.json` (cleaned motions for debates)
+- Logs all changes to `data/debate-podcasts/debate_motions.modifications.json` for transparency
+- Includes retry logic for API errors (up to 2 attempts per motion)
+
+Output files:
+- `data/debate_motions.json` - Final cleaned motions ready for use
+- `data/debate-podcasts/debate_motions_collated.json` - Original collated motions (preserved for reference)
+- `data/debate-podcasts/debate_motions.modifications.json` - Detailed log of all changes made
+
+##### Temporal Constraints in Debates
+
+When debate motions include temporal context (e.g., "As of 2019", "In 2016"), the debate system automatically enforces temporal constraints:
+
+**For Debaters:**
+- Can ONLY reference facts, events, and evidence from the specified year or earlier
+- References to information after the specified year are flagged as invalid
+- Helps ensure historically accurate debates that reflect the knowledge available at that time
+
+**For Judges:**
+- Instructed to IGNORE any references to events after the specified year
+- Only consider evidence and arguments from the specified year or earlier
+- Ensures fair evaluation based on information available at the time of the original debate
+
+This feature is automatically applied to any claim/motion that begins with temporal framing patterns:
+- "As of [YEAR]" (e.g., "As of 2019, the capitalist system was broken...")
+- "In [YEAR]" (e.g., "In 2016, Donald Trump could make America great again...")
+- "In the context of [YEAR]" (e.g., "In the context of 2013, men were obsolete...")
+
+Non-temporal motions are unaffected by these constraints.
 
 ### Running Experiments
 

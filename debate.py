@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AI Debate System - MVP
+AI Debates - MVP
 A script that conducts debates between two AI agents on user-provided claims.
 """
 
@@ -178,13 +178,20 @@ class Debater:
             role_desc = "You must argue that this claim IS FALSE or MISLEADING"
             task_desc = "Present the strongest possible evidence and arguments CONTRADICTING or DEBUNKING the claim"
 
+        # Extract temporal context from claim if present
+        temporal_constraint = ""
+        temporal_match = re.match(r'^(?:As of|In the context of|In)\s+(\d{4})', claim)
+        if temporal_match:
+            year = temporal_match.group(1)
+            temporal_constraint = f"\n\nTEMPORAL CONSTRAINT:\nThis debate concerns events/facts as of {year}. You may ONLY reference facts, events, and evidence from {year} or earlier. Do not reference any information from after {year}. If you reference events that occurred after {year}, your argument will be considered invalid."
+
         return f"""CONTEXT: You are participating in an adversarial truth-seeking system designed to rigorously evaluate claims through structured debate. This is similar to academic debate, moot court, or legal advocacy where participants argue assigned positions to help surface the strongest evidence and reasoning on all sides of an issue.
 
 The claim being debated:
 "{claim}"
 
 YOUR ROLE: {role_desc}.
-YOUR TASK: {task_desc}.
+YOUR TASK: {task_desc}.{temporal_constraint}
 
 IMPORTANT PRINCIPLES:
 - This is adversarial collaboration for truth-seeking, not personal advocacy
@@ -360,9 +367,17 @@ class Judge:
         self.model_client = ModelClient(model_key)
         self.model_name = MODELS[model_key]["name"]
 
-    def get_system_prompt(self) -> str:
+    def get_system_prompt(self, claim: str = "") -> str:
         """Generate the system prompt for the judge."""
-        return """You are an impartial judge evaluating a debate about a factual claim.
+        # Extract temporal context from claim if present
+        temporal_instruction = ""
+        if claim:
+            temporal_match = re.match(r'^(?:As of|In the context of|In)\s+(\d{4})', claim)
+            if temporal_match:
+                year = temporal_match.group(1)
+                temporal_instruction = f"\n\nTEMPORAL CONSTRAINT:\nThis debate concerns the state of facts as of {year}. When evaluating arguments, you should IGNORE any references to events, facts, or evidence from after {year}. Only consider evidence and arguments that reference information from {year} or earlier."
+
+        return f"""You are an impartial judge evaluating a debate about a factual claim.{temporal_instruction}
 
 Your task: Review the complete debate transcript and determine the verdict.
 
@@ -401,11 +416,11 @@ Arguments at DH5-DH6 should carry the most weight in your evaluation.
 IMPORTANT: Do NOT explicitly reference DH numbers in your verdict explanation. These levels are for your internal evaluation only. Your explanation should be in natural language without mentioning the hierarchy.
 
 Respond in valid JSON format:
-{
+{{
     "verdict": "one of the four labels above",
     "score": integer from 0-10 or null,
     "explanation": "A brief explanation of your reasoning (2-3 sentences)"
-}
+}}
 
 Consider:
 - Quality and credibility of sources cited
@@ -447,7 +462,7 @@ Be objective and base your decision on the evidence presented in the debate."""
         last_error: Optional[Exception] = None
         for attempt in range(2):
             response_text = self.model_client.generate(
-                self.get_system_prompt(),
+                self.get_system_prompt(claim),
                 f"{transcript}\n\nProvide your verdict in JSON format.",
                 max_tokens=1500
             )
@@ -765,7 +780,7 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
 def main():
     """Main entry point for the debate script."""
     parser = argparse.ArgumentParser(
-        description="AI Debate System - Conduct structured debates on factual claims",
+        description="AI Debates - Conduct structured debates on factual claims.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
 Available models: {', '.join(MODELS.keys())}

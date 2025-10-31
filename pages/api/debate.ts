@@ -47,6 +47,8 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const wantsStream = req.headers['x-debate-stream'] === '1';
+
   try {
     const { claim, turns, proModel, conModel, judgeModel, userApiKeys }: DebateRequest = req.body;
 
@@ -170,6 +172,37 @@ export default async function handler(
         }
       : userApiKeys;
 
+    if (wantsStream) {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/x-ndjson');
+      res.setHeader('Cache-Control', 'no-cache, no-transform');
+      res.setHeader('Connection', 'keep-alive');
+
+      const writeLine = (payload: unknown) => {
+        res.write(`${JSON.stringify(payload)}\n`);
+        const anyRes = res as any;
+        if (typeof anyRes.flush === 'function') {
+          anyRes.flush();
+        }
+      };
+
+      const result = await runDebate(
+        claim,
+        turns,
+        proModel,
+        conModel,
+        judgeModel,
+        apiKeys,
+        {
+          onUpdate: (update) => writeLine(update)
+        }
+      );
+
+      writeLine({ type: 'complete', result });
+      res.end();
+      return;
+    }
+
     // Run debate
     const result = await runDebate(
       claim,
@@ -183,6 +216,36 @@ export default async function handler(
     return res.status(200).json(result);
   } catch (error: any) {
     console.error('Debate error:', error);
+
+    if (wantsStream) {
+      let status = 500;
+      let errorLabel = 'Internal server error';
+
+      if (error.message?.includes('API_KEY')) {
+        status = 400;
+        errorLabel = 'Missing API key';
+      } else if (error.message?.includes('API error')) {
+        status = 502;
+        errorLabel = 'API error';
+      }
+
+      if (!res.headersSent) {
+        res.statusCode = status;
+        res.setHeader('Content-Type', 'application/x-ndjson');
+        res.setHeader('Cache-Control', 'no-cache, no-transform');
+        res.setHeader('Connection', 'keep-alive');
+      } else {
+        res.statusCode = status;
+      }
+
+      res.write(`${JSON.stringify({
+        type: 'error',
+        error: errorLabel,
+        message: error.message || 'An unexpected error occurred'
+      })}\n`);
+      res.end();
+      return;
+    }
 
     // Handle specific error types
     if (error.message.includes('API_KEY')) {

@@ -18,7 +18,7 @@ load_dotenv()
 
 # Import ModelClient and topics utilities from existing scripts
 from debate import ModelClient, MODELS
-from process_claims import load_topics, save_topics
+from process_factcheck_claims import load_topics, save_topics
 
 
 def parse_percentage(pct_str: str) -> Optional[float]:

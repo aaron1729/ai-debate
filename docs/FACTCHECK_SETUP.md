@@ -232,11 +232,11 @@ After fetching raw claims, they need to be cleaned and verified before use in de
 
 ### Step 1: Process Claims
 
-Clean and standardize raw claims using `process_claims.py`:
+Clean and standardize raw claims using `process_factcheck_claims.py`:
 
 ```bash
 source venv/bin/activate
-python process_claims.py claims_historical_health_50.json -o test_clean_health.json --model gpt4
+python process_factcheck_claims.py claims_historical_health_50.json -o test_clean_health.json --model gpt4
 ```
 
 **What it does:**

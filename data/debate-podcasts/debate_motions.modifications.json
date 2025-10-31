@@ -1,0 +1,290 @@
+[
+  {
+    "index": 0,
+    "original_motion": "Be it resolved, the capitalist system is broken. It's time to try something different.",
+    "cleaned_motion": "As of 2019, the capitalist system was broken and it was time to try something different.",
+    "reason": "Added temporal context 'As of 2019', removed formal debate language 'Be it resolved', used past tense 'was' for both clauses to match 2019 debate date, added period",
+    "date": "2019-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 1,
+    "original_motion": "Be it resolved, China is a threat to the liberal international order.",
+    "cleaned_motion": "As of 2019, China was a threat to the liberal international order.",
+    "reason": "Added temporal context 'As of 2019', removed formal debate language 'Be it resolved', changed 'is' to 'was' (past tense) to reflect that this was a 2019 debate, and added period",
+    "date": "2019-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 2,
+    "original_motion": "Be it resolved, what you call political correctness, I call progress.",
+    "cleaned_motion": "As of 2018, what critics called political correctness represented genuine progress.",
+    "reason": "Added temporal context ('As of 2018'), removed formal debate language ('Be it resolved'), replaced first-person 'you call' and 'I call' with third-person perspective ('critics called', 'represented'), converted to clear declarative statement, and added period",
+    "date": "2018-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 3,
+    "original_motion": "Be it resolved, American democracy is in its worst crisis in a generation and Donald J. Trump is to blame.",
+    "cleaned_motion": "As of 2017, American democracy was in its worst crisis in a generation and Donald J. Trump was to blame.",
+    "reason": "Added temporal context ('As of 2017'), removed formal debate phrasing ('Be it resolved'), changed present tense to past tense ('is' to 'was') to match the 2017 debate date, and added period.",
+    "date": "2017-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 4,
+    "original_motion": "Be it resolved, the liberal international order is over.",
+    "cleaned_motion": "As of 2017, the liberal international order was over.",
+    "reason": "Added temporal context 'As of 2017', removed formal debate preamble 'Be it resolved', changed 'is' to 'was' for past tense, and added period",
+    "date": "2017-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 5,
+    "original_motion": "Be it resolved, Donald Trump can make America great again.",
+    "cleaned_motion": "In 2016, Donald Trump could make America great again.",
+    "reason": "Added temporal context 'In 2016', removed ceremonial phrasing 'Be it resolved', changed 'can' to 'could' for past conditional tense (since this debate occurred in 2016 about a then-future possibility), and added period for proper sentence completion",
+    "date": "2016-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 6,
+    "original_motion": "Be it resolved, the West has lost the Middle East.",
+    "cleaned_motion": "As of 2014, the West had lost the Middle East.",
+    "reason": "Added temporal context 'As of 2014', removed formal debate phrasing 'Be it resolved', changed 'has lost' to 'had lost' (past perfect tense appropriate for 2014), and added period",
+    "date": "2014-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 7,
+    "original_motion": "Be it resolved, state surveillance is a legitimate defence of our freedoms.",
+    "cleaned_motion": "As of 2014, state surveillance was a legitimate defense of our freedoms.",
+    "reason": "Added temporal context 'As of 2014', removed formal debate phrasing 'Be it resolved', changed 'is' to 'was' for past tense, changed 'defence' to 'defense' (standard spelling), added period",
+    "date": "2014-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 8,
+    "original_motion": "Be it resolved, men are obsolete.",
+    "cleaned_motion": "In the context of 2013, men were obsolete.",
+    "reason": "Removed formal debate phrasing 'Be it resolved', added temporal context 'In the context of 2013', changed present tense 'are' to past tense 'were' to match the 2013 debate date, and added period for proper sentence completion.",
+    "date": "2013-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 9,
+    "original_motion": "Be it resolved, tax the rich (more).",
+    "cleaned_motion": "As of 2013, governments should tax the rich more.",
+    "reason": "Added temporal context ('As of 2013'), removed formal debate phrasing ('Be it resolved'), added subject ('governments'), removed parenthetical '(more)' and integrated it naturally, converted to clear declarative statement, added period",
+    "date": "2013-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 10,
+    "original_motion": "Be it resolved, the world would be better off without Israel.",
+    "cleaned_motion": "As of 2012, the world would be better off without Israel.",
+    "reason": "Added temporal context 'As of 2012', removed formal debate prefix 'Be it resolved', kept conditional 'would be' appropriate for hypothetical, added period",
+    "date": "2012-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 11,
+    "original_motion": "Be it resolved, religion is a force for good in the world.",
+    "cleaned_motion": "As of 2010, religion was a force for good in the world.",
+    "reason": "Added temporal context ('As of 2010'), removed formal debate language ('Be it resolved'), changed present tense 'is' to past tense 'was' to reflect 2010 debate timing, and added period",
+    "date": "2010-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 12,
+    "original_motion": "Be it resolved, I would rather get sick in the United States than Canada.",
+    "cleaned_motion": "As of 2010, it was preferable to get sick in the United States than in Canada.",
+    "reason": "Added temporal context ('As of 2010'), removed ceremonial opening ('Be it resolved'), converted first-person subjective ('I would rather') to objective statement ('it was preferable'), changed to past tense for historical debate, and added period",
+    "date": "2010-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 13,
+    "original_motion": "Be it resolved, Anti-Zionism is Anti-Semitism.",
+    "cleaned_motion": "As of 2024, anti-Zionism is anti-Semitism.",
+    "reason": "Added temporal context ('As of 2024'), removed formal debate phrasing ('Be it resolved'), converted to lowercase for readability, and added period for completeness",
+    "date": "2024-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 14,
+    "original_motion": "Be it resolved, the case for Trump\u2019s America has never been stronger.",
+    "cleaned_motion": "As of January 2025, the case for Trump's America had never been stronger.",
+    "reason": "Added temporal context ('As of January 2025'), removed formal debate phrasing ('Be it resolved'), changed verb tense to past perfect ('had never been') to reflect the debate timing, and added period for complete sentence.",
+    "date": "2025-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 15,
+    "original_motion": "Be it resolved, don't trust mainstream media.",
+    "cleaned_motion": "As of 2022, people should not trust mainstream media.",
+    "reason": "Added temporal context ('As of 2022'), removed formal debate phrasing ('Be it resolved'), converted imperative to clear statement with subject ('people should'), added period",
+    "date": "2022-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 17,
+    "original_motion": "Be it resolved, liberalism gets the big questions right.",
+    "cleaned_motion": "As of 2023, liberalism gets the big questions right.",
+    "reason": "Added temporal context 'As of 2023', removed formal debate phrasing 'Be it resolved', added period",
+    "date": "2023-01-01T00:00:00Z",
+    "source": "Munk Debates"
+  },
+  {
+    "index": 18,
+    "original_motion": "Men Are Finished.",
+    "cleaned_motion": "As of 2011, men were finished.",
+    "reason": "Added temporal context with 'As of 2011', changed 'Are' to 'were' for past tense, made lowercase for standard sentence format, and added period",
+    "date": "2011-09-20T00:00:00Z",
+    "source": "Open To Debate"
+  },
+  {
+    "index": 19,
+    "original_motion": "Do we need a Grand Strategy on China?",
+    "cleaned_motion": "As of 2021, the United States needed a Grand Strategy on China.",
+    "reason": "Added temporal context 'As of 2021', converted question to statement, clarified 'we' as 'the United States', changed 'need' to 'needed' (past tense), added period",
+    "date": "2021-11-02T00:00:00Z",
+    "source": "Open To Debate"
+  },
+  {
+    "index": 20,
+    "original_motion": "Will the Future Be Abundant?",
+    "cleaned_motion": "As of 2023, the future will be abundant.",
+    "reason": "Added temporal context ('As of 2023'), converted question to statement, kept future tense since this is a prediction about the future made in 2023, added period",
+    "date": "2023-12-22T00:00:00Z",
+    "source": "Open To Debate"
+  },
+  {
+    "index": 21,
+    "original_motion": "AI Will Do More Harm Than Good.",
+    "cleaned_motion": "As of 2022, AI will do more harm than good.",
+    "reason": "Added temporal context 'As of 2022', kept future tense as appropriate for predictions about AI's impact, added period",
+    "date": "2022-09-02T00:00:00Z",
+    "source": "Open To Debate"
+  },
+  {
+    "index": 22,
+    "original_motion": "Should America End Birthright Citizenship?",
+    "cleaned_motion": "As of 2025, the United States should end birthright citizenship.",
+    "reason": "Added temporal context 'As of 2025', replaced 'America' with 'the United States' for clarity, converted question to statement, used present tense for recent debate, added period",
+    "date": "2025-10-09T00:00:00Z",
+    "source": "Open To Debate"
+  },
+  {
+    "index": 23,
+    "original_motion": "Is War Inevitable?",
+    "cleaned_motion": "As of 2025, war is inevitable.",
+    "reason": "Added temporal context ('As of 2025'), converted question to statement, changed to present tense for recent debate, added period",
+    "date": "2025-10-10T00:00:00Z",
+    "source": "Open To Debate"
+  },
+  {
+    "index": 24,
+    "original_motion": "Globalization Has Undermined America's Working Class.",
+    "cleaned_motion": "Globalization has undermined America's working class.",
+    "reason": "Added period to complete the sentence. Note: Without a specific debate date, cannot add precise temporal context, but the present perfect tense 'has undermined' already implies a historical process up to an unspecified present moment.",
+    "date": null,
+    "source": "Open To Debate"
+  },
+  {
+    "index": 25,
+    "original_motion": "The failure of Oregon's experiment in decriminalizing all drugs is compelling evidence that other attempts at complete decriminalization will fail just as badly.",
+    "cleaned_motion": "As of 2025, the failure of Oregon's experiment in decriminalizing all drugs is compelling evidence that other attempts at complete decriminalization will fail just as badly.",
+    "reason": "Added temporal context 'As of 2025' to frame when this claim is being debated, added period at end",
+    "date": "2025-09-01T00:00:00Z",
+    "source": "Soho Forum"
+  },
+  {
+    "index": 26,
+    "original_motion": "Paying for sex should be a crime.",
+    "cleaned_motion": "As of 2025, paying for sex should be a crime.",
+    "reason": "Added temporal context 'As of 2025', kept present tense for recent debate, added period",
+    "date": "2025-08-01T00:00:00Z",
+    "source": "Soho Forum"
+  },
+  {
+    "index": 27,
+    "original_motion": "President Trump's deportation policies generally violate key civil liberties as set forth in the U.S. Constitution.",
+    "cleaned_motion": "As of July 2025, President Trump's deportation policies generally violated key civil liberties as set forth in the U.S. Constitution.",
+    "reason": "Added temporal context 'As of July 2025', changed 'violate' to 'violated' (past tense for consistency with debate date), ensured complete sentence with period",
+    "date": "2025-07-01T00:00:00Z",
+    "source": "Soho Forum"
+  },
+  {
+    "index": 28,
+    "original_motion": "The government should offer to all Americans a health insurance plan that would compete with private insurance plans.",
+    "cleaned_motion": "As of 2025, the United States government should offer to all Americans a health insurance plan that would compete with private insurance plans.",
+    "reason": "Added temporal context 'As of 2025', clarified 'the government' to 'the United States government', added period",
+    "date": "2025-06-01T00:00:00Z",
+    "source": "Soho Forum"
+  },
+  {
+    "index": 29,
+    "original_motion": "The Cold War was a necessary response by the United States to a Soviet and Chinese threat to the global balance of power.",
+    "cleaned_motion": "As of 2025, the Cold War was a necessary response by the United States to a Soviet and Chinese threat to the global balance of power.",
+    "reason": "Added temporal context 'As of 2025' to indicate when this historical assessment was being debated, added period at end",
+    "date": "2025-05-01T00:00:00Z",
+    "source": "Soho Forum"
+  },
+  {
+    "index": 30,
+    "original_motion": "Government restrictions on the immigration of peaceful and healthy people make sense from a libertarian standpoint, especially in present-day America.",
+    "cleaned_motion": "As of 2025, government restrictions on the immigration of peaceful and healthy people make sense from a libertarian standpoint, especially in present-day America.",
+    "reason": "Added temporal context 'As of 2025' and ensured period at end (already present)",
+    "date": "2025-04-01T00:00:00Z",
+    "source": "Soho Forum"
+  },
+  {
+    "index": 31,
+    "original_motion": "Libertarians should focus on building liberty-for-real societies like the Free State Project, rather than reforming an ever-expanding, uncontrollable federal government.",
+    "cleaned_motion": "As of 2025, libertarians should focus on building liberty-for-real societies like the Free State Project, rather than reforming the federal government.",
+    "reason": "Added temporal context 'As of 2025', removed redundant qualifier 'an ever-expanding, uncontrollable' (these are argumentative claims, not definitional), added period",
+    "date": "2025-03-01T00:00:00Z",
+    "source": "Soho Forum"
+  },
+  {
+    "index": 32,
+    "original_motion": "The oppression of Palestinians in non-democratic Israel has been systematic and profound.",
+    "cleaned_motion": "As of 2025, the oppression of Palestinians in non-democratic Israel has been systematic and profound.",
+    "reason": "Added temporal context 'As of 2025' to indicate when this claim was being debated, and added period at the end for proper sentence completion.",
+    "date": "2025-02-01T00:00:00Z",
+    "source": "Soho Forum"
+  },
+  {
+    "index": 33,
+    "original_motion": "The United States started the new Cold War with Russia and provoked Russia's invasion of Ukraine.",
+    "cleaned_motion": "As of 2025, the United States started the new Cold War with Russia and provoked Russia's invasion of Ukraine.",
+    "reason": "Added temporal context 'As of 2025', added period at end for complete sentence",
+    "date": "2025-01-01T00:00:00Z",
+    "source": "Soho Forum"
+  },
+  {
+    "index": 34,
+    "original_motion": "President Nayib Bukele's crime-fighting policies in El Salvador provide a model for reducing violence in other Latin American countries.",
+    "cleaned_motion": "As of 2025, President Nayib Bukele's crime-fighting policies in El Salvador provide a model for reducing violence in other Latin American countries.",
+    "reason": "Added temporal context 'As of 2025' to establish when this claim was being debated, added period at the end",
+    "date": "2025-01-01T00:00:00Z",
+    "source": "Soho Forum"
+  },
+  {
+    "index": 35,
+    "original_motion": "Artificial intelligence poses a threat to the survival of humanity that must be actively addressed by government.",
+    "cleaned_motion": "As of 2023, artificial intelligence posed a threat to the survival of humanity that must be actively addressed by government.",
+    "reason": "Added temporal context 'As of 2023', changed 'poses' to 'posed' for past tense consistency with debate date, kept modal 'must' as it represents the normative claim being debated, added period",
+    "date": "2023-11-01T00:00:00Z",
+    "source": "Soho Forum"
+  },
+  {
+    "index": 36,
+    "original_motion": "Anarcho-capitalism would definitely be a complete disaster for humanity.",
+    "cleaned_motion": "As of 2023, anarcho-capitalism would be a complete disaster for humanity.",
+    "reason": "Added temporal context 'As of 2023', removed intensifier 'definitely' (makes it less debatable), added period",
+    "date": "2023-09-01T00:00:00Z",
+    "source": "Soho Forum"
+  }
+]

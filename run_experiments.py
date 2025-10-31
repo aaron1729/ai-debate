@@ -7,12 +7,19 @@ This script runs the 2x8 experiment design documented in claude.md:
 - 2 debater orderings: (debater1 pro, debater2 con) and (debater2 pro, debater1 con)
 - Total: 8 experiments per claim
 
+Supports multiple data formats:
+  - Fact-checked claims (claims_verified_*.json, claims_gpt5_*.json)
+  - Debate motions (debate_motions.json) - real-world debate outcomes
+
 Usage examples:
-  # Run all 8 experiments on a specific claim
-  python run_experiments.py claims_gpt5_01.json:0 --debater1 claude --debater2 grok --judge gpt4
+  # Run on fact-checked claim
+  python run_experiments.py data/claims_gpt5_01.json:0 --debater1 claude --debater2 grok --judge gpt4
+
+  # Run on debate motion (compare AI vs human debate outcomes)
+  python run_experiments.py data/debate_motions.json:0 --debater1 claude --debater2 grok --judge gpt4
 
   # Run with different debaters
-  python run_experiments.py claims_verified_health_50.json:5 --debater1 gpt4 --debater2 gemini --judge claude
+  python run_experiments.py data/claims_verified_health_50.json:5 --debater1 gpt4 --debater2 gemini --judge claude
 """
 
 import argparse
@@ -199,7 +206,7 @@ Examples:
     parser.add_argument(
         "claim",
         type=str,
-        help='Claim specification in format "filename:index" (e.g., "claims_gpt5_01.json:0")'
+        help='Claim/motion specification in format "filename:index" (e.g., "data/claims_gpt5_01.json:0" or "data/debate_motions.json:0")'
     )
 
     parser.add_argument(

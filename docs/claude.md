@@ -1,6 +1,6 @@
 # Claude.md - Implementation Context
 
-This file provides implementation details and design decisions for the AI Debate System to help future development.
+This file provides implementation details and design decisions for the AI Debates system to help future development.
 
 ## Project Overview
 
@@ -53,7 +53,7 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 - ✅ Documentation for fetching custom datasets
 
 **Data Processing Pipeline:**
-- ✅ LLM-powered claim cleaning and standardization (process_claims.py)
+- ✅ LLM-powered claim cleaning and standardization (process_factcheck_claims.py)
 - ✅ URL fetching and content verification (verify_claims.py)
 - ✅ Two-stage pipeline: process → verify
 - ✅ Verdict mapping to debate system's 4 verdicts
@@ -78,7 +78,7 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 /
 ├── debate.py                      # Python CLI script
 ├── fetch_claims.py                # Fetch claims from Google Fact Check API
-├── process_claims.py              # Step 1: Clean and standardize raw claims
+├── process_factcheck_claims.py    # Step 1: Clean and standardize fact-check claims
 ├── verify_claims.py               # Step 2: Verify claims with URL fetching
 ├── process_debate_podcasts.py     # Process debate podcast CSV data to JSON
 ├── run_experiments.py             # Deterministic 2×8 experiment suite runner
@@ -277,12 +277,12 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 
 **Solution**: Two-step LLM-powered processing pipeline
 
-**Step 1: Process Claims** (process_claims.py)
+**Step 1: Process Claims** (process_factcheck_claims.py)
 
-Cleans and standardizes raw claims using an LLM:
+Cleans and standardizes raw fact-check claims using an LLM:
 
 ```bash
-python process_claims.py claims_historical_health_50.json -o test_clean_health.json --model gpt4
+python process_factcheck_claims.py claims_historical_health_50.json -o test_clean_health.json --model gpt4
 ```
 
 **What it does**:
@@ -296,7 +296,7 @@ python process_claims.py claims_historical_health_50.json -o test_clean_health.j
 - **Before**: "Scientists have had to pause the Climate Change Hoax Scam"
 - **After**: "Climate deniers misinterpreted a 2025 Antarctic ice study to falsely claim scientists paused climate change research"
 
-**Implementation** (process_claims.py):
+**Implementation** (process_factcheck_claims.py):
 - `get_system_prompt()`: Comprehensive prompt with verdict mapping rules, topic guidelines, and examples
 - `process_single_claim()`: Calls LLM with claim + review data, parses JSON response
 - Model selection: claude/gpt4/gemini/grok (default: claude)

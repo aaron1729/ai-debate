@@ -1,6 +1,6 @@
 # Documentation
 
-This folder contains detailed documentation for the AI Debate System.
+This folder contains detailed documentation for AI Debates.
 
 ## Files
 

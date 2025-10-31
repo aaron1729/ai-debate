@@ -1,6 +1,6 @@
-# Deployment Guide: AI Debate System
+# Deployment Guide: AI Debates
 
-This guide walks you through deploying the AI Debate System to Vercel.
+This guide walks you through deploying AI Debates to Vercel.
 
 ## Prerequisites
 
@@ -338,4 +338,4 @@ Next.js API routes are protected by default. No additional configuration needed.
 - [ ] Rate limiting tested (if using free tier)
 - [ ] Monitoring dashboards bookmarked
 
-Congratulations! Your AI Debate System is now live.
+Congratulations! Your AI Debates instance is now live.

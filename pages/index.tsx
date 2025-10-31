@@ -19,8 +19,9 @@ export default function Home() {
   const [conModel, setConModel] = useState<ModelKey>('claude');
   const [judgeModel, setJudgeModel] = useState<ModelKey>('claude');
   const [loading, setLoading] = useState(false);
+  type ProgressMessage = { primary: string; secondary?: string };
   const [progress, setProgress] = useState(0);
-  const [progressText, setProgressText] = useState('');
+  const [progressMessage, setProgressMessage] = useState<ProgressMessage>({ primary: '', secondary: undefined });
   const [debateHistory, setDebateHistory] = useState<DebateTurn[]>([]);
   const [verdict, setVerdict] = useState<DebateResult['verdict'] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -100,8 +101,19 @@ export default function Home() {
     setError(null);
     setDebateHistory([]);
     setVerdict(null);
-    setProgress(0);
-    setProgressText(messages.start.replace('{turns}', turns.toString()) + ' Please wait...');
+    setProgress(5);
+    const proModelName = MODELS[proModel].name;
+    const conModelName = MODELS[conModel].name;
+    const judgeModelName = MODELS[judgeModel].name;
+    const startMessageTemplate = messages.start.replace('{turns}', turns.toString());
+    const singularStart = turns === 1
+      ? startMessageTemplate.replace('turns per side', 'turn per side')
+      : startMessageTemplate;
+    const cleanedStart = singularStart.replace(/\.\.\.$/, '.');
+    setProgressMessage({
+      primary: cleanedStart,
+      secondary: `Pro side (${proModelName}) now making an argument in turn 1/${Math.max(turns, 1)}...`
+    });
 
     try {
       // Determine which API keys to send
@@ -123,18 +135,31 @@ export default function Home() {
         }
       }
 
-      const totalSteps = turns * 2 + 1; // Pro + Con per turn + Judge
-      let currentStep = 0;
+      let completedSteps = 0;
+      let totalSteps = turns * 2 + 1;
+      let streamError: string | null = null;
+      let historyLength = 0;
+      let lastActionSummary = '';
 
-      // Update progress as we wait for the response
-      const progressInterval = setInterval(() => {
-        // Simulate progress up to 90% while waiting
-        setProgress(prev => Math.min(prev + 2, 90));
-      }, 200);
+      const getProgressPercentage = (completed: number, total: number) => {
+        if (total <= 0) {
+          return 100;
+        }
+        const raw = (completed / total) * 100;
+        const rounded = Math.round(raw / 5) * 5;
+        return Math.min(100, Math.max(5, rounded));
+      };
+
+      const applyProgress = (completed: number, total: number) => {
+        setProgress(getProgressPercentage(completed, total));
+      };
 
       const response = await fetch('/api/debate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Debate-Stream': '1'
+        },
         body: JSON.stringify({
           claim,
           turns,
@@ -145,42 +170,199 @@ export default function Home() {
         })
       });
 
-      clearInterval(progressInterval);
-
-      // Extract rate limit headers
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.message || data.error || 'Failed to run debate');
+        let message = 'Failed to run debate';
+        try {
+          const errorPayload = await response.json();
+          message = errorPayload.message || errorPayload.error || message;
+        } catch {
+          const text = await response.text();
+          if (text) {
+            message = text;
+          }
+        }
+        throw new Error(message);
       }
 
-      // Simulate progressive display (since we get all data at once)
-      // In a real streaming implementation, this would happen naturally
-      for (let i = 0; i < data.debate_history.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        setDebateHistory(prev => [...prev, data.debate_history[i]]);
-        currentStep++;
-        setProgress(90 + (currentStep / totalSteps) * 8); // 90-98%
-
-        const turnNum = Math.floor(i / 2) + 1;
-        const position = data.debate_history[i].position;
-        const model = data.debate_history[i].model;
-
-        // Format: "Turn {turn}/{total_turns}... {Side} side ({model}) is arguing..."
-        const turnMsg = messages.turn
-          .replace('{turn}', turnNum.toString())
-          .replace('{total_turns}', turns.toString());
-        const sideMsg = messages[position === 'pro' ? 'pro_turn' : 'con_turn']
-          .replace('{model_name}', model);
-        setProgressText(`${turnMsg}\n${sideMsg}`);
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Unable to read debate progress stream.');
       }
 
-      const judgeMsg = messages.judge_deliberating.replace('{model_name}', MODELS[judgeModel].name);
-      setProgressText(judgeMsg);
-      setProgress(98);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setVerdict(data.verdict);
-      setProgress(100);
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      const getEffectiveTotalTurns = () =>
+        Math.max(1, Math.floor(Math.max(totalSteps - 1, 1) / 2));
+
+      const buildNextActionText = (remainingSteps: number, currentHistoryLength: number) => {
+        if (remainingSteps <= 0) {
+          return '';
+        }
+        if (remainingSteps === 1) {
+          return `Judge (${judgeModelName}) now deliberating...`;
+        }
+        const nextIndex = currentHistoryLength;
+        const nextTurnNum = Math.floor(nextIndex / 2) + 1;
+        const effectiveTotalTurns = getEffectiveTotalTurns();
+        const nextSideLabel = nextIndex % 2 === 0 ? 'Pro' : 'Con';
+        const nextModelName = nextSideLabel === 'Pro' ? proModelName : conModelName;
+        return `${nextSideLabel} side (${nextModelName}) now making an argument in turn ${nextTurnNum}/${effectiveTotalTurns}...`;
+      };
+
+      const handleEvent = (rawEvent: any) => {
+        if (!rawEvent || typeof rawEvent.type !== 'string') {
+          return;
+        }
+
+        switch (rawEvent.type) {
+          case 'init': {
+            if (typeof rawEvent.totalSteps === 'number') {
+              totalSteps = rawEvent.totalSteps;
+            }
+            completedSteps = 0;
+            applyProgress(completedSteps, totalSteps);
+            break;
+          }
+          case 'total_steps': {
+            if (typeof rawEvent.totalSteps === 'number') {
+              totalSteps = rawEvent.totalSteps;
+            }
+            if (typeof rawEvent.completedSteps === 'number') {
+              completedSteps = rawEvent.completedSteps;
+            }
+            applyProgress(completedSteps, totalSteps);
+            break;
+          }
+          case 'turn': {
+            if (typeof rawEvent.totalSteps === 'number') {
+              totalSteps = rawEvent.totalSteps;
+            }
+            if (typeof rawEvent.completedSteps === 'number') {
+              completedSteps = rawEvent.completedSteps;
+            } else {
+              completedSteps += 1;
+            }
+
+            if (rawEvent.turn) {
+              const turnIndex = historyLength;
+              historyLength += 1;
+              setDebateHistory(prev => [...prev, rawEvent.turn]);
+              const effectiveTotalTurns = getEffectiveTotalTurns();
+              const turnNum = Math.floor(turnIndex / 2) + 1;
+              const position = rawEvent.turn.position;
+              const modelName = rawEvent.turn.model;
+              const refused = rawEvent.turn.refused;
+              const sideLabel = position === 'pro' ? 'Pro' : 'Con';
+              const completedText = refused
+                ? `${sideLabel} side (${modelName}) declined to argue in turn ${turnNum}/${effectiveTotalTurns}.`
+                : `${sideLabel} side (${modelName}) finished their argument in turn ${turnNum}/${effectiveTotalTurns}.`;
+              lastActionSummary = completedText;
+              const remainingSteps = Math.max(totalSteps - completedSteps, 0);
+              const nextText = buildNextActionText(remainingSteps, historyLength);
+              setProgressMessage({
+                primary: completedText,
+                secondary: nextText || undefined
+              });
+            }
+
+            applyProgress(completedSteps, totalSteps);
+            break;
+          }
+          case 'judge_pending': {
+            if (typeof rawEvent.totalSteps === 'number') {
+              totalSteps = rawEvent.totalSteps;
+            }
+            if (typeof rawEvent.completedSteps === 'number') {
+              completedSteps = rawEvent.completedSteps;
+            }
+            applyProgress(completedSteps, totalSteps);
+            const judgeName = rawEvent.model || judgeModelName;
+            const judgeMsg = `Judge (${judgeName}) now deliberating...`;
+            if (lastActionSummary) {
+              setProgressMessage({
+                primary: lastActionSummary,
+                secondary: judgeMsg
+              });
+            } else {
+              setProgressMessage({
+                primary: judgeMsg
+              });
+            }
+            break;
+          }
+          case 'verdict': {
+            if (typeof rawEvent.totalSteps === 'number') {
+              totalSteps = rawEvent.totalSteps;
+            }
+            if (typeof rawEvent.completedSteps === 'number') {
+              completedSteps = rawEvent.completedSteps;
+            } else {
+              completedSteps += 1;
+            }
+            if (rawEvent.verdict) {
+              setVerdict(rawEvent.verdict);
+            }
+            applyProgress(completedSteps, totalSteps);
+            setProgressMessage({
+              primary: `Judge (${judgeModelName}) delivered the verdict.`,
+              secondary: undefined
+            });
+            break;
+          }
+          case 'complete': {
+            if (rawEvent.result?.debate_history && rawEvent.result.debate_history.length > 0) {
+              setDebateHistory(rawEvent.result.debate_history);
+              historyLength = rawEvent.result.debate_history.length;
+            }
+            if (rawEvent.result?.verdict && !verdict) {
+              setVerdict(rawEvent.result.verdict);
+            }
+            break;
+          }
+          case 'error': {
+            streamError = rawEvent.message || 'Failed to run debate';
+            break;
+          }
+          default:
+            break;
+        }
+      };
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex = buffer.indexOf('\n');
+        while (newlineIndex !== -1) {
+          const line = buffer.slice(0, newlineIndex).trim();
+          buffer = buffer.slice(newlineIndex + 1);
+          if (line.length > 0) {
+            try {
+              const parsed = JSON.parse(line);
+              handleEvent(parsed);
+            } catch (parseErr) {
+              console.warn('Failed to parse debate stream chunk:', parseErr, line);
+            }
+          }
+          newlineIndex = buffer.indexOf('\n');
+        }
+      }
+
+      const remaining = buffer.trim();
+      if (remaining) {
+        try {
+          const parsed = JSON.parse(remaining);
+          handleEvent(parsed);
+        } catch (parseErr) {
+          console.warn('Failed to parse final debate stream chunk:', parseErr, remaining);
+        }
+      }
+
+      if (streamError) {
+        throw new Error(streamError);
+      }
 
       // Refresh rate limits so UI reflects the latest usage
       if (usingServerKeys) {
@@ -542,9 +724,16 @@ export default function Home() {
                 {Math.round(progress)}%
               </div>
             </div>
-            <p style={{ textAlign: 'center', marginTop: '8px', color: '#666', fontSize: '14px', whiteSpace: 'pre-line' }}>
-              {progressText}
-            </p>
+            <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'center', color: '#666' }}>
+              <div style={{ textAlign: 'left', fontSize: '14px' }}>
+                {progressMessage.primary && (
+                  <p style={{ margin: 0 }}>{progressMessage.primary}</p>
+                )}
+                {progressMessage.secondary && (
+                  <p style={{ margin: '4px 0 0 0' }}>{progressMessage.secondary}</p>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
