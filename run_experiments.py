@@ -59,7 +59,7 @@ def load_claim_from_file(claim_spec: str) -> tuple[str, Optional[str], Optional[
 
     # Extract fields - support multiple formats
     if isinstance(claim_data, dict):
-        claim_text = claim_data.get("claim") or claim_data.get("text")
+        claim_text = claim_data.get("claim") or claim_data.get("text") or claim_data.get("motion")
         topic = claim_data.get("topic")
         gt_verdict = claim_data.get("verdict")
         gt_url = claim_data.get("url")
