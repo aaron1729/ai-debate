@@ -2,14 +2,13 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { Redis } from '@upstash/redis';
 import { MODELS, ModelKey } from '../../lib/debate-engine';
 import { getClientIp, isLocalhostIp } from '../../lib/request-ip';
+import { ADMIN_RATE_LIMIT, NON_ADMIN_RATE_LIMIT } from '../../lib/rate-limits';
 
 const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
   ? Redis.fromEnv()
   : null;
 
 const ADMIN_IP = process.env.ADMIN_IP;
-const ADMIN_RATE_LIMIT = parseInt(process.env.ADMIN_RATE_LIMIT || '500', 10);
-const DEFAULT_RATE_LIMIT = 5;
 
 export default async function handler(
   req: NextApiRequest,
@@ -26,7 +25,7 @@ export default async function handler(
   const identifier = getClientIp(req);
   const isLocalhost = isLocalhostIp(identifier);
   const isAdmin = Boolean(ADMIN_IP && (identifier === ADMIN_IP || isLocalhost));
-  const rateLimit = isAdmin ? ADMIN_RATE_LIMIT : DEFAULT_RATE_LIMIT;
+  const rateLimit = isAdmin ? ADMIN_RATE_LIMIT : NON_ADMIN_RATE_LIMIT;
 
   // Check all models
   const modelKeys = Object.keys(MODELS) as ModelKey[];

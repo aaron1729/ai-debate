@@ -1,0 +1,742 @@
+[
+  {
+    "motion": "Be it resolved, the capitalist system is broken. It's time to try something different.",
+    "date": "2019-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 50.0,
+      "against": 50.0
+    },
+    "postVote": {
+      "for": 34.0,
+      "against": 66.0
+    },
+    "voteSwing": {
+      "pro": -16.0
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "economics"
+  },
+  {
+    "motion": "Be it resolved, China is a threat to the liberal international order.",
+    "date": "2019-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 40.0,
+      "against": 60.0
+    },
+    "postVote": {
+      "for": 38.0,
+      "against": 62.0
+    },
+    "voteSwing": {
+      "pro": -2.0
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Be it resolved, what you call political correctness, I call progress.",
+    "date": "2018-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 49.0,
+      "against": 51.0
+    },
+    "postVote": {
+      "for": 53.0,
+      "against": 47.0
+    },
+    "voteSwing": {
+      "pro": 4.0
+    },
+    "winner": "For",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Be it resolved, American democracy is in its worst crisis in a generation and Donald J. Trump is to blame.",
+    "date": "2017-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 51.0,
+      "against": 49.0
+    },
+    "postVote": {
+      "for": 48.0,
+      "against": 52.0
+    },
+    "voteSwing": {
+      "pro": -3.0
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Be it resolved, the liberal international order is over.",
+    "date": "2017-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 45.0,
+      "against": 55.0
+    },
+    "postVote": {
+      "for": 40.0,
+      "against": 60.0
+    },
+    "voteSwing": {
+      "pro": -5.0
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Be it resolved, Donald Trump can make America great again.",
+    "date": "2016-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 47.0,
+      "against": 53.0
+    },
+    "postVote": {
+      "for": 53.0,
+      "against": 47.0
+    },
+    "voteSwing": {
+      "pro": 6.0
+    },
+    "winner": "For",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Be it resolved, the West has lost the Middle East.",
+    "date": "2014-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 34.0,
+      "against": 66.0
+    },
+    "postVote": {
+      "for": 32.0,
+      "against": 68.0
+    },
+    "voteSwing": {
+      "pro": -2.0
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Be it resolved, state surveillance is a legitimate defence of our freedoms.",
+    "date": "2014-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 36.0,
+      "against": 64.0
+    },
+    "postVote": {
+      "for": 45.0,
+      "against": 55.0
+    },
+    "voteSwing": {
+      "pro": 9.0
+    },
+    "winner": "For",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Be it resolved, men are obsolete.",
+    "date": "2013-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 19.0,
+      "against": 81.0
+    },
+    "postVote": {
+      "for": 47.0,
+      "against": 53.0
+    },
+    "voteSwing": {
+      "pro": 28.0
+    },
+    "winner": "For",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Be it resolved, tax the rich (more).",
+    "date": "2013-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 48.0,
+      "against": 52.0
+    },
+    "postVote": {
+      "for": 60.0,
+      "against": 40.0
+    },
+    "voteSwing": {
+      "pro": 12.0
+    },
+    "winner": "For",
+    "type": "debate_motion",
+    "topic": "economics"
+  },
+  {
+    "motion": "Be it resolved, the world would be better off without Israel.",
+    "date": "2012-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 22.0,
+      "against": 78.0
+    },
+    "postVote": {
+      "for": 20.0,
+      "against": 80.0
+    },
+    "voteSwing": {
+      "pro": -2.0
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Be it resolved, religion is a force for good in the world.",
+    "date": "2010-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 68.0,
+      "against": 32.0
+    },
+    "postVote": {
+      "for": 75.0,
+      "against": 25.0
+    },
+    "voteSwing": {
+      "pro": 7.0
+    },
+    "winner": "For",
+    "type": "debate_motion",
+    "topic": "religion"
+  },
+  {
+    "motion": "Be it resolved, I would rather get sick in the United States than Canada.",
+    "date": "2010-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 50.0,
+      "against": 50.0
+    },
+    "postVote": {
+      "for": 50.0,
+      "against": 50.0
+    },
+    "voteSwing": {
+      "pro": 0.0
+    },
+    "winner": "Draw",
+    "type": "debate_motion",
+    "topic": "health"
+  },
+  {
+    "motion": "Be it resolved, Anti-Zionism is Anti-Semitism.",
+    "date": "2024-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 61.0,
+      "against": 39.0
+    },
+    "postVote": {
+      "for": 66.0,
+      "against": 34.0
+    },
+    "voteSwing": {
+      "pro": 5.0
+    },
+    "winner": "For",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Be it resolved, the case for Trump\u2019s America has never been stronger.",
+    "date": "2025-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 15.0,
+      "against": 85.0
+    },
+    "postVote": {
+      "for": 14.0,
+      "against": 86.0
+    },
+    "voteSwing": {
+      "pro": -1.0
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Be it resolved, don't trust mainstream media.",
+    "date": "2022-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 48.0,
+      "against": 52.0
+    },
+    "postVote": {
+      "for": 67.0,
+      "against": 33.0
+    },
+    "voteSwing": {
+      "pro": 19.0
+    },
+    "winner": "For",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Be it resolved, AI research and development poses an existential threat.",
+    "date": "2023-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 36.0,
+      "against": 64.0
+    },
+    "postVote": {
+      "for": 33.0,
+      "against": 67.0
+    },
+    "voteSwing": {
+      "pro": -3.0
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "technology"
+  },
+  {
+    "motion": "Be it resolved, liberalism gets the big questions right.",
+    "date": "2023-01-01T00:00:00Z",
+    "source": "Munk Debates",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 49.0,
+      "against": 51.0
+    },
+    "postVote": {
+      "for": 35.0,
+      "against": 65.0
+    },
+    "voteSwing": {
+      "pro": -14.0
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Men Are Finished.",
+    "date": "2011-09-20T00:00:00Z",
+    "source": "Open To Debate",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 20.0,
+      "against": 54.0
+    },
+    "postVote": {
+      "for": 66.0,
+      "against": 29.0
+    },
+    "voteSwing": {
+      "pro": 46.0
+    },
+    "winner": "For",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Do we need a Grand Strategy on China?",
+    "date": "2021-11-02T00:00:00Z",
+    "source": "Open To Debate",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 35.0,
+      "against": 31.0
+    },
+    "postVote": {
+      "for": 44.0,
+      "against": 49.0
+    },
+    "voteSwing": {
+      "pro": 9.0
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Will the Future Be Abundant?",
+    "date": "2023-12-22T00:00:00Z",
+    "source": "Open To Debate",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 26.0,
+      "against": 24.0
+    },
+    "postVote": {
+      "for": 36.0,
+      "against": 22.0
+    },
+    "voteSwing": {
+      "pro": 10.0
+    },
+    "winner": "For",
+    "type": "debate_motion",
+    "topic": "economics"
+  },
+  {
+    "motion": "AI Will Do More Harm Than Good.",
+    "date": "2022-09-02T00:00:00Z",
+    "source": "Open To Debate",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 32.0,
+      "against": 44.0
+    },
+    "postVote": {
+      "for": 40.0,
+      "against": 49.0
+    },
+    "voteSwing": {
+      "pro": 8.0
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "technology"
+  },
+  {
+    "motion": "Should America End Birthright Citizenship?",
+    "date": "2025-10-09T00:00:00Z",
+    "source": "Open To Debate",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 23.0,
+      "against": 60.0
+    },
+    "postVote": {
+      "for": 13.0,
+      "against": 74.0
+    },
+    "voteSwing": {
+      "pro": -10.0
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Is War Inevitable?",
+    "date": "2025-10-10T00:00:00Z",
+    "source": "Open To Debate",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 28.0,
+      "against": 44.0
+    },
+    "postVote": {
+      "for": 14.0,
+      "against": 72.0
+    },
+    "voteSwing": {
+      "pro": -14.0
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Globalization Has Undermined America's Working Class.",
+    "date": null,
+    "source": "Open To Debate",
+    "sourceUrl": null,
+    "preVote": {
+      "for": null,
+      "against": 45.0
+    },
+    "postVote": {
+      "for": null,
+      "against": 61.0
+    },
+    "voteSwing": {
+      "pro": null
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "economics"
+  },
+  {
+    "motion": "The failure of Oregon's experiment in decriminalizing all drugs is compelling evidence that other attempts at complete decriminalization will fail just as badly.",
+    "date": "2025-09-01T00:00:00Z",
+    "source": "Soho Forum",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 30.6,
+      "against": 51.5
+    },
+    "postVote": {
+      "for": 38.6,
+      "against": 58.1
+    },
+    "voteSwing": {
+      "pro": 8.0
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "health"
+  },
+  {
+    "motion": "Paying for sex should be a crime.",
+    "date": "2025-08-01T00:00:00Z",
+    "source": "Soho Forum",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 46.1,
+      "against": 38.5
+    },
+    "postVote": {
+      "for": 32.2,
+      "against": 64.4
+    },
+    "voteSwing": {
+      "pro": -13.9
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "President Trump's deportation policies generally violate key civil liberties as set forth in the U.S. Constitution.",
+    "date": "2025-07-01T00:00:00Z",
+    "source": "Soho Forum",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 61.6,
+      "against": 15.7
+    },
+    "postVote": {
+      "for": 59.9,
+      "against": 35.8
+    },
+    "voteSwing": {
+      "pro": -1.7
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "The government should offer to all Americans a health insurance plan that would compete with private insurance plans.",
+    "date": "2025-06-01T00:00:00Z",
+    "source": "Soho Forum",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 42.1,
+      "against": 34.6
+    },
+    "postVote": {
+      "for": 43.1,
+      "against": 55.4
+    },
+    "voteSwing": {
+      "pro": 1.0
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "health"
+  },
+  {
+    "motion": "The Cold War was a necessary response by the United States to a Soviet and Chinese threat to the global balance of power.",
+    "date": "2025-05-01T00:00:00Z",
+    "source": "Soho Forum",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 31.8,
+      "against": 31.8
+    },
+    "postVote": {
+      "for": 34.1,
+      "against": 60.6
+    },
+    "voteSwing": {
+      "pro": 2.3
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Government restrictions on the immigration of peaceful and healthy people make sense from a libertarian standpoint, especially in present-day America.",
+    "date": "2025-04-01T00:00:00Z",
+    "source": "Soho Forum",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 32.3,
+      "against": 46.2
+    },
+    "postVote": {
+      "for": 38.1,
+      "against": 59.1
+    },
+    "voteSwing": {
+      "pro": 5.8
+    },
+    "winner": "For",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Libertarians should focus on building liberty-for-real societies like the Free State Project, rather than reforming an ever-expanding, uncontrollable federal government.",
+    "date": "2025-03-01T00:00:00Z",
+    "source": "Soho Forum",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 44.4,
+      "against": 26.2
+    },
+    "postVote": {
+      "for": 54.4,
+      "against": 37.8
+    },
+    "voteSwing": {
+      "pro": 10.0
+    },
+    "winner": "For",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "The oppression of Palestinians in non-democratic Israel has been systematic and profound.",
+    "date": "2025-02-01T00:00:00Z",
+    "source": "Soho Forum",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 41.6,
+      "against": 36.6
+    },
+    "postVote": {
+      "for": 51.5,
+      "against": 44.8
+    },
+    "voteSwing": {
+      "pro": 9.9
+    },
+    "winner": "For",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "The United States started the new Cold War with Russia and provoked Russia's invasion of Ukraine.",
+    "date": "2025-01-01T00:00:00Z",
+    "source": "Soho Forum",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 47.9,
+      "against": 25.4
+    },
+    "postVote": {
+      "for": 40.5,
+      "against": 55.6
+    },
+    "voteSwing": {
+      "pro": -7.4
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "President Nayib Bukele's crime-fighting policies in El Salvador provide a model for reducing violence in other Latin American countries.",
+    "date": "2025-01-01T00:00:00Z",
+    "source": "Soho Forum",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 58.1,
+      "against": 17.7
+    },
+    "postVote": {
+      "for": 48.6,
+      "against": 40.2
+    },
+    "voteSwing": {
+      "pro": -9.5
+    },
+    "winner": "Against",
+    "type": "debate_motion",
+    "topic": "politics"
+  },
+  {
+    "motion": "Artificial intelligence poses a threat to the survival of humanity that must be actively addressed by government.",
+    "date": "2023-11-01T00:00:00Z",
+    "source": "Soho Forum",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 25.0,
+      "against": 43.8
+    },
+    "postVote": {
+      "for": 31.7,
+      "against": 65.0
+    },
+    "voteSwing": {
+      "pro": 6.7
+    },
+    "winner": "For",
+    "type": "debate_motion",
+    "topic": "technology"
+  },
+  {
+    "motion": "Anarcho-capitalism would definitely be a complete disaster for humanity.",
+    "date": "2023-09-01T00:00:00Z",
+    "source": "Soho Forum",
+    "sourceUrl": null,
+    "preVote": {
+      "for": 55.6,
+      "against": 24.1
+    },
+    "postVote": {
+      "for": 61.2,
+      "against": 33.3
+    },
+    "voteSwing": {
+      "pro": 5.6
+    },
+    "winner": "For",
+    "type": "debate_motion",
+    "topic": "politics"
+  }
+]

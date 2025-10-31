@@ -3,16 +3,18 @@ import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { runDebate, ModelKey, APIKeys, MODELS } from '../../lib/debate-engine';
 import { getClientIp, isLocalhostIp } from '../../lib/request-ip';
+import {
+  ADMIN_RATE_LIMIT,
+  NON_ADMIN_RATE_LIMIT,
+  GLOBAL_MODEL_LIMIT
+} from '../../lib/rate-limits';
 
-// Rate limiter: 5 requests per 24 hours per IP per model (500 for admin)
+// Rate limiter: per-model quotas (configurable via env / lib/rate-limits.ts)
 const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
   ? Redis.fromEnv()
   : null;
 
 const ADMIN_IP = process.env.ADMIN_IP;
-const ADMIN_RATE_LIMIT = parseInt(process.env.ADMIN_RATE_LIMIT || '500', 10);
-const DEFAULT_RATE_LIMIT = 5;
-const GLOBAL_MODEL_LIMIT = parseInt(process.env.GLOBAL_MODEL_LIMIT || '200', 10);
 
 // Use admin rate limit as the max for tracking, then check against user's actual limit
 const ratelimiter = redis ? new Ratelimit({
@@ -65,7 +67,7 @@ export default async function handler(
       const identifier = getClientIp(req);
       const isLocalhost = isLocalhostIp(identifier);
       const isAdmin = Boolean(ADMIN_IP && (identifier === ADMIN_IP || isLocalhost));
-      const rateLimit = isAdmin ? ADMIN_RATE_LIMIT : DEFAULT_RATE_LIMIT;
+      const rateLimit = isAdmin ? ADMIN_RATE_LIMIT : NON_ADMIN_RATE_LIMIT;
 
       console.log(`[Rate Limit] IP: ${identifier}, isLocalhost: ${isLocalhost}, isAdmin: ${isAdmin}, limit: ${rateLimit}`);
 
@@ -108,7 +110,7 @@ export default async function handler(
             if (!globalResult.success || globalRemaining <= 0) {
               return res.status(429).json({
                 error: 'Rate limit exceeded',
-                message: `The free tier for ${MODELS[modelKey].name} is exhausted. Provide your own API key or wait for the 24-hour window to reset.`,
+                message: `The free tier usage for ${MODELS[modelKey].name} is exhausted. Provide your own API key or wait for the 24-hour window to reset.`,
                 model: modelKey,
                 type: 'global',
                 resetAt: globalResult.reset ? new Date(globalResult.reset * 1000).toISOString() : null,

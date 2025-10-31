@@ -60,6 +60,8 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 - ✅ Temporal/geographical context enhancement
 - ✅ Transparent modification logging
 - ✅ Two verified datasets ready for testing: climate (48 claims), health (50 claims)
+- ✅ Debate podcast data integration (process_debate_podcasts.py)
+- ✅ Real-world debate motions from Munk Debates, Open To Debate, Soho Forum (37 motions)
 
 ### Not Yet Implemented
 - ⏳ Verification of debaters' cited sources (URL fetching infrastructure exists, needs integration)
@@ -78,6 +80,7 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 ├── fetch_claims.py                # Fetch claims from Google Fact Check API
 ├── process_claims.py              # Step 1: Clean and standardize raw claims
 ├── verify_claims.py               # Step 2: Verify claims with URL fetching
+├── process_debate_podcasts.py     # Process debate podcast CSV data to JSON
 ├── run_experiments.py             # Deterministic 2×8 experiment suite runner
 ├── run_experiments_randomize_all.py # Randomized experiment sweeps with retry guard
 ├── requirements.txt               # Python dependencies
@@ -95,11 +98,19 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 │   └── request-ip.ts             # Shared helpers for normalizing client IPs
 ├── shared/
 │   └── messages.json             # Progress messages (shared between CLI & UI)
-├── claims_recent_30days.json      # Raw data: 6 recent political claims
-├── claims_historical_health_50.json   # Raw data: 50 health claims
-├── claims_historical_climate_50.json  # Raw data: 50 climate claims
-├── test_verified_climate.json     # Verified: 48 climate claims (ready for debates)
-├── test_verified_health.json      # Verified: 50 health claims (ready for debates)
+├── data/
+│   ├── claims_verified_climate_48.json  # Verified: 48 climate claims
+│   ├── claims_verified_health_50.json   # Verified: 50 health claims
+│   ├── claims_gpt5_01.json              # GPT-5 generated claims (set 1)
+│   ├── claims_gpt5_02.json              # GPT-5 generated claims (set 2)
+│   ├── debate_motions.json              # 37 real debate motions with voting data
+│   ├── google-fact-check/
+│   │   ├── raw/                         # Unprocessed API responses
+│   │   ├── cleaned/                     # Cleaned claims
+│   │   └── verification-mods/           # Modification logs
+│   └── debate-podcasts/
+│       ├── raw/                         # CSV files from debate series
+│       └── README.md                    # Debate podcast data documentation
 ├── topics.json                    # Topic list for claim categorization
 ├── docs/
 │   ├── CLAUDE.md                 # This file - implementation context
@@ -153,7 +164,7 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
   - Creates single Ratelimit instance with ADMIN_RATE_LIMIT (500)
   - Tracks all usage in unified Redis database
   - Calculates: `used = ADMIN_RATE_LIMIT - remaining`
-  - Checks: `if (used >= userLimit)` where userLimit is 5 or 500
+  - Checks: `if (used >= userLimit)` where userLimit resolves to NON_ADMIN_RATE_LIMIT or ADMIN_RATE_LIMIT
   - Returns: `actualRemaining = userLimit - used`
 - Calls `runDebate()` from lib/debate-engine.ts
 - Returns JSON with debate history and verdict
@@ -357,6 +368,103 @@ beautifulsoup4>=4.12.0  # HTML parsing
 
 **See**: docs/FACTCHECK_SETUP.md for complete processing pipeline guide
 
+### Debate Podcast Data Integration
+
+**Purpose**: Integrate real-world debate data from professional debate series to compare AI debate outcomes with human persuasiveness.
+
+**Problem**: Need empirical data on how real debates perform—which side wins, how much minds change, what topics generate biggest swings.
+
+**Solution**: Process CSV data from three major debate series into standardized JSON format.
+
+**Data Sources**:
+
+1. **Munk Debates** (18 motions)
+   - High-profile debates on major global issues
+   - Features prominent public intellectuals
+   - Topics: politics, economics, international relations
+
+2. **Open To Debate** (7 motions with voting data)
+   - Policy-focused debates on current issues
+   - Audience voting before/after debate
+   - Topics: technology, economics, politics
+
+3. **Soho Forum** (12 motions)
+   - Libertarian-oriented Oxford-style debates
+   - Clear winner determination by vote swing
+   - Topics: politics, economics, health policy
+
+**Processing Implementation** (process_debate_podcasts.py):
+
+```bash
+python process_debate_podcasts.py data/debate-podcasts/raw/ -o data/debate_motions.json --model claude
+```
+
+**What it does**:
+- Parses three CSV files with different formats
+- Normalizes voting percentages and date formats
+- Assigns topics using LLM (same topic list as fact-checked claims)
+- Outputs unified JSON with 37 debate motions
+
+**Data Structure**:
+```json
+{
+  "motion": "The standalone debatable claim/resolution",
+  "date": "ISO 8601 timestamp or null",
+  "source": "Munk Debates|Open To Debate|Soho Forum",
+  "sourceUrl": null,
+  "preVote": {"for": 50.0, "against": 50.0},
+  "postVote": {"for": 34.0, "against": 66.0},
+  "voteSwing": {"pro": -16.0},
+  "winner": "For|Against|Draw",
+  "type": "debate_motion",
+  "topic": "politics|economics|health|technology|religion"
+}
+```
+
+**Key Distinction from Fact-Checked Claims**:
+- **Fact-checked claims**: Evaluate truth (verdict: supported/contradicted/misleading/needs more evidence)
+- **Debate motions**: Evaluate persuasiveness (winner: who changed more minds)
+
+A debate "won" by the For side doesn't mean the claim is true—it means the For side was more persuasive in that particular debate.
+
+**Use Cases**:
+1. **Benchmark AI debates** against real human debate outcomes
+2. **Compare vote swings**: Do AI debates produce similar persuasion patterns?
+3. **Test persuasion strategies**: Which arguments work in real debates vs AI debates?
+4. **Validate judge verdicts**: Do AI judges agree with human audience voting trends?
+
+**Topic Distribution** (as of October 2025):
+- Politics: 26 motions (70%)
+- Economics: 4 motions (11%)
+- Health: 3 motions (8%)
+- Technology: 3 motions (8%)
+- Religion: 1 motion (3%)
+
+**Data Organization**:
+```
+data/debate-podcasts/
+├── raw/
+│   ├── Munk-Debates.csv
+│   ├── Open-To-Debate.csv
+│   └── Soho-Forum-Debates.csv
+├── README.md                      # Full documentation
+└── ../debate_motions.json         # Processed output (in data/)
+```
+
+**Quality Notes**:
+- Some motions have incomplete voting data (marked with null values)
+- Dates normalized to ISO 8601 (some only have year precision)
+- Vote swings can be positive (For gained) or negative (Against gained)
+- "Draw" outcomes are rare but possible (zero vote swing)
+
+**Integration with Experiments**:
+- Debate motions can be used as claims for AI debate experiments
+- Both fact-checked claims and debate motions share the `topic` field
+- Allows sampling from either dataset or combination
+- Compare AI verdicts with human voting outcomes
+
+**See**: data/debate-podcasts/README.md for complete documentation and examples
+
 ### Environment Variables
 
 Required for web deployment:
@@ -374,10 +482,12 @@ UPSTASH_REDIS_REST_TOKEN=AXXXxxx
 # Admin rate limiting (optional)
 ADMIN_IP=your.public.ip.here          # Gets ADMIN_RATE_LIMIT
 ADMIN_RATE_LIMIT=500                  # Default: 500 uses/model/day
+NON_ADMIN_RATE_LIMIT=5                # Default: 5 uses/model/day
+GLOBAL_MODEL_LIMIT=200                # Default: 200 uses/model/day (global backstop)
 
 # Notes:
 # - Localhost (::1, 127.0.0.1) treated as admin when ADMIN_IP is set
-# - Non-admin IPs get 5 uses/model/day (DEFAULT_RATE_LIMIT)
+# - Non-admin IPs get NON_ADMIN_RATE_LIMIT uses/model/day (defaults to 5)
 # - Rate limits use 24-hour sliding window
 ```
 
@@ -416,7 +526,7 @@ ADMIN_RATE_LIMIT=500                  # Default: 500 uses/model/day
 
 **Solution** (pages/api/debate.ts, pages/api/check-rate-limit.ts, lib/request-ip.ts):
 - Normalize client IPs (handles `x-forwarded-for`, IPv6, ports) so Redis buckets are consistent locally and on Vercel
-- Use a single Upstash sliding-window limiter configured with the admin ceiling (500) and derive per-user usage (`used = 500 - remaining`)
+- Use a single Upstash sliding-window limiter configured with the admin ceiling (ADMIN_RATE_LIMIT) and derive per-user usage (`used = ADMIN_RATE_LIMIT - remaining`)
 - Persist per-IP usage snapshots to Redis (`ratelimit:usage:<ip>:<model>`) so the web UI can read true remaining counts across refreshes and restarts
 - Add a global backstop limiter (default 200 free-tier calls per model per 24h, configurable via `GLOBAL_MODEL_LIMIT`) that shares usage across all IPs (`ratelimit:usage-global:<model>`)
 - Surface both per-user and global remaining counts via `/api/check-rate-limit`
@@ -605,8 +715,8 @@ curl http://localhost:3000/api/check-usage | python3 -m json.tool
 - **Reset helper**: `python check_rate_limits.py [ip] --reset [--include-global]` clears the per-IP cache, the Upstash sliding window entries, and (optionally) the global backstop so you can start a fresh test run.
 
 **Test different IPs**:
-- Localhost: Should get ADMIN_RATE_LIMIT (500)
-- Other IPs: Should get DEFAULT_RATE_LIMIT (5)
+- Localhost: Should get ADMIN_RATE_LIMIT (default 500)
+- Other IPs: Should get NON_ADMIN_RATE_LIMIT (default 5)
 - Check console logs for `[Rate Limit] IP: ...` debug output
 
 ### Adding New Features

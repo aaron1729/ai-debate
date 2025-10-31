@@ -98,15 +98,12 @@ GOOGLE_API_KEY=AIzaSyxxxxx
 XAI_API_KEY=xai-xxxxx
 ```
 
-**Optional (admin rate limiting):**
+**Optional (rate limit configuration):**
 ```
-ADMIN_IP=your.ip.address.here
-ADMIN_RATE_LIMIT=500
-```
-
-**Optional (global backstop; defaults to 200 if unset):**
-```
-GLOBAL_MODEL_LIMIT=200
+ADMIN_IP=your.ip.address.here       # Treat this IP (and localhost) as admin
+ADMIN_RATE_LIMIT=500                # Admin allowance per model/day (default 500)
+NON_ADMIN_RATE_LIMIT=5              # Non-admin allowance per model/day (default 5)
+GLOBAL_MODEL_LIMIT=200              # Global backstop per model/day (default 200)
 ```
 
 Notes:
@@ -114,8 +111,8 @@ Notes:
 - If you don't add any LLM API keys, users must provide their own
 - Consider your budget: each free debate consumes API tokens
 - To find your IP address: `curl https://api.ipify.org`
-- The ADMIN_IP will get ADMIN_RATE_LIMIT uses per model per day (default: 500)
-- Other IPs get 5 uses per model per day
+- The ADMIN_IP (and localhost) get ADMIN_RATE_LIMIT uses per model per day
+- Other IPs use NON_ADMIN_RATE_LIMIT (defaults to 5) per model per day
 
 #### 4.3 Deploy
 
@@ -128,7 +125,7 @@ Notes:
 ### Free Tier (With Your API Keys)
 
 When you provide API keys in Vercel environment variables:
-- Users get 5 free debates per 24 hours
+- Users get up to NON_ADMIN_RATE_LIMIT debates per model every 24 hours (defaults to 5)
 - Rate limited by IP address using Upstash Redis
 - After 5 debates, they see a message to provide their own keys
 - Rate limit resets after 24 hours

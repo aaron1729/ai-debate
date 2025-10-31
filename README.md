@@ -6,8 +6,6 @@ reorganize the "claims" json files according to which is final data to be used f
 
 fix or remove the text below the progress bar in the UI.
 
-use claims and results from debate podcasts as data.
-
 ## possible experiments
 
 - different models from the same provider (e.g. gpt-4 vs. gpt-5)
@@ -114,15 +112,21 @@ The project includes fact-checked claims from Google's Fact Check Tools API for 
 All claims data is now organized in the `data/` directory:
 
 **Ready-to-use claims (in `data/`):**
-- **claims_verified_climate_48.json** - 48 verified climate claims
-- **claims_verified_health_50.json** - 50 verified health claims
+- **claims_verified_climate_48.json** - 48 verified climate claims from fact-checkers
+- **claims_verified_health_50.json** - 50 verified health claims from fact-checkers
 - **claims_gpt5_01.json** - GPT-5 generated claims (set 1)
 - **claims_gpt5_02.json** - GPT-5 generated claims (set 2)
+- **debate_motions.json** - 37 real-world debate motions from debate podcasts (see below)
 
 **Google Fact Check API data (in `data/google-fact-check/`):**
 - `raw/` - Unprocessed API responses (e.g., claims_historical_health_50.json, claims_historical_climate_50.json, claims_recent_30days.json)
 - `cleaned/` - Cleaned and standardized claims (e.g., claims_cleaned_health_50.json)
 - `verification-mods/` - Verification modification logs
+
+**Debate Podcast data (in `data/debate-podcasts/`):**
+- `raw/` - CSV files from Munk Debates, Open To Debate, and Soho Forum
+- `debate_motions.json` - 37 processed debate motions with pre/post voting data and winners
+- See `data/debate-podcasts/README.md` for full documentation
 
 These verified datasets have been cleaned and enhanced by LLMs to ensure claims are:
 - Specific and factually debatable
@@ -131,6 +135,28 @@ These verified datasets have been cleaned and enhanced by LLMs to ensure claims 
 - Have correct verdict mappings (supported/contradicted/misleading/needs more evidence)
 
 Use these to test the debate system's accuracy by comparing verdicts with professional fact-checker ratings. See [FACTCHECK_SETUP.md](docs/FACTCHECK_SETUP.md) for how to fetch and process more claims.
+
+#### Debate Podcast Motions
+
+The `debate_motions.json` file contains 37 motions from real-world debates with actual voting data:
+
+- **Sources**: Munk Debates (18), Open To Debate (7), Soho Forum (12)
+- **Topics**: Politics (26), Economics (4), Health (3), Technology (3), Religion (1)
+- **Data includes**: Pre/post debate voting percentages, vote swing, winner determination
+
+These motions differ from fact-checked claims in an important way:
+- **Fact-checked claims** evaluate **truth** (verdict: supported/contradicted/misleading/needs more evidence)
+- **Debate motions** evaluate **persuasiveness** (winner: who changed more minds in the actual debate)
+
+A debate "won" by the For side doesn't necessarily mean the claim is true—it means the For side was more persuasive in that particular debate. This data can be used to:
+- Compare AI debate outcomes to real human debate outcomes
+- Test whether AI debates produce similar vote swings
+- Benchmark persuasion strategies against real-world data
+
+To process new debate podcast data:
+```bash
+python process_debate_podcasts.py data/debate-podcasts/raw/ -o data/debate_motions.json --model claude
+```
 
 ### Running Experiments
 

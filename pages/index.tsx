@@ -407,7 +407,7 @@ export default function Home() {
               color: '#9a3412',
               fontSize: '13px'
             }}>
-              All free-tier slots are exhausted. Add your own API keys below or wait for the 24-hour window to reset.
+              Your free-tier usage has been exhausted. Add your own API keys below, or wait for the 24-hour window to reset.
             </div>
           )}
 
