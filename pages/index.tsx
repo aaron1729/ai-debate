@@ -17,8 +17,8 @@ export default function Home() {
   const [turns, setTurns] = useState(2);
   const [firstSpeaker, setFirstSpeaker] = useState<'pro' | 'con'>('pro');
   const [proModel, setProModel] = useState<ModelKey>('claude');
-  const [conModel, setConModel] = useState<ModelKey>('claude');
-  const [judgeModel, setJudgeModel] = useState<ModelKey>('claude');
+  const [conModel, setConModel] = useState<ModelKey>('grok');
+  const [judgeModel, setJudgeModel] = useState<ModelKey>('gpt4');
   const [loading, setLoading] = useState(false);
   type ProgressMessage = { primary: string; secondary?: string };
   const [progress, setProgress] = useState(0);
@@ -481,17 +481,18 @@ export default function Home() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '15px' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <label htmlFor="pro-model" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
                 Pro Model:
               </label>
               <select
+                id="pro-model"
                 value={proModel}
                 onChange={(e) => setProModel(e.target.value as ModelKey)}
                 disabled={loading}
                 style={{
                   width: '100%',
                   padding: '8px',
-                  fontSize: '14px',
+                  fontSize: '13px',
                   border: '1px solid #e7d7c7',
                   borderRadius: '6px',
                   background: '#fefaf5',
@@ -519,17 +520,18 @@ export default function Home() {
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <label htmlFor="con-model" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
                 Con Model:
               </label>
               <select
+                id="con-model"
                 value={conModel}
                 onChange={(e) => setConModel(e.target.value as ModelKey)}
                 disabled={loading}
                 style={{
                   width: '100%',
                   padding: '8px',
-                  fontSize: '14px',
+                  fontSize: '13px',
                   border: '1px solid #e7d7c7',
                   borderRadius: '6px',
                   background: '#fefaf5',
@@ -557,17 +559,18 @@ export default function Home() {
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <label htmlFor="judge-model" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
                 Judge Model:
               </label>
               <select
+                id="judge-model"
                 value={judgeModel}
                 onChange={(e) => setJudgeModel(e.target.value as ModelKey)}
                 disabled={loading}
                 style={{
                   width: '100%',
                   padding: '8px',
-                  fontSize: '14px',
+                  fontSize: '13px',
                   border: '1px solid #e7d7c7',
                   borderRadius: '6px',
                   background: '#fefaf5',
@@ -595,21 +598,24 @@ export default function Home() {
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <label htmlFor="turns" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
                 Number of Turns:
               </label>
               <select
+                id="turns"
                 value={turns}
                 onChange={(e) => setTurns(parseInt(e.target.value))}
                 disabled={loading}
                 style={{
                   width: '100%',
                   padding: '8px',
-                  fontSize: '14px',
+                  fontSize: '13px',
                   border: '1px solid #e7d7c7',
                   borderRadius: '6px',
                   background: '#fefaf5',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  transition: 'box-shadow 0.2s ease, border-color 0.2s ease'
                 }}
               >
                 {[1, 2, 3, 4, 5, 6].map(n => (
@@ -1144,13 +1150,14 @@ export default function Home() {
           select:focus,
           input:focus {
             border-color: #18636d;
-            box-shadow: 0 0 0 3px rgba(24, 99, 109, 0.25);
+            box-shadow: 0 0 0 3px #18636d40;
           }
 
           textarea:hover,
           select:hover,
           input:hover {
             border-color: rgba(24, 99, 109, 0.7);
+            background-color: #fef2eb;
           }
 
           @media (min-width: 960px) {
