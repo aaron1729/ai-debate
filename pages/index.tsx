@@ -472,7 +472,9 @@ export default function Home() {
                 border: '1px solid #e7d7c7',
                 borderRadius: '6px',
                 background: '#fefaf5',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                outline: 'none',
+                transition: 'box-shadow 0.2s ease, border-color 0.2s ease'
               }}
             />
           </div>
@@ -493,7 +495,9 @@ export default function Home() {
                   border: '1px solid #e7d7c7',
                   borderRadius: '6px',
                   background: '#fefaf5',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  transition: 'box-shadow 0.2s ease, border-color 0.2s ease'
                 }}
               >
                 {modelKeys.map(key => {
@@ -529,7 +533,9 @@ export default function Home() {
                   border: '1px solid #e7d7c7',
                   borderRadius: '6px',
                   background: '#fefaf5',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  transition: 'box-shadow 0.2s ease, border-color 0.2s ease'
                 }}
               >
                 {modelKeys.map(key => {
@@ -565,7 +571,9 @@ export default function Home() {
                   border: '1px solid #e7d7c7',
                   borderRadius: '6px',
                   background: '#fefaf5',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  transition: 'box-shadow 0.2s ease, border-color 0.2s ease'
                 }}
               >
                 {modelKeys.map(key => {
@@ -611,36 +619,34 @@ export default function Home() {
             </div>
           </div>
 
-          {!showApiKeys && (
-            <div style={{
-              padding: '12px',
-              background: '#fdf9f4',
-              border: '1px solid #eddccf',
-              borderRadius: '4px',
-              marginBottom: '20px'
-            }}>
-              <p style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: '#374151' }}>
-                Free uses remaining today:
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px' }}>
-                {modelKeys.map(key => {
-                  const info = modelLimits[key];
-                  const remaining = Math.max(0, info?.remaining ?? rateLimit);
-                  const color = remaining <= 0 ? '#ef4444' : '#6b7280';
-                  return (
-                    <div key={key} style={{ fontSize: '12px', color }}>
-                      <strong>{MODELS[key].name}:</strong> {remaining}/{rateLimit}
-                      {info?.globalRemaining !== undefined && info.globalRemaining <= 0 && (
-                        <span style={{ display: 'block', color: '#b91c1c', marginTop: '4px' }}>
-                          Global limit reached — add your own API key or come back tomorrow.
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+          <div style={{
+            padding: '10px 12px 12px',
+            background: '#fdf9f4',
+            border: '1px solid #eddccf',
+            borderRadius: '4px',
+            marginBottom: '20px'
+          }}>
+            <p style={{ fontSize: '13px', fontWeight: 'bold', margin: '0 0 8px', color: '#374151' }}>
+              Free uses remaining today:
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px' }}>
+              {modelKeys.map(key => {
+                const info = modelLimits[key];
+                const remaining = Math.max(0, info?.remaining ?? rateLimit);
+                const color = remaining <= 0 ? '#ef4444' : '#6b7280';
+                return (
+                  <div key={key} style={{ fontSize: '12px', color }}>
+                    <strong>{MODELS[key].name}:</strong> {remaining}/{rateLimit}
+                    {info?.globalRemaining !== undefined && info.globalRemaining <= 0 && (
+                      <span style={{ display: 'block', color: '#b91c1c', marginTop: '4px' }}>
+                        Global limit reached — add your own API key or come back tomorrow.
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          )}
+          </div>
 
           {usingServerKeys && hasLoadedLimits && allServerModelsExhausted && (
             <div style={{
@@ -671,18 +677,20 @@ export default function Home() {
                 padding: 0
               }}
             >
-              {showApiKeys ? 'Hide' : 'Show'} API Keys (optional - for unlimited usage)
+              {showApiKeys ? 'Hide' : 'Use API Keys'}
             </button>
+            <span style={{ marginLeft: '6px', fontSize: '13px', color: '#4b5563' }}>(optional, for unlimited usage)</span>
 
             {showApiKeys && (
               <div style={{
-                marginTop: '15px',
-                padding: '15px',
+                marginTop: '8px',
+                padding: '10px 15px 15px',
                 background: '#fefbf6',
                 borderRadius: '4px'
               }}>
-                <p style={{ fontSize: '13px', color: '#666', marginBottom: '10px' }}>
-                  You get {rateLimit} free uses per model per day. To unlock unlimited usage, add your own API keys:
+                <p style={{ fontSize: '13px', color: '#666', margin: '0 0 8px', lineHeight: 1.5 }}>
+                  You get {rateLimit} free uses per model per day. Add your own API keys here for unlimited usage.
+                  <span style={{ display: 'block', marginTop: '4px' }}>(These are only stored in your browser, and disappear when you leave or refresh the page.)</span>
                 </p>
                 <div style={{ display: 'grid', gap: '10px' }}>
                   <input
@@ -693,11 +701,13 @@ export default function Home() {
                     disabled={loading}
                     style={{
                       padding: '8px',
-                      fontSize: '14px',
+                      fontSize: '13px',
                       border: '1px solid #e7d7c7',
                       borderRadius: '6px',
                       background: '#fefaf5',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                      transition: 'box-shadow 0.2s ease, border-color 0.2s ease'
                     }}
                   />
                   <input
@@ -708,11 +718,13 @@ export default function Home() {
                     disabled={loading}
                     style={{
                       padding: '8px',
-                      fontSize: '14px',
+                      fontSize: '13px',
                       border: '1px solid #e7d7c7',
                       borderRadius: '6px',
                       background: '#fefaf5',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                      transition: 'box-shadow 0.2s ease, border-color 0.2s ease'
                     }}
                   />
                   <input
@@ -723,11 +735,13 @@ export default function Home() {
                     disabled={loading}
                     style={{
                       padding: '8px',
-                      fontSize: '14px',
+                      fontSize: '13px',
                       border: '1px solid #e7d7c7',
                       borderRadius: '6px',
                       background: '#fefaf5',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                      transition: 'box-shadow 0.2s ease, border-color 0.2s ease'
                     }}
                   />
                   <input
@@ -738,11 +752,13 @@ export default function Home() {
                     disabled={loading}
                     style={{
                       padding: '8px',
-                      fontSize: '14px',
+                      fontSize: '13px',
                       border: '1px solid #e7d7c7',
                       borderRadius: '6px',
                       background: '#fefaf5',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                      transition: 'box-shadow 0.2s ease, border-color 0.2s ease'
                     }}
                   />
                 </div>
@@ -1122,6 +1138,19 @@ export default function Home() {
           .start-button:focus-visible {
             outline: 2px solid rgba(196, 107, 54, 0.55);
             outline-offset: 3px;
+          }
+
+          textarea:focus,
+          select:focus,
+          input:focus {
+            border-color: #18636d;
+            box-shadow: 0 0 0 3px rgba(24, 99, 109, 0.25);
+          }
+
+          textarea:hover,
+          select:hover,
+          input:hover {
+            border-color: rgba(24, 99, 109, 0.7);
           }
 
           @media (min-width: 960px) {
