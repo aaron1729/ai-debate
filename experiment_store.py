@@ -95,7 +95,7 @@ class SQLiteExperimentStore(ExperimentStore):
                 -- Models used
                 pro_model TEXT NOT NULL,
                 con_model TEXT NOT NULL,
-                judge_model TEXT NOT NULL,
+                judge_model TEXT,  -- NULL if no judge yet
 
                 -- Configuration
                 turns INTEGER NOT NULL,
@@ -107,9 +107,9 @@ class SQLiteExperimentStore(ExperimentStore):
                 gt_url TEXT,
 
                 -- Judge decision
-                judge_verdict TEXT NOT NULL,
-                judge_score INTEGER,  -- NULL for "needs more evidence"
-                judge_reasoning TEXT NOT NULL,
+                judge_verdict TEXT,  -- NULL if no judge yet
+                judge_score INTEGER,  -- NULL for "needs more evidence" or no judge
+                judge_reasoning TEXT,  -- NULL if no judge yet
 
                 -- Full data as JSON blob for complex queries
                 full_data TEXT NOT NULL,
@@ -191,7 +191,7 @@ class SQLiteExperimentStore(ExperimentStore):
         ground_truth = experiment.get("ground_truth", {})
         config = experiment.get("experiment_config", {})
         models = config.get("models", {})
-        judge_decision = experiment.get("judge_decision", {})
+        judge_decision = experiment.get("judge_decision") or {}
 
         cursor.execute("""
             INSERT INTO experiments (

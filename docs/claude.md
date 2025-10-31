@@ -760,6 +760,157 @@ curl http://localhost:3000/api/check-usage | python3 -m json.tool
 - Run `npm run build` to check for type errors
 - Ensure ModelKey type matches MODELS object keys
 
+## Debate Visualization and Plotting
+
+### Overview
+
+After running debate experiments, we generate publication-quality visualizations showing how judge scores evolve across debate turns for different judge models, debater assignments, and turn orders.
+
+### Plotting Scripts
+
+**create_debate_plot.py** - Production plotting script
+- Generates 2×2 subplot grids for the full Claude vs Grok debate suite
+- Each subplot shows one of four experimental conditions:
+  - Top-left: Claude Pro → Grok Con (Pro, then Con)
+  - Top-right: Grok Con → Claude Pro (Con, then Pro)
+  - Bottom-left: Grok Pro → Claude Con (Pro, then Con)
+  - Bottom-right: Claude Con → Grok Pro (Con, then Pro)
+
+**generate_all_debate_plots.py** - Batch generation script
+- Generates plots for all three main debate motions
+- Outputs: `political_correctness_debates.png`, `anti_zionism_debates.png`, `cold_war_debates.png`
+
+### Plot Features
+
+**Visual Design:**
+- **Color scheme**:
+  - Judge models: Claude (purple), Gemini (blue), GPT-4 (orange), Grok (bright pink)
+  - Pro/Con labels: Green (#007000) for "Supported", Red (#D22222) for "Contradicted"
+- **Model hierarchy**: When scores collide at a turn, models are offset vertically by fixed order:
+  1. Claude (highest/top)
+  2. Gemini
+  3. GPT-4
+  4. Grok (lowest/bottom)
+- **Open circles**: "Needs more evidence" rulings (not scored, plotted at y=5)
+- **Dashed lines**: Connect rulings that include "needs more evidence"
+- **Solid lines**: Connect all other rulings
+- **Small font note**: Bottom of figure explains open circles and dashed lines
+
+**Layout:**
+- **Main title**: Centered at top with ample spacing above/below
+- **Column labels**: "Pro, then Con" and "Con, then Pro" positioned above subplot columns
+- **Row labels**: "Pro = Claude, Con = Grok" and "Pro = Grok, Con = Claude" rotated 90° on left side
+- **Subplot titles**: Colored text showing debater models and positions (e.g., "Claude arguing Pro, then Grok arguing Con")
+- **Axes**: X-axis shows debate turns (1-6), Y-axis shows score (0-10)
+- **Reference labels**: "Supported" (green) near y=9, "Contradicted" (red) near y=1
+
+### Key Implementation Details
+
+**Dynamic Offset Calculation** (`calculate_offsets()` function):
+```python
+def calculate_offsets(judge_data):
+    """
+    Calculate offsets for each model based on score collisions.
+    Returns a dict mapping (judge_model, turn) -> offset
+    """
+```
+- Detects which judge models have colliding scores at each turn
+- Assigns vertical offsets based on MODEL_ORDER hierarchy
+- Offsets are context-dependent (only applied when scores actually collide)
+- Two models colliding: ±0.1 offset
+- Three models colliding: -0.15, 0, +0.15
+- Four models colliding: -0.15, -0.05, +0.05, +0.15
+
+**Color Constants:**
+```python
+MODEL_COLORS = {
+    'claude-sonnet-4-5-20250929': '#8B5CF6',  # purple
+    'gemini-2.5-flash': '#2424bf',  # blue
+    'gpt-4-turbo-preview': '#F97316',  # lighter orange
+    'grok-3': '#f96bf3'  # bright pink
+}
+
+PRO_COLOR = '#007000'  # green
+CON_COLOR = '#D22222'  # red
+```
+
+**Spacing Parameters:**
+```python
+fig.subplots_adjust(
+    hspace=0.40,    # vertical space between subplot rows
+    wspace=0.35,    # horizontal space between subplot columns
+    top=0.76,       # top margin (makes room for column labels)
+    bottom=0.10,    # bottom margin (makes room for note)
+    left=0.14,      # left margin (makes room for row labels)
+    right=0.97      # right margin
+)
+```
+
+### Usage
+
+**Generate single plot:**
+```bash
+python create_debate_plot.py
+# Outputs: political_correctness_debates.png
+```
+
+**Generate all plots:**
+```bash
+python generate_all_debate_plots.py
+# Outputs: political_correctness_debates.png, anti_zionism_debates.png, cold_war_debates.png
+```
+
+**Customize for different motion:**
+```python
+create_debate_plot('%your search pattern%', 'output_filename.png')
+```
+
+### Generated Plots
+
+**Current debate motions with full visualization:**
+
+1. **political_correctness_debates.png**
+   - Motion: "As of 2018, what critics called political correctness represented genuine progress."
+   - Pattern: `%political correctness%`
+
+2. **anti_zionism_debates.png**
+   - Motion: "As of 2024, anti-Zionism is anti-Semitism."
+   - Pattern: `%anti-Zionism is anti-Semitism%`
+
+3. **cold_war_debates.png**
+   - Motion: "As of 2025, the United States started the new Cold War with Russia and provoked Russia's invasion of Ukraine."
+   - Pattern: `%United States started the new Cold War%`
+
+All three represent the complete 4-experiment suite (2 debater assignments × 2 turn orders) judged by all four models (Claude, Gemini, GPT-4, Grok) across 6 turns each.
+
+### Design Iterations
+
+The plotting system went through several iterations to achieve publication quality:
+
+**Legacy iteration (retired):**
+- Fixed model offsets (hardcoded per model)
+- Basic spacing and layout
+- Original green/red colors
+
+**Current iteration (`create_debate_plot.py`):**
+- Dynamic offset calculation (only when scores collide)
+- Model hierarchy ordering (Claude > Gemini > GPT-4 > Grok)
+- Improved spacing (column/row labels don't overlap)
+- Updated color scheme (darker green #007000, red #D22222)
+- Commas in column labels ("Pro, then Con")
+- Bottom note explaining open circles and dashed lines
+- Smaller open circle markers matching filled marker size
+
+### Future Enhancements
+
+**Potential additions:**
+- Statistical significance markers (e.g., asterisks for p<0.05)
+- Confidence intervals around judge scores
+- Win/loss annotations per subplot
+- Vote swing comparisons (for debate motions with voting data)
+- Cross-motion comparison panels
+- Interactive HTML versions with hover tooltips
+
 ## Experimental Results
 
 ### Initial Findings (October 2025)

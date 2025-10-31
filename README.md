@@ -2,13 +2,9 @@
 
 ## TO-DO
 
-run debates on the debate podcast motions! do them with or without a judge, but in any case do a bunch of after-the-fact judging per-round. probably just run the debates for 6 rounds, rather than 1,2,4,6.
-
 ## possible experiments
 
 - different models from the same provider (e.g. gpt-4 vs. gpt-5)
-
-- different judges of the same debates [already done some of this]
 
 - have the two debaters switch sides and see how it goes [this is already happening in `run_experiments.py`]
 
@@ -20,11 +16,14 @@ run debates on the debate podcast motions! do them with or without a judge, but 
 
 - trajectory of judgments through debate turns, plotted for each judge separately.
 
+- different judges of the same debates
+
 ## things to note in writeup
 
 - data sources
 
 - functionality
+
 
 
 ====================================

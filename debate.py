@@ -777,6 +777,199 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
     return experiment_id
 
 
+def run_debate_no_judge(claim: str, turns: int, pro_model: str, con_model: str,
+                        pro_went_first: bool = True, topic: Optional[str] = None, claim_id: Optional[str] = None,
+                        gt_verdict: Optional[str] = None, gt_source: Optional[str] = None,
+                        gt_url: Optional[str] = None) -> int:
+    """
+    Run a debate without a judge (to be judged later).
+
+    This is similar to run_debate() but:
+    - Does NOT require a judge
+    - Saves the debate to the database without a judge_decision
+    - Returns the experiment ID so it can be judged later
+
+    Args:
+        claim: The claim to debate
+        turns: Number of turns per side (total turns = turns * 2)
+        pro_model: Model key for pro debater
+        con_model: Model key for con debater
+        pro_went_first: Whether pro debater goes first (default: True)
+        topic: Optional topic category for the claim
+        claim_id: Optional claim ID in format 'filename:index'
+        gt_verdict: Optional ground truth verdict
+        gt_source: Optional ground truth source
+        gt_url: Optional ground truth URL
+
+    Returns:
+        Experiment ID in database
+    """
+    timestamp = datetime.utcnow().isoformat() + "Z"
+    errors = []
+    print(f"\n{MESSAGES['start'].replace('{turns}', str(turns))}")
+    print(f"Claim: {claim}")
+    print(f"Pro: {MODELS[pro_model]['name']}, Con: {MODELS[con_model]['name']}, Judge: None (will be judged later)\n")
+
+    # Initialize agents (no judge)
+    try:
+        pro_debater = Debater("pro", pro_model)
+        con_debater = Debater("con", con_model)
+    except ValueError as e:
+        print(f"\nModel initialization error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    # Run the debate
+    debate_history = []
+    debate_shortened = False
+
+    # Determine order of debaters
+    if pro_went_first:
+        first_debater = ("pro", pro_debater, pro_model, "pro_turn")
+        second_debater = ("con", con_debater, con_model, "con_turn")
+    else:
+        first_debater = ("con", con_debater, con_model, "con_turn")
+        second_debater = ("pro", pro_debater, pro_model, "pro_turn")
+
+    for turn in range(turns):
+        print(MESSAGES['turn'].replace('{turn}', str(turn + 1)).replace('{total_turns}', str(turns)))
+
+        # Loop through both debaters in order
+        for position_label, debater_obj, model_key, message_key in [first_debater, second_debater]:
+            side_label = "PRO" if position_label == "pro" else "CON"
+            print(MESSAGES[message_key].replace('{model_name}', MODELS[model_key]['name']))
+
+            try:
+                arg = debater_obj.make_argument(claim, debate_history)
+                debate_history.append(arg)
+
+                # Display the argument immediately
+                print(f"\n  {'='*60}")
+                if arg.get("refused", False):
+                    print(f"  {side_label} SIDE DECLINED TO ARGUE")
+                    print(f"  Reason: {arg.get('refusal_reason', 'No reason provided')}")
+                    debate_shortened = True
+                else:
+                    print(f"  Source: {arg['url']}")
+                    print(f"  Quote: \"{arg['quote']}\"")
+                    print(f"  Context: {arg['context']}")
+                    print(f"  Argument: {arg['argument']}")
+                print(f"  {'='*60}\n")
+            except RuntimeError as e:
+                # API errors - inform user and exit
+                print(f"\n  API Error from {side_label} debater: {e}", file=sys.stderr)
+                print("  Cannot continue debate due to API issues.\n", file=sys.stderr)
+                sys.exit(1)
+            except ValueError as e:
+                # Malformed response - inform user and exit
+                print(f"\n  Response Error from {side_label} debater: {e}", file=sys.stderr)
+                print("  Cannot continue debate due to malformed response.\n", file=sys.stderr)
+                sys.exit(1)
+            except Exception as e:
+                # Unexpected error
+                print(f"\n  Unexpected error from {side_label} debater: {e}", file=sys.stderr)
+                sys.exit(1)
+
+            # If this side refused, allow opponent one response then stop
+            if debate_shortened:
+                break
+
+        # If either side refused, stop the debate
+        if debate_shortened:
+            print(MESSAGES['debate_shortened'])
+            break
+
+    # Print summary without judge verdict
+    print("\n" + "=" * 80)
+    print("AI DEBATE SYSTEM")
+    print("=" * 80 + "\n")
+    print(f"CLAIM: {claim}\n")
+    print(f"MODELS:")
+    print(f"  Pro: {MODELS[pro_model]['name']}")
+    print(f"  Con: {MODELS[con_model]['name']}")
+    print(f"  Judge: None (will be judged later)\n")
+    print("=" * 80)
+    print("DEBATE TRANSCRIPT")
+    print("=" * 80 + "\n")
+
+    for i, turn in enumerate(debate_history, 1):
+        side_label = "PRO (Supporting)" if turn['position'] == "pro" else "CON (Opposing)"
+        model_name = turn.get('model', 'Unknown')
+        print(f"Turn {i} - {side_label} [{model_name}]")
+        print("-" * 80)
+        if turn.get("refused", False):
+            print("[MODEL REFUSED TO ARGUE THIS POSITION]")
+            print(f"Refusal reason: {turn.get('refusal_reason', 'No reason provided')}\n")
+        else:
+            print(f"Source: {turn['url']}")
+            print(f"Quote: \"{turn['quote']}\"")
+            print(f"Context: {turn['context']}")
+            print(f"Argument: {turn['argument']}\n")
+
+    print("=" * 80)
+    print("Debate complete. No judge verdict at this time.")
+    print("=" * 80 + "\n")
+
+    # Save to database without judge decision
+    # Convert debate_history to transcript format
+    transcript = []
+    turn_num = 1
+    for entry in debate_history:
+        transcript_entry = {
+            "turn": (turn_num + 1) // 2,
+            "debater": entry['position'],
+            "argument": entry.get('argument', ''),
+            "source_url": entry.get('url', ''),
+            "source_quote": entry.get('quote', '')
+        }
+
+        # Add refusal info if present
+        if entry.get('refused', False):
+            transcript_entry['refused'] = True
+            transcript_entry['refusal_reason'] = entry.get('refusal_reason', '')
+
+        transcript.append(transcript_entry)
+        turn_num += 1
+
+    experiment_data = {
+        "claim_data": {
+            "claim": claim
+        },
+        "ground_truth": {},
+        "experiment_config": {
+            "timestamp": timestamp,
+            "models": {
+                "pro": MODELS[pro_model]['id'],
+                "con": MODELS[con_model]['id'],
+                "judge": None  # No judge for now
+            },
+            "turns": turns,
+            "pro_went_first": pro_went_first
+        },
+        "debate_transcript": transcript,
+        "judge_decision": None,  # No judge decision
+        "errors_or_refusals": errors
+    }
+
+    # Add optional fields if provided
+    if topic:
+        experiment_data["claim_data"]["topic"] = topic
+    if claim_id:
+        experiment_data["claim_data"]["claim_id"] = claim_id
+
+    if gt_verdict:
+        experiment_data["ground_truth"]["verdict"] = gt_verdict
+    if gt_source:
+        experiment_data["ground_truth"]["source"] = gt_source
+    if gt_url:
+        experiment_data["ground_truth"]["url"] = gt_url
+
+    store = SQLiteExperimentStore()
+    experiment_id = store.save(experiment_data)
+    print(f"Experiment saved to database (ID: {experiment_id})")
+
+    return experiment_id
+
+
 def main():
     """Main entry point for the debate script."""
     parser = argparse.ArgumentParser(
