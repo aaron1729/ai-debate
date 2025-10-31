@@ -37,6 +37,14 @@ export default function Home() {
   const [rateLimit, setRateLimit] = useState(5);
   const [globalLimit, setGlobalLimit] = useState(200);
 
+  const description = 'Adversarial truth-seeking through structured AI debates';
+  const rawSiteUrl = process.env.SITE_URL;
+  const siteUrl = rawSiteUrl ? rawSiteUrl.replace(/\/$/, '') : '';
+  const ogImagePath = '/og-ai-debate-B-circle-1200x630.png';
+  const twitterImagePath = '/og-ai-debate-B-twitter-1200x628.png';
+  const ogImageUrl = siteUrl ? `${siteUrl}${ogImagePath}` : ogImagePath;
+  const twitterImageUrl = siteUrl ? `${siteUrl}${twitterImagePath}` : twitterImagePath;
+
   const modelKeys = Object.keys(MODELS) as ModelKey[];
   const trimmedKeysState = {
     anthropic: apiKeys.anthropic.trim(),
@@ -379,8 +387,25 @@ export default function Home() {
     <>
       <Head>
         <title>AI Debates</title>
-        <meta name="description" content="Adversarial truth-seeking through structured AI debates" />
+        <meta name="description" content={description} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/ai-debate.ico" sizes="any" />
+        <link rel="icon" type="image/png" href="/ai-debate-32x32.png" sizes="32x32" />
+        <link rel="icon" type="image/png" href="/ai-debate-16x16.png" sizes="16x16" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <meta name="theme-color" content="#ffffff" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="AI Debates" />
+        <meta property="og:description" content={description} />
+        {siteUrl && <meta property="og:url" content={siteUrl} />}
+        <meta property="og:image" content={ogImageUrl} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="AI Debates" />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={twitterImageUrl} />
       </Head>
 
       <div style={{

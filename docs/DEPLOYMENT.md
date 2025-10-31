@@ -104,6 +104,7 @@ ADMIN_IP=your.ip.address.here       # Treat this IP (and localhost) as admin
 ADMIN_RATE_LIMIT=500                # Admin allowance per model/day (default 500)
 NON_ADMIN_RATE_LIMIT=5              # Non-admin allowance per model/day (default 5)
 GLOBAL_MODEL_LIMIT=200              # Global backstop per model/day (default 200)
+SITE_URL=https://your-deployment-url.com   # Used for favicon + social preview metadata
 ```
 
 Notes:
@@ -113,12 +114,26 @@ Notes:
 - To find your IP address: `curl https://api.ipify.org`
 - The ADMIN_IP (and localhost) get ADMIN_RATE_LIMIT uses per model per day
 - Other IPs use NON_ADMIN_RATE_LIMIT (defaults to 5) per model per day
+- Set `SITE_URL` to the fully qualified production URL so Open Graph/Twitter previews render correctly (otherwise social scrapers may not resolve relative image paths)
 
 #### 4.3 Deploy
 
 1. Click **"Deploy"**
 2. Wait 2-3 minutes for initial deployment
 3. You'll get a URL like: `https://ai-debate-xxxx.vercel.app`
+
+#### 4.4 Branding Assets (favicons, OG images)
+
+The repository now ships a complete icon and Open Graph pack under `public/`:
+
+- `ai-debate.ico`, `ai-debate-16x16.png`, `ai-debate-32x32.png` (favicon coverage)
+- `apple-touch-icon.png` (iOS home-screen icon)
+- `ai-debate-192x192.png`, `ai-debate-512x512.png`, `maskable-512x512.png` (PWA icons)
+- `og-ai-debate-B-circle-1200x630.png` (Open Graph preview)
+- `og-ai-debate-B-twitter-1200x628.png` (Twitter preview)
+- `site.webmanifest` (referencing the new icon filenames)
+
+As long as `SITE_URL` is set, the Next.js `<Head>` metadata automatically references these assets. If you want to swap in your own artwork, replace the files in `public/` while keeping the same filenames.
 
 ## How It Works
 

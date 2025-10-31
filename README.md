@@ -2,8 +2,6 @@
 
 ## TO-DO
 
-fix or remove the text below the progress bar in the UI.
-
 run debates on the debate podcast motions! do them with or without a judge, but in any case do a bunch of after-the-fact judging per-round. probably just run the debates for 6 rounds, rather than 1,2,4,6.
 
 ## possible experiments
@@ -96,6 +94,7 @@ npm run dev
      - `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, etc. (for free tier)
      - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (required)
       - `GLOBAL_MODEL_LIMIT` (optional global backstop, defaults to 200 free debates per model/day)
+      - `SITE_URL` (public base URL, used for Open Graph/Twitter previews)
 
 The web version includes:
 - 5 free debates per IP per 24 hours
