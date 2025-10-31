@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import { MODELS, ModelKey, DebateResult, DebateTurn } from '../lib/debate-engine';
 import messages from '../shared/messages.json';
@@ -55,31 +55,34 @@ export default function Home() {
 
   const allServerModelsExhausted = usingServerKeys && modelKeys.every(model => isModelExhausted(model));
 
+  const fetchRateLimits = useCallback(async () => {
+    try {
+      const response = await fetch('/api/check-rate-limit', { cache: 'no-store' });
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      if (typeof data.limit === 'number') {
+        setRateLimit(data.limit);
+      }
+      if (typeof data.globalLimit === 'number') {
+        setGlobalLimit(data.globalLimit);
+      }
+
+      if (data.modelLimits) {
+        setModelLimits(data.modelLimits);
+        setHasLoadedLimits(true);
+      }
+    } catch (err) {
+      console.error('Failed to check rate limit:', err);
+    }
+  }, []);
+
   // Fetch initial rate limit and usage on page load
   useEffect(() => {
-    const fetchRateLimit = async () => {
-      try {
-        const response = await fetch('/api/check-rate-limit');
-        if (response.ok) {
-          const data = await response.json();
-          setRateLimit(data.limit);
-           if (data.globalLimit) {
-             setGlobalLimit(data.globalLimit);
-           }
-
-          // Set model limits from the API response
-          if (data.modelLimits) {
-            setModelLimits(data.modelLimits);
-            setHasLoadedLimits(true);
-          }
-        }
-      } catch (err) {
-        // If check fails, keep default of 5
-        console.error('Failed to check rate limit:', err);
-      }
-    };
-    fetchRateLimit();
-  }, []);
+    fetchRateLimits();
+  }, [fetchRateLimits]);
 
   const getVerdictColor = (verdictType: string) => {
     switch (verdictType) {
@@ -178,6 +181,11 @@ export default function Home() {
       await new Promise(resolve => setTimeout(resolve, 500));
       setVerdict(data.verdict);
       setProgress(100);
+
+      // Refresh rate limits so UI reflects the latest usage
+      if (usingServerKeys) {
+        await fetchRateLimits();
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {

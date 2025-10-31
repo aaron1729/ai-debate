@@ -7,16 +7,12 @@ const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_RE
   ? Redis.fromEnv()
   : null;
 
-
-
-
 // TEMPORARY DEBUGGING LOGGING
-console.log('[check-rate-limit] env', {
-  url: process.env.UPSTASH_REDIS_REST_URL?.slice(0, 40), // mask token in logs
-  tokenPresent: Boolean(process.env.UPSTASH_REDIS_REST_TOKEN)
-});
+// console.log('[check-rate-limit] env', {
+//   url: process.env.UPSTASH_REDIS_REST_URL?.slice(0, 40), // mask token in logs
+//   tokenPresent: Boolean(process.env.UPSTASH_REDIS_REST_TOKEN)
+// });
 ///////////////
-
 
 const ADMIN_IP = process.env.ADMIN_IP;
 const ADMIN_RATE_LIMIT = parseInt(process.env.ADMIN_RATE_LIMIT || '500', 10);
@@ -30,6 +26,11 @@ export default async function handler(
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  res.setHeader('Cache-Control', 'no-store, max-age=0, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.removeHeader('ETag');
 
   const identifier = getClientIp(req);
   const isLocalhost = isLocalhostIp(identifier);
@@ -49,9 +50,9 @@ export default async function handler(
       const globalSlidingKey = `@upstash/ratelimit:global:${modelKey}`;
 
 
-      // TEMPORARY DEBUGGING LOGGING
-    const usageRaw = redis ? await redis.get(usageKey) : null;
-    console.log('[check-rate-limit] raw snapshot', usageKey, usageRaw);
+    // TEMPORARY DEBUGGING LOGGING
+    // const usageRaw = redis ? await redis.get(usageKey) : null;
+    // console.log('[check-rate-limit] raw snapshot', usageKey, usageRaw);
     ///////////////
 
       let storedUsed: number | null = null;
@@ -123,17 +124,6 @@ export default async function handler(
 
       const effectiveUsed = storedUsed !== null ? storedUsed : slidingEntries;
       const effectiveGlobalUsed = globalStoredUsed !== null ? globalStoredUsed : globalSlidingEntries;
-
-      console.log('[check-rate-limit]', {
-        usageKey,
-        storedUsed,
-        slidingEntries,
-        effectiveUsed,
-        globalUsageKey,
-        globalStoredUsed,
-        globalSlidingEntries,
-        effectiveGlobalUsed
-      });
 
       const actualRemaining = Math.max(0, rateLimit - effectiveUsed);
       const globalRemaining = Math.max(0, GLOBAL_MODEL_LIMIT - effectiveGlobalUsed);
