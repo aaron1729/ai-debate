@@ -1,14 +1,5 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm install && npm run build",
-  "outputDirectory": ".next",
-  "env": {
-    "ANTHROPIC_API_KEY": "@anthropic_api_key",
-    "OPENAI_API_KEY": "@openai_api_key",
-    "GOOGLE_API_KEY": "@google_api_key",
-    "XAI_API_KEY": "@xai_api_key",
-    "UPSTASH_REDIS_REST_URL": "@upstash_redis_rest_url",
-    "UPSTASH_REDIS_REST_TOKEN": "@upstash_redis_rest_token",
-    "GLOBAL_MODEL_LIMIT": "@global_model_limit"
-  }
+  "outputDirectory": ".next"
 }
