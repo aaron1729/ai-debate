@@ -2,30 +2,13 @@
 
 ## TO-DO
 
-go through all 6-turn debates and add judgments by all judges. (this is partway done; the script can skip it.)
+plot all 6-turn debates individually (not just those that came as a suite of 4, which were all from `debate_motions.json`).
 
-
-**replace the comma-separated list of numbers here (no spaces!)**
-`python judge_existing_debates.py --experiment-ids 27,31,35,39 --judges all --turns-range 1-6 --skip-existing`
-
-codex gave me this list. i'm updating it as i go.
-DONE: 27, 31, 35, 39,
-DONE: 43, 47, 51, 55, 59, 63, 67, 71, 75, 82, 92, 96
-DONE: 100,104,108,112,116,120,124,128,132,136
-DONE: 140,144,148,152,156,160,164,168,172. `python judge_existing_debates.py --experiment-ids 140,144,148,152,156,160,164,168,172 --judges all --turns-range 1-6 --skip-existing`
-DONE: 176,180,184,190,194,198,202,206,210,223. `python judge_existing_debates.py --experiment-ids 176,180,184,190,194,198,202,206,210,223 --judges all --turns-range 1-6 --skip-existing`
-
-**have it check if there are any more.**
-
-**see if any debates were run multiple times, with same _or_ different debaters! if so, we can see how judges act.**
+compare the "political correctness debates", which involved _all_ six matchups.
 
 make plots of judgments.
 - use `generate_all_debate_plots.py` for 4-fold 6-turn debates (switch sides, and switch first-mover).
 - use `create_single_debate_plot.py` for single debates.
-
-
-MEANWHILE,
-i'm running some "debate motions" in the 4 x 6-turns, making sure to use two different models as debaters (otherwise they'd be repeats).
 
 ## CLEANUP
 
