@@ -157,6 +157,7 @@ The web version includes:
   - `PROMPT_LOG_TRIM_PROBABILITY` — probability (0–1) of running the prune check on writes to spread out Redis commands (default 0.1)
 - Logs live in the same Upstash instance the rate limiter uses. Inspect them with the Upstash console or via `redis-cli`/REST: e.g. `ZREVRANGE promptlog:index 0 9` to list recent debates, then `GET <key>` for the JSON payload.
 - A running total of stored bytes is maintained (`promptlog:total_bytes`). When the cap is hit, the oldest entries (and their size bookkeeping) are purged automatically so storage stays within the budget.
+- A local helper (`inspect_prompt_logs.py`) is available for quick checks: run `python inspect_prompt_logs.py list --limit 5 --summary` to print the newest claims/metadata (add `--include-scores` for their timestamps) or `python inspect_prompt_logs.py get <key> --summary` for a single entry. Include `--include-payloads` if you want the full debate transcript. The script auto-loads `.env` in the repo root before reaching for `UPSTASH_REDIS_REST_URL`/`TOKEN`. Like the logging pipeline, this script is new and untested—confirm results against Upstash before relying on it.
 
 ### Test Data
 

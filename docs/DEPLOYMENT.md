@@ -116,6 +116,17 @@ PROMPT_LOG_ENTRY_BYTES=12000                       # Estimated bytes per debate 
 PROMPT_LOG_TRIM_PROBABILITY=0.1                    # How often to run the prune check (0-1)
 ```
 
+To spot-check entries locally you can run the helper script:
+
+```
+python inspect_prompt_logs.py list --limit 5
+python inspect_prompt_logs.py list --limit 5 --summary --include-scores
+python inspect_prompt_logs.py get promptlog:<timestamp>:<uuid>
+python inspect_prompt_logs.py get promptlog:<timestamp>:<uuid> --summary
+```
+
+Add `--include-scores` if you want to see the sorted-set timestamps alongside the keys. The helper reads `.env` automatically (if present) before looking for `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`. As with the logging pipeline, treat these results as provisional until you have validated them in your environment.
+
 Notes:
 - You only need to add keys for models you want users to access for free
 - If you don't add any LLM API keys, users must provide their own
