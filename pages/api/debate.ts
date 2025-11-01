@@ -1,13 +1,16 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
-import { runDebate, ModelKey, APIKeys, MODELS } from '../../lib/debate-engine';
+import { randomUUID } from 'crypto';
+import { runDebate, ModelKey, APIKeys, MODELS, DebateProgressUpdate, DebateResult } from '../../lib/debate-engine';
 import { getClientIp, isLocalhostIp } from '../../lib/request-ip';
 import {
   ADMIN_RATE_LIMIT,
   NON_ADMIN_RATE_LIMIT,
   GLOBAL_MODEL_LIMIT
 } from '../../lib/rate-limits';
+import { hashIp, logDebateEntry } from '../../lib/prompt-log';
+import type { DebateLogMetadata } from '../../lib/prompt-log';
 
 // Rate limiter: per-model quotas (configurable via env / lib/rate-limits.ts)
 const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
@@ -49,9 +52,15 @@ export default async function handler(
   }
 
   const wantsStream = req.headers['x-debate-stream'] === '1';
+  const startedAt = Date.now();
+  const progressUpdates: DebateProgressUpdate[] = [];
+  let logMetadata: DebateLogMetadata | undefined;
+  let requestSnapshot: Record<string, unknown> | undefined;
+  let debateResult: DebateResult | undefined;
 
   try {
     const { claim, turns, proModel, conModel, judgeModel, firstSpeaker, userApiKeys }: DebateRequest = req.body;
+    const requestId = randomUUID();
 
     // Validate input
     if (!claim || !proModel || !conModel || !judgeModel) {
@@ -68,10 +77,45 @@ export default async function handler(
 
     // Determine if using server keys or user keys
     const usingServerKeys = !userApiKeys || Object.keys(userApiKeys).length === 0;
+    const userApiKeyProviders = usingServerKeys
+      ? []
+      : Object.entries(userApiKeys || {}).filter(([, value]) => Boolean(value)).map(([key]) => key);
+
+    const clientIp = getClientIp(req);
+    const ipHash = hashIp(clientIp);
+    const userAgentHeader = req.headers['user-agent'];
+    const userAgent = Array.isArray(userAgentHeader) ? userAgentHeader[0] : userAgentHeader;
+
+    logMetadata = {
+      id: requestId,
+      claim,
+      turns,
+      proModel,
+      conModel,
+      judgeModel,
+      firstSpeaker,
+      usingServerKeys,
+      userApiKeyProviders,
+      createdAt: new Date(startedAt).toISOString(),
+      ipHash,
+      userAgent
+    };
+
+    requestSnapshot = {
+      claim,
+      turns,
+      proModel,
+      conModel,
+      judgeModel,
+      firstSpeaker,
+      usingServerKeys,
+      userApiKeyProviders,
+      wantsStream
+    };
 
     // If using server keys, apply per-model rate limiting
     if (usingServerKeys && redis) {
-      const identifier = getClientIp(req);
+      const identifier = clientIp;
       const isLocalhost = isLocalhostIp(identifier);
       const isAdmin = Boolean(ADMIN_IP && (identifier === ADMIN_IP || isLocalhost));
       const rateLimit = isAdmin ? ADMIN_RATE_LIMIT : NON_ADMIN_RATE_LIMIT;
@@ -191,7 +235,7 @@ export default async function handler(
         }
       };
 
-      const result = await runDebate(
+      debateResult = await runDebate(
         claim,
         turns,
         proModel,
@@ -200,29 +244,58 @@ export default async function handler(
         apiKeys,
         firstSpeaker,
         {
-          onUpdate: (update) => writeLine(update)
+          onUpdate: (update) => {
+            progressUpdates.push(update);
+            writeLine(update);
+          }
         }
       );
 
-      writeLine({ type: 'complete', result });
+      if (logMetadata && requestSnapshot) {
+        logMetadata.durationMs = Date.now() - startedAt;
+        await logDebateEntry({
+          metadata: logMetadata,
+          requestBody: requestSnapshot,
+          updates: progressUpdates,
+          result: debateResult
+        });
+      }
+
+      writeLine({ type: 'complete', result: debateResult });
       res.end();
       return;
     }
 
     // Run debate
-    const result = await runDebate(
+    debateResult = await runDebate(
       claim,
       turns,
       proModel,
       conModel,
       judgeModel,
       apiKeys,
-      firstSpeaker
+      firstSpeaker,
+      {
+        onUpdate: (update) => {
+          progressUpdates.push(update);
+        }
+      }
     );
 
-    return res.status(200).json(result);
+    if (logMetadata && requestSnapshot) {
+      logMetadata.durationMs = Date.now() - startedAt;
+      await logDebateEntry({
+        metadata: logMetadata,
+        requestBody: requestSnapshot,
+        updates: progressUpdates.length ? progressUpdates : undefined,
+        result: debateResult
+      });
+    }
+
+    return res.status(200).json(debateResult);
   } catch (error: any) {
     console.error('Debate error:', error);
+    const durationMs = Date.now() - startedAt;
 
     if (wantsStream) {
       let status = 500;
@@ -234,6 +307,22 @@ export default async function handler(
       } else if (error.message?.includes('API error')) {
         status = 502;
         errorLabel = 'API error';
+      }
+
+      if (logMetadata && requestSnapshot) {
+        logMetadata.durationMs = durationMs;
+        await logDebateEntry({
+          metadata: logMetadata,
+          requestBody: requestSnapshot,
+          updates: progressUpdates.length ? progressUpdates : undefined,
+          result: debateResult,
+          error: {
+            message: error.message || 'An unexpected error occurred',
+            stack: error.stack,
+            label: errorLabel,
+            statusCode: status
+          }
+        });
       }
 
       if (!res.headersSent) {
@@ -252,6 +341,20 @@ export default async function handler(
       })}\n`);
       res.end();
       return;
+    }
+
+    if (logMetadata && requestSnapshot) {
+      logMetadata.durationMs = durationMs;
+      await logDebateEntry({
+        metadata: logMetadata,
+        requestBody: requestSnapshot,
+        updates: progressUpdates.length ? progressUpdates : undefined,
+        result: debateResult,
+        error: {
+          message: error.message,
+          stack: error.stack
+        }
+      });
     }
 
     // Handle specific error types

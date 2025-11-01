@@ -1040,7 +1040,7 @@ Examples:
         "--topic",
         type=str,
         choices=VALID_TOPICS if VALID_TOPICS else None,
-        help=f"Topic category for the claim (optional){f': {', '.join(VALID_TOPICS)}' if VALID_TOPICS else ''}"
+        help="Topic category for the claim (optional)" + (f": {', '.join(VALID_TOPICS)}" if VALID_TOPICS else "")
     )
 
     parser.add_argument(

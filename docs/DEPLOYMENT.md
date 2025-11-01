@@ -47,6 +47,7 @@ npm install
 # Create local .env file
 cp .env.example .env
 # Edit .env and add your API keys and Upstash credentials
+# Include PROMPT_LOG_IP_SALT (long random string) if you plan to exercise the new Redis prompt logging pipeline. This feature is newly added and not yet fully tested, so double-check inserts in your own environment.
 
 # Build the project
 npm run build
@@ -105,6 +106,14 @@ ADMIN_RATE_LIMIT=500                # Admin allowance per model/day (default 500
 NON_ADMIN_RATE_LIMIT=5              # Non-admin allowance per model/day (default 5)
 GLOBAL_MODEL_LIMIT=200              # Global backstop per model/day (default 200)
 SITE_URL=https://your-deployment-url.com   # Used for favicon + social preview metadata
+```
+
+**Optional (prompt/debate logging - new & untested):**
+```
+PROMPT_LOG_IP_SALT=generate_a_long_random_string   # Salt when hashing IPs into Redis
+PROMPT_LOG_MAX_BYTES=224000000                     # Adjust storage ceiling before pruning
+PROMPT_LOG_ENTRY_BYTES=12000                       # Estimated bytes per debate for pruning math
+PROMPT_LOG_TRIM_PROBABILITY=0.1                    # How often to run the prune check (0-1)
 ```
 
 Notes:

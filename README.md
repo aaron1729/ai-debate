@@ -2,27 +2,72 @@
 
 ## TO-DO
 
+go through all 6-turn debates and add judgments by all judges. (this is partway done; the script can skip it.)
+
+
+**replace the comma-separated list of numbers here (no spaces!)**
+`python judge_existing_debates.py --experiment-ids 27,31,35,39 --judges all --turns-range 1-6 --skip-existing`
+
+codex gave me this list. i'm updating it as i go.
+DONE: 27, 31, 35, 39,
+DONE: 43, 47, 51, 55, 59, 63, 67, 71, 75, 82, 92, 96
+DONE: 100,104,108,112,116,120,124,128,132,136
+DONE: 140,144,148,152,156,160,164,168,172. `python judge_existing_debates.py --experiment-ids 140,144,148,152,156,160,164,168,172 --judges all --turns-range 1-6 --skip-existing`
+DONE: 176,180,184,190,194,198,202,206,210,223. `python judge_existing_debates.py --experiment-ids 176,180,184,190,194,198,202,206,210,223 --judges all --turns-range 1-6 --skip-existing`
+
+**have it check if there are any more.**
+
+**see if any debates were run multiple times, with same _or_ different debaters! if so, we can see how judges act.**
+
+make plots of judgments.
+- use `generate_all_debate_plots.py` for 4-fold 6-turn debates (switch sides, and switch first-mover).
+- use `create_single_debate_plot.py` for single debates.
+
+
+MEANWHILE,
+i'm running some "debate motions" in the 4 x 6-turns, making sure to use two different models as debaters (otherwise they'd be repeats).
+
+## CLEANUP
+
+everything of course, but particularly e.g.:
+- data-processing scripts;
+- images, and scripts for generating those;
+- ...
+
+
 ## possible experiments
+
+- same debate with all (4 choose 3 = ) 6 matchups, to see relative debater strength.
 
 - different models from the same provider (e.g. gpt-4 vs. gpt-5)
 
 - have the two debaters switch sides and see how it goes [this is already happening in `run_experiments.py`]
 
+- rerun debates with all the same parameters on my side (since the models have their own randomness).
+
 - same matchup with same debaters, but in reverse order: CON argues before PRO.
 
 - label claims by how controversial they are, and by their political polarity (if any).
 
+- see if a judge appears to have an implicit bias on a given topic -- they're giving similar scores on the same topic regardless of who's debating which side.
+
+- do judges particularly agree with their own reasoning? e.g. there could be some implicit bias towards language of the sort that the model itself generates. split this into Pro vs Con judgments.
+
+- check based on source (gpt5, etc.).
+
 ## possible ways of slicing the data
 
-- trajectory of judgments through debate turns, plotted for each judge separately.
+- trajectory of judgments through debate turns, plotted all together for all judges of the same debate.
 
-- different judges of the same debates
+- by topic (environment, religion, politics, ...)
 
 ## things to note in writeup
 
-- data sources
+- data sources; data cleaning and verification.
 
 - functionality
+
+- web UI
 
 
 
@@ -55,6 +100,7 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edit .env with your keys
 ```
+- Add `PROMPT_LOG_IP_SALT` (for hashed IP logging) and other prompt-log settings if you want to exercise the new Redis logging pipeline. This path is freshly added and not yet tested end-to-end.
 
 3. Run a debate:
 ```bash
@@ -100,6 +146,17 @@ The web version includes:
 - Global backstop of 200 free debates per model per 24 hours (shared across all IPs)
 - Option for users to provide their own API keys for unlimited usage
 - Support for 4 models (Claude, GPT-4, Gemini, Grok)
+
+### Prompt & Debate Logging
+
+- Every debate request and outcome is persisted in Upstash Redis under `promptlog:*` keys, including metadata (models, turns, hashed IP, user-agent), streaming progress updates, final transcripts, verdicts, and error details when runs fail. **This logging pipeline is new and has not yet been fully tested—verify it in your environment before relying on it.**
+- IP addresses are hashed with `PROMPT_LOG_IP_SALT` (falls back to `IP_HASH_SALT` if unset); set a unique salt so hashes cannot be reversed.
+- Storage is capped by a configurable byte budget. Defaults (tuned for the 256 MB free tier) can be overridden via:
+  - `PROMPT_LOG_MAX_BYTES` — total bytes before pruning kicks in (default ≈214 MB headroom)
+  - `PROMPT_LOG_ENTRY_BYTES` — expected per-entry size used to estimate how many records to trim (default 12 KB)
+  - `PROMPT_LOG_TRIM_PROBABILITY` — probability (0–1) of running the prune check on writes to spread out Redis commands (default 0.1)
+- Logs live in the same Upstash instance the rate limiter uses. Inspect them with the Upstash console or via `redis-cli`/REST: e.g. `ZREVRANGE promptlog:index 0 9` to list recent debates, then `GET <key>` for the JSON payload.
+- A running total of stored bytes is maintained (`promptlog:total_bytes`). When the cap is hit, the oldest entries (and their size bookkeeping) are purged automatically so storage stays within the budget.
 
 ### Test Data
 
