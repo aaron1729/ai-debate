@@ -1,5 +1,5 @@
 import os
-from typing import Iterable
+from typing import Iterable, Protocol
 
 # Model configuration
 # fmt: off
@@ -26,6 +26,24 @@ MODELS = {
     }
 }
 # fmt: on
+
+class GenerateFromPrompt(Protocol):
+    """
+    Any class that produces a response from system and user prompts
+    """
+    def generate(self, system_prompt: str, user_prompt: str, max_tokens: int = 2000) -> str:
+        """
+        Generate a response from the model.
+
+        Args:
+            system_prompt: System instructions
+            user_prompt: User message
+            max_tokens: Maximum tokens to generate
+
+        Returns:
+            Generated text response
+        """
+        ...
 
 
 class ModelClient:
