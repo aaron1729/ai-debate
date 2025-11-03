@@ -26,7 +26,7 @@ everything of course, but particularly e.g.:
 
 - have the two debaters switch sides and see how it goes [this is already happening in `run_experiments.py`]
 
-- rerun debates with all the same parameters on my side (since the models have their own randomness).
+- rerun debates with _all_ the same parameters on my side (since all of the models have their own randomness -- temperature > 0).
 
 - same matchup with same debaters, but in reverse order: CON argues before PRO.
 
@@ -243,7 +243,25 @@ Non-temporal motions are unaffected by these constraints.
 
 ### Running Experiments
 
-The debate system automatically saves all experiment results to a SQLite database for easy querying and analysis:
+The debate system automatically saves all experiment results to a SQLite database for easy querying and analysis.
+
+#### Debate Suites
+
+For systematic testing, debates can be run in "suites" of 4 configurations to control for order effects:
+- **2 debater orders**: Model A arguing Pro vs Model B arguing Con, and vice versa
+- **2 turn orders**: Pro going first vs Con going first
+
+This 2×2 design (4 debates total) helps isolate the effect of argument strength from confounding factors like first-mover advantage or model-specific biases toward certain argument positions.
+
+Use `run_debate_motion_suite.py` to run all 4 configurations automatically:
+
+```bash
+python run_debate_motion_suite.py --motion 2 --debater1 claude --debater2 gpt4
+```
+
+This will run all 4 debate configurations for motion index 2 from `data/debate_motions.json`. The political correctness motion (index 2) has been run with all 6 possible debater matchups (claude-gemini, claude-gpt4, claude-grok, gemini-gpt4, gemini-grok, gpt4-grok), providing a comprehensive comparison of model debating capabilities on the same topic.
+
+#### Individual Experiments
 
 ```bash
 python debate.py "Your claim here" \
