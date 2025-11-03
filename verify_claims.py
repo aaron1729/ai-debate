@@ -19,7 +19,7 @@ from bs4 import BeautifulSoup
 load_dotenv()
 
 # Import from other scripts
-from debate import ModelClient, MODELS
+from model_client import ModelClient, MODELS
 
 
 def fetch_url_content(url: str) -> Optional[str]:

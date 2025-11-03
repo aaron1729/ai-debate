@@ -17,7 +17,7 @@ from datetime import datetime
 load_dotenv()
 
 # Import ModelClient and topics utilities from existing scripts
-from debate import ModelClient, MODELS
+from model_client import ModelClient, MODELS
 from process_factcheck_claims import load_topics, save_topics
 
 

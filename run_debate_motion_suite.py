@@ -32,7 +32,7 @@ import subprocess
 import sys
 from typing import List
 
-from debate import MODELS
+from model_client import MODELS
 
 
 def load_debate_motions(filepath: str = "data/debate_motions.json") -> list[dict]:

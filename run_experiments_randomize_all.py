@@ -15,7 +15,7 @@ import subprocess
 import sys
 from typing import List, Sequence, Tuple
 
-from debate import MODELS
+from model_client import MODELS
 
 
 def discover_claim_files() -> List[str]:

@@ -1,4 +1,7 @@
+import os
+
 # Model configuration
+# fmt: off
 MODELS = {
     "claude": {
         "name": "Claude Sonnet 4.5",
@@ -21,6 +24,7 @@ MODELS = {
         "provider": "xai"
     }
 }
+# fmt: on
 
 
 class ModelClient:
