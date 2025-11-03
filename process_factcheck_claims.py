@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import ModelClient from model_client.py
-from model_client import ModelClient, MODELS
+from model_client import ModelClient, all_available_model_keys, get_model_name
 
 
 def load_topics(topics_file: str = "topics.json") -> list[str]:
@@ -293,7 +293,7 @@ def process_claims_file(input_file: str, output_file: str, model_key: str, topic
     print(f"Loaded {len(topics)} existing topics: {', '.join(topics)}\n")
 
     # Initialize model
-    print(f"Initializing {MODELS[model_key]['name']}...")
+    print(f"Initializing {get_model_name(model_key)}...")
     try:
         model = ModelClient(model_key)
     except ValueError as e:
@@ -376,7 +376,7 @@ Examples:
   python process_factcheck_claims.py data/google-fact-check/raw/claims_historical_climate_50.json -o data/google-fact-check/cleaned/clean_climate.json
   python process_factcheck_claims.py data/google-fact-check/raw/claims_historical_health_50.json --model gpt4 -o data/google-fact-check/cleaned/clean_health.json
 
-Available models: {', '.join(MODELS.keys())}
+Available models: {', '.join(all_available_model_keys())}
 
 The script will:
 1. Clean and rewrite claims to be standalone and debatable
@@ -401,7 +401,7 @@ The script will:
     parser.add_argument(
         "--model",
         default="claude",
-        choices=list(MODELS.keys()),
+        choices=list(all_available_model_keys()),
         help="Model to use for processing (default: claude)"
     )
 

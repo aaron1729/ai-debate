@@ -32,7 +32,7 @@ import subprocess
 import sys
 from typing import List
 
-from model_client import MODELS
+from model_client import all_available_model_keys, get_model_name
 
 
 def load_debate_motions(filepath: str = "data/debate_motions.json") -> list[dict]:
@@ -83,7 +83,7 @@ def run_debate_config(motion_idx: int, pro_model: str, con_model: str,
 
     order = "pro_first" if pro_first else "con_first"
     print(f"\n{'='*80}")
-    print(f"Running Config: {MODELS[pro_model]['name']}(pro) vs {MODELS[con_model]['name']}(con), {order}")
+    print(f"Running Config: {get_model_name(pro_model)}(pro) vs {get_model_name(con_model)}(con), {order}")
     print(f"{'='*80}\n")
 
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -141,7 +141,7 @@ def main():
         description="Run complete debate motion experiment suite (4 debates + 64 judgments)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
-Available models: {', '.join(MODELS.keys())}
+Available models: {', '.join(all_available_model_keys())}
 
 Experiment Design:
   4 debate configurations (all 6 rounds):
@@ -151,7 +151,7 @@ Experiment Design:
     4. Debater2=pro, Debater1=con, con first
 
   64 judgments total:
-    - 4 judges: {', '.join(MODELS.keys())}
+    - 4 judges: {', '.join(all_available_model_keys())}
     - 4 turn lengths: 1, 2, 4, 6
     - 4 debates
 
@@ -178,7 +178,7 @@ Examples:
         "--debater1",
         type=str,
         required=True,
-        choices=list(MODELS.keys()),
+        choices=list(all_available_model_keys()),
         help="First debater model"
     )
 
@@ -186,7 +186,7 @@ Examples:
         "--debater2",
         type=str,
         required=True,
-        choices=list(MODELS.keys()),
+        choices=list(all_available_model_keys()),
         help="Second debater model (must be different from debater1)"
     )
 
@@ -243,8 +243,8 @@ Examples:
         print("DEBATE MOTION EXPERIMENT SUITE")
         print("=" * 80)
         print(f"Motion: {motion_text}")
-        print(f"Debater 1: {MODELS[args.debater1]['name']}")
-        print(f"Debater 2: {MODELS[args.debater2]['name']}")
+        print(f"Debater 1: {get_model_name(args.debater1)}")
+        print(f"Debater 2: {get_model_name(args.debater2)}")
         print(f"\nRunning 4 debate configurations...")
         print("=" * 80)
 

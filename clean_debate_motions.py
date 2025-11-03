@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import ModelClient from model_client.py
-from model_client import ModelClient, MODELS
+from model_client import ModelClient, get_model_name, all_available_model_keys
 
 
 def get_system_prompt() -> str:
@@ -225,7 +225,7 @@ def clean_debate_motions(
     print(f"Found {total_motions} motions to clean.\n")
 
     # Initialize model
-    print(f"Initializing {MODELS[model_key]['name']}...")
+    print(f"Initializing {get_model_name(model_key)}...")
     try:
         model = ModelClient(model_key)
     except ValueError as e:
@@ -312,7 +312,7 @@ Examples:
 
   python clean_debate_motions.py data/debate-podcasts/debate_motions_collated.json --model gpt4
 
-Available models: {', '.join(MODELS.keys())}
+Available models: {', '.join(all_available_model_keys())}
 
 The script will:
 1. Read collated debate motions
@@ -335,7 +335,7 @@ The script will:
     parser.add_argument(
         "--model",
         default="claude",
-        choices=list(MODELS.keys()),
+        choices=list(all_available_model_keys()),
         help="Model to use for cleaning (default: claude)"
     )
 

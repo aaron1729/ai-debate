@@ -28,7 +28,7 @@ import os
 import sys
 from typing import Optional
 from debate import run_debate
-from model_client import MODELS
+from model_client import all_available_model_keys, get_model_name, is_not_an_available_model
 
 
 def load_claim_from_file(claim_spec: str) -> tuple[str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]]:
@@ -115,8 +115,8 @@ def run_experiment_suite(claim_spec: str, debater1: str, debater2: str, judge: s
     """
     # Validate models
     for model_key, role in [(debater1, "debater1"), (debater2, "debater2"), (judge, "judge")]:
-        if model_key not in MODELS:
-            raise ValueError(f"Unknown model for {role}: {model_key}. Available: {list(MODELS.keys())}")
+        if is_not_an_available_model(model_key):
+            raise ValueError(f"Unknown model for {role}: {model_key}. Available: {list(all_available_model_keys())}")
 
     # Load claim
     print(f"\nLoading claim: {claim_spec}")
@@ -127,8 +127,8 @@ def run_experiment_suite(claim_spec: str, debater1: str, debater2: str, judge: s
         print(f"Topic: {topic}")
     if gt_verdict:
         print(f"Ground truth: {gt_verdict}")
-    print(f"\nDebaters: {MODELS[debater1]['name']} vs {MODELS[debater2]['name']}")
-    print(f"Judge: {MODELS[judge]['name']}")
+    print(f"\nDebaters: {get_model_name(debater1)} vs {get_model_name(debater2)}")
+    print(f"Judge: {get_model_name(judge)}")
     print("\nRunning 8 experiments (4 turn counts × 2 orderings)...")
     print("=" * 80)
 
@@ -136,7 +136,7 @@ def run_experiment_suite(claim_spec: str, debater1: str, debater2: str, judge: s
     turn_counts = [1, 2, 4, 6]
 
     # Configuration 1: debater1 pro, debater2 con (debater1 goes first)
-    print(f"\nConfiguration 1: {MODELS[debater1]['name']} argues PRO, {MODELS[debater2]['name']} argues CON")
+    print(f"\nConfiguration 1: {get_model_name(debater1)} argues PRO, {get_model_name(debater2)} argues CON")
     print("-" * 80)
     for turns in turn_counts:
         print(f"\n>>> Running with T={turns} turns per side...")
@@ -157,7 +157,7 @@ def run_experiment_suite(claim_spec: str, debater1: str, debater2: str, judge: s
         print(f"✓ Completed T={turns} (Experiment ID: {exp_id})")
 
     # Configuration 2: debater2 pro, debater1 con (debater2 goes first)
-    print(f"\n\nConfiguration 2: {MODELS[debater2]['name']} argues PRO, {MODELS[debater1]['name']} argues CON")
+    print(f"\n\nConfiguration 2: {get_model_name(debater2)} argues PRO, {get_model_name(debater1)} argues CON")
     print("-" * 80)
     for turns in turn_counts:
         print(f"\n>>> Running with T={turns} turns per side...")
@@ -185,7 +185,7 @@ def main():
         description="Run systematic debate experiments with varying turn counts and debater orderings",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
-Available models: {', '.join(MODELS.keys())}
+Available models: {', '.join(all_available_model_keys())}
 
 Experiment Design (2x8):
   - Turn counts: T=1, 2, 4, 6 (4 variations)
@@ -214,7 +214,7 @@ Examples:
         "--debater1",
         type=str,
         required=True,
-        choices=list(MODELS.keys()),
+        choices=list(all_available_model_keys()),
         help="First debater model (will argue PRO in first 4 experiments, CON in last 4)"
     )
 
@@ -222,7 +222,7 @@ Examples:
         "--debater2",
         type=str,
         required=True,
-        choices=list(MODELS.keys()),
+        choices=list(all_available_model_keys()),
         help="Second debater model (will argue CON in first 4 experiments, PRO in last 4)"
     )
 
@@ -230,7 +230,7 @@ Examples:
         "--judge",
         type=str,
         required=True,
-        choices=list(MODELS.keys()),
+        choices=list(all_available_model_keys()),
         help="Judge model (same for all 8 experiments)"
     )
 

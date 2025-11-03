@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Literal, Optional
 from dotenv import load_dotenv
 from experiment_store import SQLiteExperimentStore
-from model_client import ModelClient, MODELS
+from model_client import ModelClient, get_model_name, get_model_id, all_available_model_keys
 
 # Load environment variables
 load_dotenv()
@@ -51,7 +51,7 @@ class Debater:
         """
         self.position = position
         self.model_client = ModelClient(model_key)
-        self.model_name = MODELS[model_key]["name"]
+        self.model_name = get_model_name(model_key)
 
     def get_system_prompt(self, claim: str) -> str:
         """Generate the system prompt for this debater."""
@@ -249,7 +249,7 @@ class Judge:
             model_key: Model to use (e.g., "claude", "gpt4")
         """
         self.model_client = ModelClient(model_key)
-        self.model_name = MODELS[model_key]["name"]
+        self.model_name = get_model_name(model_key)
 
     def get_system_prompt(self, claim: str = "") -> str:
         """Generate the system prompt for the judge."""
@@ -501,9 +501,9 @@ def create_experiment_json(claim: str, topic: Optional[str], claim_id: Optional[
         "experiment_config": {
             "timestamp": timestamp,
             "models": {
-                "pro": MODELS[pro_model_key]['id'],
-                "con": MODELS[con_model_key]['id'],
-                "judge": MODELS[judge_model_key]['id']
+                "pro": get_model_id(pro_model_key),
+                "con": get_model_id(con_model_key),
+                "judge": get_model_id(judge_model_key)
             },
             "turns": turns,
             "pro_went_first": pro_went_first
@@ -560,7 +560,7 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
     errors = []
     print(f"\n{MESSAGES['start'].replace('{turns}', str(turns))}")
     print(f"Claim: {claim}")
-    print(f"Pro: {MODELS[pro_model]['name']}, Con: {MODELS[con_model]['name']}, Judge: {MODELS[judge_model]['name']}\n")
+    print(f"Pro: {get_model_name(pro_model)}, Con: {get_model_name(con_model)}, Judge: {get_model_name(judge_model)}\n")
 
     # Initialize agents
     try:
@@ -589,7 +589,7 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
         # Loop through both debaters in order
         for position_label, debater_obj, model_key, message_key in [first_debater, second_debater]:
             side_label = "PRO" if position_label == "pro" else "CON"
-            print(MESSAGES[message_key].replace('{model_name}', MODELS[model_key]['name']))
+            print(MESSAGES[message_key].replace('{model_name}', get_model_name(model_key)))
 
             try:
                 arg = debater_obj.make_argument(claim, debate_history)
@@ -632,7 +632,7 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
             break
 
     # Judge the debate
-    print(f"\n{MESSAGES['judge_deliberating'].replace('{model_name}', MODELS[judge_model]['name'])}")
+    print(f"\n{MESSAGES['judge_deliberating'].replace('{model_name}', get_model_name(judge_model))}")
     try:
         verdict = judge.judge_debate(claim, debate_history)
     except Exception as e:
@@ -641,9 +641,9 @@ def run_debate(claim: str, turns: int, pro_model: str, con_model: str, judge_mod
 
     # Output the results
     output = format_debate_output(claim, debate_history, verdict,
-                                  MODELS[pro_model]['name'],
-                                  MODELS[con_model]['name'],
-                                  MODELS[judge_model]['name'])
+                                  get_model_name(pro_model),
+                                  get_model_name(con_model),
+                                  get_model_name(judge_model))
     print(output)
 
     # Save to database
@@ -692,7 +692,7 @@ def run_debate_no_judge(claim: str, turns: int, pro_model: str, con_model: str,
     errors = []
     print(f"\n{MESSAGES['start'].replace('{turns}', str(turns))}")
     print(f"Claim: {claim}")
-    print(f"Pro: {MODELS[pro_model]['name']}, Con: {MODELS[con_model]['name']}, Judge: None (will be judged later)\n")
+    print(f"Pro: {get_model_name(pro_model)}, Con: {get_model_name(con_model)}, Judge: None (will be judged later)\n")
 
     # Initialize agents (no judge)
     try:
@@ -720,7 +720,7 @@ def run_debate_no_judge(claim: str, turns: int, pro_model: str, con_model: str,
         # Loop through both debaters in order
         for position_label, debater_obj, model_key, message_key in [first_debater, second_debater]:
             side_label = "PRO" if position_label == "pro" else "CON"
-            print(MESSAGES[message_key].replace('{model_name}', MODELS[model_key]['name']))
+            print(MESSAGES[message_key].replace('{model_name}', get_model_name(model_key)))
 
             try:
                 arg = debater_obj.make_argument(claim, debate_history)
@@ -768,8 +768,8 @@ def run_debate_no_judge(claim: str, turns: int, pro_model: str, con_model: str,
     print("=" * 80 + "\n")
     print(f"CLAIM: {claim}\n")
     print(f"MODELS:")
-    print(f"  Pro: {MODELS[pro_model]['name']}")
-    print(f"  Con: {MODELS[con_model]['name']}")
+    print(f"  Pro: {get_model_name(pro_model)}")
+    print(f"  Con: {get_model_name(con_model)}")
     print(f"  Judge: None (will be judged later)\n")
     print("=" * 80)
     print("DEBATE TRANSCRIPT")
@@ -822,8 +822,8 @@ def run_debate_no_judge(claim: str, turns: int, pro_model: str, con_model: str,
         "experiment_config": {
             "timestamp": timestamp,
             "models": {
-                "pro": MODELS[pro_model]['id'],
-                "con": MODELS[con_model]['id'],
+                "pro": get_model_id(pro_model),
+                "con": get_model_id(con_model),
                 "judge": None  # No judge for now
             },
             "turns": turns,
@@ -860,7 +860,7 @@ def main():
         description="AI Debates - Conduct structured debates on factual claims.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
-Available models: {', '.join(MODELS.keys())}
+Available models: {', '.join(all_available_model_keys())}
 
 Examples:
   python debate.py "Electric vehicles produce less CO2 than gas cars" --turns 2
@@ -887,7 +887,7 @@ Examples:
         "--pro-model",
         type=str,
         default="claude",
-        choices=list(MODELS.keys()),
+        choices=list(all_available_model_keys()),
         help="Model for pro side (default: claude)"
     )
 
@@ -895,7 +895,7 @@ Examples:
         "--con-model",
         type=str,
         default="claude",
-        choices=list(MODELS.keys()),
+        choices=list(all_available_model_keys()),
         help="Model for con side (default: claude)"
     )
 
@@ -903,7 +903,7 @@ Examples:
         "--judge-model",
         type=str,
         default="claude",
-        choices=list(MODELS.keys()),
+        choices=list(all_available_model_keys()),
         help="Model for judge (default: claude)"
     )
 

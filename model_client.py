@@ -1,4 +1,5 @@
 import os
+from typing import Iterable
 
 # Model configuration
 # fmt: off
@@ -118,3 +119,44 @@ class ModelClient:
         except Exception as e:
             error_type = type(e).__name__
             raise RuntimeError(f"API error ({error_type}): {str(e)}")
+
+def get_model_name(model_key: str) -> str:
+    """
+    The full name from just the model key
+    e.g.
+    claude -> Claude Sonnet 4.5
+    """
+    return MODELS[model_key]["name"]
+
+def get_model_id(model_key: str) -> str:
+    """
+    The id from just the model key
+    e.g.
+    claude -> claude-sonnet-4-5-20250929
+    """
+    return MODELS[model_key]["id"]
+
+def all_available_model_keys() -> Iterable[str]:
+    """
+    The keys of all available models
+    """
+    return MODELS.keys()
+
+def is_not_an_available_model(model_key: str) -> bool:
+    """
+    This model key does not correspond to an existing/available model
+    so we cannot get it's name, id or provider
+    """
+    return model_key not in MODELS
+
+def average_cost_estimator(cost_per_judgment: dict[str,float], default_cost: float = 0.01) -> float:
+    """
+    Providing costs for each model by ID
+    give the average if randomly selected one of MODELS uniformly
+    """
+    total_cost = 0
+    for judge_id in MODELS.values():
+        total_cost += cost_per_judgment.get(judge_id['id'], default_cost)
+
+    avg_cost_per_judgment = total_cost / len(MODELS)
+    return avg_cost_per_judgment

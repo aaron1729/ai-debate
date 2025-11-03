@@ -15,7 +15,7 @@ import subprocess
 import sys
 from typing import List, Sequence, Tuple
 
-from model_client import MODELS
+from model_client import all_available_model_keys
 
 
 def discover_claim_files() -> List[str]:
@@ -78,7 +78,7 @@ def choose_random_claim(datasets: Sequence[Tuple[str, int]]) -> Tuple[str, int]:
 
 def choose_models() -> Tuple[str, str, str]:
     """Select distinct model keys for debater1, debater2, and judge."""
-    model_keys = list(MODELS.keys())
+    model_keys = list(all_available_model_keys())
     selected = random.sample(model_keys, 3)
     return selected[0], selected[1], selected[2]
 
