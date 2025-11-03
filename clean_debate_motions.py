@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Import ModelClient from debate.py
-from debate import ModelClient, MODELS
+# Import ModelClient from model_client.py
+from model_client import ModelClient, MODELS
 
 
 def get_system_prompt() -> str:

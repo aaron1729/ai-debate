@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Import ModelClient from debate.py
-from debate import ModelClient, MODELS
+# Import ModelClient from model_client.py
+from model_client import ModelClient, MODELS
 
 
 def load_topics(topics_file: str = "topics.json") -> list[str]:

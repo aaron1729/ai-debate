@@ -27,7 +27,8 @@ import json
 import os
 import sys
 from typing import Optional
-from debate import run_debate, MODELS
+from debate import run_debate
+from model_client import MODELS
 
 
 def load_claim_from_file(claim_spec: str) -> tuple[str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str]]:

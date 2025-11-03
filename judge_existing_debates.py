@@ -13,7 +13,8 @@ import sys
 import json
 from typing import List, Dict, Any, Optional
 from experiment_store import SQLiteExperimentStore
-from debate import Judge, MODELS
+from debate import Judge
+from model_client import MODELS
 
 def estimate_cost(num_experiments: int, turns_per_experiment: int, num_judges: int) -> Dict[str, Any]:
     """

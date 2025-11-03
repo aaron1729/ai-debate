@@ -34,7 +34,8 @@ import random
 import sys
 from typing import Optional
 
-from debate import run_debate_no_judge, MODELS
+from debate import run_debate_no_judge
+from model_client import MODELS
 
 
 def load_debate_motions(filepath: str = "data/debate_motions.json") -> list[dict]:
