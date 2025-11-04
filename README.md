@@ -1,14 +1,16 @@
 # ai-debate
 
+## Summary
+
+We implement [AI Safety via Debate](https://arxiv.org/abs/1805.00899) (Irving et al., 2018), a proposed mechanism for AI alignment, within the context of natural language debates between LLMs.
+
+
+
 ## TO-DO
 
 plot all 6-turn debates individually (not just those that came as a suite of 4, which were all from `debate_motions.json`).
 
-compare the "political correctness debates", which involved _all_ six matchups.
 
-make plots of judgments.
-- use `generate_all_debate_plots.py` for 4-fold 6-turn debates (switch sides, and switch first-mover).
-- use `create_single_debate_plot.py` for single debates.
 
 ## CLEANUP
 
@@ -19,8 +21,6 @@ everything of course, but particularly e.g.:
 
 
 ## possible experiments
-
-- same debate with all (4 choose 3 = ) 6 matchups, to see relative debater strength.
 
 - different models from the same provider (e.g. gpt-4 vs. gpt-5)
 
@@ -51,6 +51,8 @@ everything of course, but particularly e.g.:
 - functionality
 
 - web UI
+
+- compare the "political correctness debates", which involved _all_ six matchups (4 choose 2).
 
 ## Reproducibility and Analysis
 
@@ -161,6 +163,39 @@ Full documentation is available in the `docs/` folder:
 - **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Vercel deployment guide
 - **[FACTCHECK_SETUP.md](docs/FACTCHECK_SETUP.md)** - Google Fact Check API setup for test data
 
+## Project Structure
+
+```
+ai-debate/
+├── scripts/                    # Python scripts organized by purpose
+│   ├── core/                   # Core debate engine and storage
+│   │   ├── debate.py          # Main debate engine
+│   │   └── experiment_store.py # Database abstraction
+│   ├── runners/               # Experiment runners
+│   │   ├── run_single_debate.py
+│   │   ├── run_debate_motion_suite.py
+│   │   ├── run_experiments.py
+│   │   └── run_experiments_randomize_all.py
+│   ├── data_processing/       # Data fetching and cleaning
+│   ├── validation/            # Data validation scripts
+│   ├── analysis/              # Analysis and querying tools
+│   └── utils/                 # Utilities and helpers
+├── web/                       # Next.js web application
+│   ├── pages/                 # Next.js pages (symlinked to root)
+│   ├── lib/                   # TypeScript library code
+│   ├── components/            # React components
+│   └── shared/                # Shared resources
+├── data/                      # Data files and database
+│   ├── experiments.db         # SQLite database
+│   ├── debate_motions.json    # Debate topics
+│   └── google-fact-check/     # Fact-check data
+├── plotting/                  # Visualization scripts and outputs
+│   ├── scripts/               # Plotting scripts
+│   └── plots/                 # Generated plots
+├── docs/                      # Documentation
+└── public/                    # Static assets
+```
+
 ## Quick Start
 
 ### CLI Usage
@@ -181,7 +216,12 @@ cp .env.example .env
 
 3. Run a debate:
 ```bash
-python debate.py "Your claim here" --turns 2
+python scripts/core/debate.py "Your claim here" --turns 2
+```
+
+Or run a single debate on debate motions:
+```bash
+python scripts/runners/run_single_debate.py --motion 0 --debater1 claude --debater2 grok
 ```
 
 Options:
@@ -234,7 +274,7 @@ The web version includes:
   - `PROMPT_LOG_TRIM_PROBABILITY` — probability (0–1) of running the prune check on writes to spread out Redis commands (default 0.1)
 - Logs live in the same Upstash instance the rate limiter uses. Inspect them with the Upstash console or via `redis-cli`/REST: e.g. `ZREVRANGE promptlog:index 0 9` to list recent debates, then `GET <key>` for the JSON payload.
 - A running total of stored bytes is maintained (`promptlog:total_bytes`). When the cap is hit, the oldest entries (and their size bookkeeping) are purged automatically so storage stays within the budget.
-- A local helper (`inspect_prompt_logs.py`) is available for quick checks: run `python inspect_prompt_logs.py list --limit 5 --summary` to print the newest claims/metadata (add `--include-scores` for their timestamps) or `python inspect_prompt_logs.py get <key> --summary` for a single entry. Include `--include-payloads` if you want the full debate transcript. The script auto-loads `.env` in the repo root before reaching for `UPSTASH_REDIS_REST_URL`/`TOKEN`. Like the logging pipeline, this script is new and untested—confirm results against Upstash before relying on it.
+- A local helper (`scripts/analysis/inspect_prompt_logs.py`) is available for quick checks: run `python scripts/analysis/inspect_prompt_logs.py list --limit 5 --summary` to print the newest claims/metadata (add `--include-scores` for their timestamps) or `python scripts/analysis/inspect_prompt_logs.py get <key> --summary` for a single entry. Include `--include-payloads` if you want the full debate transcript. The script auto-loads `.env` in the repo root before reaching for `UPSTASH_REDIS_REST_URL`/`TOKEN`. Like the logging pipeline, this script is new and untested—confirm results against Upstash before relying on it.
 
 ### Test Data
 
@@ -288,15 +328,15 @@ A debate "won" by the For side doesn't necessarily mean the claim is true—it m
 
 **1. Process raw CSV data from debate podcasts:**
 ```bash
-python process_debate_podcasts.py data/debate-podcasts/raw/ -o data/debate-podcasts/debate_motions_collated.json --model claude
+python scripts/data_processing/process_debate_podcasts.py data/debate-podcasts/raw/ -o data/debate-podcasts/debate_motions_collated.json --model claude
 ```
 
 **2. Clean motions to be standalone and unambiguous:**
 ```bash
-python clean_debate_motions.py data/debate-podcasts/debate_motions_collated.json --model claude
+python scripts/data_processing/clean_debate_motions.py data/debate-podcasts/debate_motions_collated.json --model claude
 ```
 
-The cleaning script (`clean_debate_motions.py`) uses an LLM to rewrite debate motions with:
+The cleaning script (`scripts/data_processing/clean_debate_motions.py`) uses an LLM to rewrite debate motions with:
 - **Temporal context**: All motions include year/date references (e.g., "As of 2019", "In 2016", "In the context of 2013")
 - **Correct verb tenses**: Past tense for historical events, past conditional for then-future possibilities
 - **Clarified references**: Ambiguous terms like "we" are replaced with specific entities (e.g., "the United States")

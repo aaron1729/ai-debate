@@ -4,7 +4,8 @@
       "Bash(source venv/bin/activate)",
       "Bash(python:*)",
       "Bash(sqlite3:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": []

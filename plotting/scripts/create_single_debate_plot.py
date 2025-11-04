@@ -61,7 +61,7 @@ def fetch_judgments(cursor: sqlite3.Cursor, experiment_id: int) -> Dict[str, Dic
 
 
 def create_single_debate_plot(experiment_id: int, output_filename: str) -> None:
-    conn = sqlite3.connect("experiments.db")
+    conn = sqlite3.connect("data/experiments.db")
     cursor = conn.cursor()
 
     try:

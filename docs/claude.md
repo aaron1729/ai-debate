@@ -76,29 +76,50 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 ### File Structure
 ```
 /
-├── debate.py                      # Python CLI script
-├── fetch_claims.py                # Fetch claims from Google Fact Check API
-├── process_factcheck_claims.py    # Step 1: Clean and standardize fact-check claims
-├── verify_claims.py               # Step 2: Verify claims with URL fetching
-├── process_debate_podcasts.py     # Process debate podcast CSV data to JSON
-├── run_experiments.py             # Deterministic 2×8 experiment suite runner
-├── run_experiments_randomize_all.py # Randomized experiment sweeps with retry guard
-├── requirements.txt               # Python dependencies
-├── package.json                   # Node.js dependencies
-├── pages/
-│   ├── index.tsx                  # Main web UI component
-│   └── api/
-│       ├── debate.ts             # Debate API endpoint with rate limiting
-│       ├── check-rate-limit.ts   # Rate limit checker (has bug)
-│       ├── check-usage.ts        # Debug endpoint for Redis inspection
-│       ├── list-redis-keys.ts    # Debug endpoint for Redis keys
-│       └── get-remaining.ts      # Debug endpoint
-├── lib/
-│   ├── debate-engine.ts          # TypeScript debate logic (shared with API)
-│   └── request-ip.ts             # Shared helpers for normalizing client IPs
-├── shared/
-│   └── messages.json             # Progress messages (shared between CLI & UI)
-├── data/
+├── scripts/                       # Python scripts organized by purpose
+│   ├── core/
+│   │   ├── debate.py             # Main debate engine (Python CLI)
+│   │   └── experiment_store.py   # SQLite database abstraction
+│   ├── runners/
+│   │   ├── run_single_debate.py          # Run single debate on motion
+│   │   ├── run_debate_motion_suite.py    # Run 4-config debate suite
+│   │   ├── run_experiments.py            # Deterministic 2×8 experiment suite
+│   │   └── run_experiments_randomize_all.py # Randomized sweeps with retry
+│   ├── data_processing/
+│   │   ├── fetch_claims.py               # Fetch from Google Fact Check API
+│   │   ├── process_factcheck_claims.py   # Clean and standardize claims
+│   │   ├── process_debate_podcasts.py    # Process podcast CSV to JSON
+│   │   └── clean_debate_motions.py       # LLM-powered motion cleaning
+│   ├── validation/
+│   │   ├── verify_claims.py              # Verify claims with URL fetching
+│   │   ├── validate_claims_json.py       # Validate claim JSON files
+│   │   └── validate_experiment_json.py   # Validate experiment data
+│   ├── analysis/
+│   │   ├── query_experiments.py          # Query and analyze experiments
+│   │   ├── judge_existing_debates.py     # Retrospectively judge debates
+│   │   └── inspect_prompt_logs.py        # Inspect Redis prompt logs
+│   └── utils/
+│       ├── check_rate_limits.py          # Check/reset rate limit cache
+│       └── test_anthropic_api.py         # Test API connection
+├── web/                           # Next.js web application
+│   ├── pages/
+│   │   ├── index.tsx             # Main web UI component
+│   │   └── api/
+│   │       ├── debate.ts         # Debate API endpoint with rate limiting
+│   │       ├── check-rate-limit.ts # Rate limit checker
+│   │       ├── check-usage.ts    # Debug: Redis inspection
+│   │       ├── list-redis-keys.ts # Debug: Redis keys
+│   │       └── get-remaining.ts  # Debug endpoint
+│   ├── lib/
+│   │   ├── debate-engine.ts      # TypeScript debate logic (shared with API)
+│   │   ├── prompt-log.ts         # Redis prompt logging
+│   │   ├── rate-limits.ts        # Rate limiting utilities
+│   │   └── request-ip.ts         # IP normalization helpers
+│   ├── components/               # React components (empty)
+│   └── shared/
+│       └── messages.json         # Progress messages (CLI & UI shared)
+├── data/                          # Data files and database
+│   ├── experiments.db            # SQLite database for all experiments
 │   ├── claims_verified_climate_48.json  # Verified: 48 climate claims
 │   ├── claims_verified_health_50.json   # Verified: 50 health claims
 │   ├── claims_gpt5_01.json              # GPT-5 generated claims (set 1)
@@ -111,7 +132,12 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 │   └── debate-podcasts/
 │       ├── raw/                         # CSV files from debate series
 │       └── README.md                    # Debate podcast data documentation
+├── plotting/                      # Visualization scripts and outputs
+│   ├── scripts/                  # 27+ plotting scripts
+│   └── plots/                    # Generated visualization files
 ├── topics.json                    # Topic list for claim categorization
+├── requirements.txt               # Python dependencies
+├── package.json                   # Node.js dependencies
 ├── docs/
 │   ├── CLAUDE.md                 # This file - implementation context
 │   ├── DEPLOYMENT.md             # Vercel deployment guide
@@ -123,21 +149,21 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 
 ### Core Components
 
-#### Python CLI (debate.py)
+#### Python CLI (scripts/core/debate.py)
 
-**1. Debater Class** (debate.py:20-190)
+**1. Debater Class** (scripts/core/debate.py:20-190)
 - Takes a position ("pro" or "con")
 - Generates arguments with citations (URL, quote, context, argument)
 - Can explicitly refuse using structured JSON format
 - System prompt emphasizes participation while allowing refusal as last resort
 
-**2. Judge Class** (debate.py:193-234)
+**2. Judge Class** (scripts/core/debate.py:193-234)
 - Reviews full debate transcript (including refusals)
 - Assigns one of 4 verdicts: supported/contradicted/misleading/needs more evidence
 - Provides brief explanation
 - Retries once when JSON parsing fails before surfacing an error
 
-**3. Debate Orchestrator** (run_debate function, debate.py:231-316)
+**3. Debate Orchestrator** (run_debate function, scripts/core/debate.py:231-316)
 - Alternates between Pro and Con for T turns
 - Filters refusals from debate history shown to opponents
 - Shortens debate after first refusal (allows one counter-argument)
@@ -145,8 +171,8 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 
 #### Experiment Automation
 
-- `run_experiments.py` runs the fixed 2×8 design (turn counts × debater order) for a specified claim and persists results to SQLite.
-- `run_experiments_randomize_all.py` samples random claims from the verified and GPT-5 datasets and unique model combinations. Each suite retries once on failure and the script continues to the next selection so a malformed response or transient API error does not abort the batch.
+- `scripts/runners/run_experiments.py` runs the fixed 2×8 design (turn counts × debater order) for a specified claim and persists results to SQLite at `data/experiments.db`.
+- `scripts/runners/run_experiments_randomize_all.py` samples random claims from the verified and GPT-5 datasets and unique model combinations. Each suite retries once on failure and the script continues to the next selection so a malformed response or transient API error does not abort the batch.
 
 #### TypeScript Web App
 
@@ -184,7 +210,7 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 
 **Purpose**: Fetch real fact-checked claims to test the debate system's accuracy by comparing verdicts with professional fact-checker ratings.
 
-**Implementation** (fetch_claims.py):
+**Implementation** (scripts/data_processing/fetch_claims.py):
 - Uses Google Fact Check Tools API with API key authentication
 - **No service account needed** (API key only for `claims:search` endpoint)
 - Fetches claims with customizable parameters: query, date range, language
@@ -196,7 +222,7 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 - The `claims:search` endpoint requires API key authentication
 - Can reuse existing `GOOGLE_API_KEY` (same key used for Gemini)
 
-**API Parameters** (fetch_claims.py:12-61):
+**API Parameters** (scripts/data_processing/fetch_claims.py:12-61):
 - `query`: Required search term (e.g., "health", "climate", "the")
 - `languageCode`: Recommended ('en' for English results)
 - `maxAgeDays`: Time range for claims (default 30, can go up to 365+)
@@ -253,7 +279,7 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 
 **Usage for Testing**:
 1. Load claims from JSON files
-2. Run debates on each claim using `debate.py`
+2. Run debates on each claim using `scripts/core/debate.py`
 3. Map fact-checker ratings to debate verdicts:
    - "False" → should get "contradicted" or "misleading"
    - "True" → should get "supported"
@@ -277,12 +303,12 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 
 **Solution**: Two-step LLM-powered processing pipeline
 
-**Step 1: Process Claims** (process_factcheck_claims.py)
+**Step 1: Process Claims** (scripts/data_processing/process_factcheck_claims.py)
 
 Cleans and standardizes raw fact-check claims using an LLM:
 
 ```bash
-python process_factcheck_claims.py claims_historical_health_50.json -o test_clean_health.json --model gpt4
+python scripts/data_processing/process_factcheck_claims.py claims_historical_health_50.json -o test_clean_health.json --model gpt4
 ```
 
 **What it does**:
@@ -296,19 +322,19 @@ python process_factcheck_claims.py claims_historical_health_50.json -o test_clea
 - **Before**: "Scientists have had to pause the Climate Change Hoax Scam"
 - **After**: "Climate deniers misinterpreted a 2025 Antarctic ice study to falsely claim scientists paused climate change research"
 
-**Implementation** (process_factcheck_claims.py):
+**Implementation** (scripts/data_processing/process_factcheck_claims.py):
 - `get_system_prompt()`: Comprehensive prompt with verdict mapping rules, topic guidelines, and examples
 - `process_single_claim()`: Calls LLM with claim + review data, parses JSON response
 - Model selection: claude/gpt4/gemini/grok (default: claude)
 - Resume capability: Saves after each claim, safe to interrupt
 - Outputs: processed claims JSON + skipped claims log + updated topics.json
 
-**Step 2: Verify Claims** (verify_claims.py)
+**Step 2: Verify Claims** (scripts/validation/verify_claims.py)
 
 Second-pass quality control with URL fetching:
 
 ```bash
-python verify_claims.py test_clean_health.json -o test_verified_health.json --model gpt4
+python scripts/validation/verify_claims.py test_clean_health.json -o test_verified_health.json --model gpt4
 ```
 
 **What it does**:
@@ -318,7 +344,7 @@ python verify_claims.py test_clean_health.json -o test_verified_health.json --mo
 - Can delete claims that don't match article content
 - Transparently logs all modifications before making changes
 
-**URL Fetching Implementation** (verify_claims.py:25-74):
+**URL Fetching Implementation** (scripts/validation/verify_claims.py:25-74):
 - Uses `requests` library with proper headers and timeouts
 - Parses HTML with BeautifulSoup4 to extract clean text
 - Removes script/style/nav elements for cleaner content
@@ -331,7 +357,7 @@ python verify_claims.py test_clean_health.json -o test_verified_health.json --mo
 - Provides LLM with actual evidence to verify verdict correctness
 - Will be needed later for verifying debaters' cited sources
 
-**Modification Logging** (verify_claims.py:326-367):
+**Modification Logging** (scripts/validation/verify_claims.py:326-367):
 - Saves complete original claim before any modifications
 - Records timestamp, modified fields, and reason
 - Outputs to `{output_file}_modifications.json`
@@ -393,10 +419,10 @@ beautifulsoup4>=4.12.0  # HTML parsing
    - Clear winner determination by vote swing
    - Topics: politics, economics, health policy
 
-**Processing Implementation** (process_debate_podcasts.py):
+**Processing Implementation** (scripts/data_processing/process_debate_podcasts.py):
 
 ```bash
-python process_debate_podcasts.py data/debate-podcasts/raw/ -o data/debate_motions.json --model claude
+python scripts/data_processing/process_debate_podcasts.py data/debate-podcasts/raw/ -o data/debate_motions.json --model claude
 ```
 
 **What it does**:
@@ -711,8 +737,8 @@ curl http://localhost:3000/api/list-redis-keys | python3 -m json.tool
 curl http://localhost:3000/api/check-usage | python3 -m json.tool
 ```
 
-- **Rate limit helper**: `python check_rate_limits.py [ip]` shows cached usage, sliding-window entry counts, and global backstop usage for each model (defaults to `127.0.0.1`). Install `python-dotenv` if you want the script to auto-load `.env`.
-- **Reset helper**: `python check_rate_limits.py [ip] --reset [--include-global]` clears the per-IP cache, the Upstash sliding window entries, and (optionally) the global backstop so you can start a fresh test run.
+- **Rate limit helper**: `python scripts/utils/check_rate_limits.py [ip]` shows cached usage, sliding-window entry counts, and global backstop usage for each model (defaults to `127.0.0.1`). Install `python-dotenv` if you want the script to auto-load `.env`.
+- **Reset helper**: `python scripts/utils/check_rate_limits.py [ip] --reset [--include-global]` clears the per-IP cache, the Upstash sliding window entries, and (optionally) the global backstop so you can start a fresh test run.
 
 **Test different IPs**:
 - Localhost: Should get ADMIN_RATE_LIMIT (default 500)

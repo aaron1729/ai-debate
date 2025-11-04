@@ -83,7 +83,7 @@ def calculate_offsets(judge_data):
     return offsets
 
 def create_debate_plot(motion_pattern, output_filename):
-    conn = sqlite3.connect('experiments.db')
+    conn = sqlite3.connect('data/experiments.db')
     cursor = conn.cursor()
 
     cursor.execute(f'''
@@ -275,7 +275,7 @@ def create_debate_plot(motion_pattern, output_filename):
 
 def create_debate_plot_from_ids(experiment_ids, output_filename):
     """Create a debate plot from a list of experiment IDs."""
-    conn = sqlite3.connect('experiments.db')
+    conn = sqlite3.connect('data/experiments.db')
     cursor = conn.cursor()
 
     # Fetch experiments by IDs
