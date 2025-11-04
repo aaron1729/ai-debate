@@ -19,7 +19,7 @@ from bs4 import BeautifulSoup
 load_dotenv()
 
 # Import from other scripts
-from debate import ModelClient, MODELS
+from model_client import ModelClient, all_available_model_keys, get_model_name
 
 
 def fetch_url_content(url: str) -> Optional[str]:
@@ -303,7 +303,7 @@ def verify_claims_file(input_file: str, output_file: str, model_key: str, topics
     print(f"Using {len(topics)} topics: {', '.join(topics)}\n")
 
     # Initialize model
-    print(f"Initializing {MODELS[model_key]['name']}...")
+    print(f"Initializing {get_model_name(model_key)}...")
     try:
         model = ModelClient(model_key)
     except ValueError as e:
@@ -426,7 +426,7 @@ Examples:
   python verify_claims.py data/google-fact-check/cleaned/test_clean_climate.json -o data/claims_verified_climate.json
   python verify_claims.py data/google-fact-check/cleaned/clean_health.json --model gpt4 -o data/claims_verified_health.json
 
-Available models: {', '.join(MODELS.keys())}
+Available models: {', '.join(all_available_model_keys())}
 
 The script will:
 1. Read each cleaned claim
@@ -452,7 +452,7 @@ The script will:
     parser.add_argument(
         "--model",
         default="claude",
-        choices=list(MODELS.keys()),
+        choices=list(all_available_model_keys()),
         help="Model to use for verification (default: claude)"
     )
 

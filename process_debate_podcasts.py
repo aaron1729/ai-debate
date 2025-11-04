@@ -17,7 +17,7 @@ from datetime import datetime
 load_dotenv()
 
 # Import ModelClient and topics utilities from existing scripts
-from debate import ModelClient, MODELS
+from model_client import ModelClient, all_available_model_keys, get_model_name
 from process_factcheck_claims import load_topics, save_topics
 
 
@@ -271,7 +271,7 @@ Examples:
   python process_debate_podcasts.py data/debate-podcasts/raw/ -o data/debate_motions.json
   python process_debate_podcasts.py data/debate-podcasts/raw/ -o data/debate_motions.json --model claude
 
-Available models: {', '.join(MODELS.keys())}
+Available models: {', '.join(all_available_model_keys())}
 
 The script will:
 1. Read all CSV files from the input directory
@@ -295,7 +295,7 @@ The script will:
     parser.add_argument(
         "--model",
         default=None,
-        choices=list(MODELS.keys()),
+        choices=list(all_available_model_keys()),
         help="Model to use for topic assignment (default: None, assigns 'general' to all)"
     )
 
@@ -319,7 +319,7 @@ The script will:
     # Initialize model if specified
     model = None
     if args.model:
-        print(f"Initializing {MODELS[args.model]['name']} for topic assignment...")
+        print(f"Initializing {get_model_name(args.model)} for topic assignment...")
         try:
             model = ModelClient(args.model)
         except ValueError as e:

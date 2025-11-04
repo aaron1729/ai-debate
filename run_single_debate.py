@@ -34,7 +34,8 @@ import random
 import sys
 from typing import Optional
 
-from debate import run_debate_no_judge, MODELS
+from debate import run_debate_no_judge
+from model_client import all_available_model_keys, get_model_name
 
 
 def load_debate_motions(filepath: str = "data/debate_motions.json") -> list[dict]:
@@ -64,7 +65,7 @@ def select_random_debaters() -> tuple[str, str]:
     Returns:
         Tuple of (debater1_key, debater2_key)
     """
-    model_keys = list(MODELS.keys())
+    model_keys = list(all_available_model_keys())
     debater1 = random.choice(model_keys)
     debater2 = random.choice(model_keys)
     return debater1, debater2
@@ -75,7 +76,7 @@ def main():
         description="Run a single debate on a debate motion without a judge",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
-Available models: {', '.join(MODELS.keys())}
+Available models: {', '.join(all_available_model_keys())}
 
 This script runs debates without immediate judging. Later, you can use
 judge_existing_debates.py to have multiple judges assess the debates.
@@ -104,14 +105,14 @@ Examples:
     parser.add_argument(
         "--debater1",
         type=str,
-        choices=list(MODELS.keys()),
+        choices=list(all_available_model_keys()),
         help="First debater model (if not specified, chosen randomly)"
     )
 
     parser.add_argument(
         "--debater2",
         type=str,
-        choices=list(MODELS.keys()),
+        choices=list(all_available_model_keys()),
         help="Second debater model (if not specified, chosen randomly)"
     )
 
@@ -176,18 +177,18 @@ Examples:
         if args.debater1 and args.debater2:
             debater1 = args.debater1
             debater2 = args.debater2
-            print(f"Using specified debaters: {MODELS[debater1]['name']} vs {MODELS[debater2]['name']}")
+            print(f"Using specified debaters: {get_model_name(debater1)} vs {get_model_name(debater2)}")
         elif args.debater1:
             debater1 = args.debater1
-            debater2 = random.choice(list(MODELS.keys()))
-            print(f"Using debater1={MODELS[debater1]['name']}, randomly selected debater2={MODELS[debater2]['name']}")
+            debater2 = random.choice(list(all_available_model_keys()))
+            print(f"Using debater1={get_model_name(debater1)}, randomly selected debater2={get_model_name(debater2)}")
         elif args.debater2:
-            debater1 = random.choice(list(MODELS.keys()))
+            debater1 = random.choice(list(all_available_model_keys()))
             debater2 = args.debater2
-            print(f"Randomly selected debater1={MODELS[debater1]['name']}, using debater2={MODELS[debater2]['name']}")
+            print(f"Randomly selected debater1={get_model_name(debater1)}, using debater2={get_model_name(debater2)}")
         else:
             debater1, debater2 = select_random_debaters()
-            print(f"Randomly selected both debaters: {MODELS[debater1]['name']} vs {MODELS[debater2]['name']}")
+            print(f"Randomly selected both debaters: {get_model_name(debater1)} vs {get_model_name(debater2)}")
 
         # Create claim_id for tracking
         claim_id = f"{args.motions_file}:{motion_idx}"
@@ -200,8 +201,8 @@ Examples:
         if topic:
             print(f"Topic: {topic}")
         print(f"Motion index: {motion_idx}")
-        print(f"Pro debater: {MODELS[debater1]['name']}")
-        print(f"Con debater: {MODELS[debater2]['name']}")
+        print(f"Pro debater: {get_model_name(debater1)}")
+        print(f"Con debater: {get_model_name(debater2)}")
         print(f"Rounds: {args.rounds}")
         print(f"Going first: {'Con' if args.con_first else 'Pro'}")
         print(f"Judge: None (will be judged later)")

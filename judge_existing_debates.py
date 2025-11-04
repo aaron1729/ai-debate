@@ -13,7 +13,8 @@ import sys
 import json
 from typing import List, Dict, Any, Optional
 from experiment_store import SQLiteExperimentStore
-from debate import Judge, MODELS
+from debate import Judge
+from model_client import all_available_model_keys, get_model_id, get_model_name, average_cost_estimator, is_not_an_available_model
 
 def estimate_cost(num_experiments: int, turns_per_experiment: int, num_judges: int) -> Dict[str, Any]:
     """
@@ -31,6 +32,7 @@ def estimate_cost(num_experiments: int, turns_per_experiment: int, num_judges: i
     total_judgments = num_experiments * turns_per_experiment * num_judges
 
     # Rough cost estimates (in USD) - these are approximations
+    
     cost_per_judgment = {
         "claude-sonnet-4-5-20250929": 0.015,  # Based on input/output tokens
         "gpt-4-turbo-preview": 0.010,
@@ -38,11 +40,7 @@ def estimate_cost(num_experiments: int, turns_per_experiment: int, num_judges: i
         "grok-3": 0.010,
     }
 
-    total_cost = 0
-    for judge_id in MODELS.values():
-        total_cost += cost_per_judgment.get(judge_id['id'], 0.01)
-
-    avg_cost_per_judgment = total_cost / len(MODELS)
+    avg_cost_per_judgement = average_cost_estimator(cost_per_judgment, 0.01)
     estimated_total = total_judgments * avg_cost_per_judgment
 
     return {
@@ -150,9 +148,9 @@ def process_experiment(experiment_id: int, experiment_data: Dict[str, Any],
             continue
 
         for judge_model in judge_models:
-            judge_id = MODELS[judge_model]["id"]
+            judge_id = get_model_id(judge_model)
 
-            print(f"  Judging with {MODELS[judge_model]['name']} at turn {turns}...", end=" ")
+            print(f"  Judging with {get_model_name(judge_model)} at turn {turns}...", end=" ")
 
             verdict = judge_at_turn_cutoff(claim, transcript, judge_model, turns)
 
@@ -243,12 +241,12 @@ Available judges: claude, gpt4, gemini, grok
 
     # Parse judge models
     if args.judges == "all":
-        judge_models = list(MODELS.keys())
+        judge_models = list(all_available_model_keys())
     else:
         judge_models = [j.strip() for j in args.judges.split(",")]
         for j in judge_models:
-            if j not in MODELS:
-                print(f"Error: Unknown judge model '{j}'. Available: {list(MODELS.keys())}", file=sys.stderr)
+            if is_not_an_available_model(j):
+                print(f"Error: Unknown judge model '{j}'. Available: {list(all_available_model_keys())}", file=sys.stderr)
                 sys.exit(1)
 
     # Parse turns range
@@ -309,7 +307,7 @@ Available judges: claude, gpt4, gemini, grok
     print("RETROSPECTIVE JUDGING PLAN")
     print(f"{'='*80}\n")
     print(f"Experiments to process: {len(experiments)}")
-    print(f"Judge models: {', '.join([MODELS[j]['name'] for j in judge_models])}")
+    print(f"Judge models: {', '.join([get_model_name(j) for j in judge_models])}")
     print(f"Turn range: {min(turns_range)}-{max(turns_range)}")
     print(f"\nEstimated judgments: {cost_estimate['total_judgments']}")
     print(f"Estimated cost: ${cost_estimate['estimated_total_cost']:.2f}")
