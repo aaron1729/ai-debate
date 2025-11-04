@@ -1,12 +1,18 @@
 # Claude.md - Implementation Context
 
-This file provides implementation details and design decisions for the AI Debates system to help future development.
+This file provides comprehensive implementation details and design decisions for the AI Debates system to help future development.
 
 ## Project Overview
 
 An adversarial truth-seeking system that uses AI debate to evaluate factual claims. Two AI agents argue opposing sides while a judge evaluates the evidence presented.
 
 **Core Hypothesis**: As debate length increases, verdicts should stabilize toward truth. Misleading arguments are more likely to succeed in shorter debates.
+
+This implementation comprises:
+- An end-to-end pipeline for running automated debates with two LLM debaters and an LLM judge
+- The pipeline is deployed as a web app at https://ai-debate-4-u.vercel.app/
+- Sourced, cleaned, and verified datasets from multiple sources (Google Fact Check API, GPT-5 generation, debate podcasts)
+- 280+ debates run across various configurations with comprehensive analysis
 
 ## Current Status
 
@@ -70,6 +76,74 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 - ⏳ Multiple judges ("mixture of experts")
 - ⏳ RL policy learning
 - ⏳ Public deployment on Vercel
+
+## Quick Start
+
+### CLI Usage
+
+1. Install dependencies:
+```bash
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+2. Create `.env` file with your API keys:
+```bash
+cp .env.example .env
+# Edit .env with your keys
+```
+- Add `PROMPT_LOG_IP_SALT` (for hashed IP logging) and other prompt-log settings if you want to exercise the new Redis logging pipeline. This path is freshly added and not yet tested end-to-end.
+
+3. Run a debate:
+```bash
+python scripts/core/debate.py "Your claim here" --turns 2
+```
+
+Or run a single debate on debate motions:
+```bash
+python scripts/runners/run_single_debate.py --motion 0 --debater1 claude --debater2 grok
+```
+
+Options:
+- `--turns`: Number of debate turns (default: 2)
+- `--pro-model`: Model for pro side (claude/gpt4/gpt35/gemini/grok, default: claude)
+- `--con-model`: Model for con side (default: claude)
+- `--judge-model`: Model for judge (default: claude)
+
+### Web Deployment
+
+The web version is built with Next.js and can be deployed to Vercel.
+
+1. Install Node.js dependencies:
+```bash
+npm install
+```
+
+2. Set up Upstash Redis for rate limiting:
+   - Sign up at https://upstash.com/
+   - Create a Redis database
+   - Copy the REST URL and token to your `.env` file
+
+3. Run locally:
+```bash
+npm run dev
+```
+
+4. Deploy to Vercel:
+   - Push to GitHub
+   - Import project in Vercel
+   - Add environment variables in Vercel dashboard:
+     - `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, etc. (for free tier)
+     - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (required)
+      - `GLOBAL_MODEL_LIMIT` (optional global backstop, defaults to 200 free debates per model/day)
+      - `SITE_URL` (public base URL, used for Open Graph/Twitter previews)
+
+The web version includes:
+- 5 free debates per IP per 24 hours
+- Global backstop of 200 free debates per model per 24 hours (shared across all IPs)
+- Option for users to provide their own API keys for unlimited usage
+- Support for 4 models (Claude, GPT-4, Gemini, Grok)
 
 ## Architecture
 
@@ -145,6 +219,172 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 ├── .env.example                  # Environment variable template
 └── README.md                     # Project vision and roadmap
 ```
+
+### Test Data
+
+The project includes fact-checked claims from Google's Fact Check Tools API for testing:
+
+All claims data is now organized in the `data/` directory:
+
+**Ready-to-use claims (in `data/`):**
+- **claims_verified_climate_48.json** - 48 verified climate claims from fact-checkers
+- **claims_verified_health_50.json** - 50 verified health claims from fact-checkers
+- **claims_gpt5_01.json** - GPT-5 generated claims (set 1)
+- **claims_gpt5_02.json** - GPT-5 generated claims (set 2)
+- **debate_motions.json** - 37 real-world debate motions from debate podcasts (see below)
+
+**Google Fact Check API data (in `data/google-fact-check/`):**
+- `raw/` - Unprocessed API responses (e.g., claims_historical_health_50.json, claims_historical_climate_50.json, claims_recent_30days.json)
+- `cleaned/` - Cleaned and standardized claims (e.g., claims_cleaned_health_50.json)
+- `verification-mods/` - Verification modification logs
+
+**Debate Podcast data (in `data/debate-podcasts/`):**
+- `raw/` - CSV files from Munk Debates, Open To Debate, and Soho Forum
+- `debate_motions.json` - 37 processed debate motions with pre/post voting data and winners
+- See `data/debate-podcasts/README.md` for full documentation
+
+These verified datasets have been cleaned and enhanced by LLMs to ensure claims are:
+- Specific and factually debatable
+- Include necessary temporal/geographical context
+- Accurately match fact-checker article content
+- Have correct verdict mappings (supported/contradicted/misleading/needs more evidence)
+
+Use these to test the debate system's accuracy by comparing verdicts with professional fact-checker ratings. See [FACTCHECK_SETUP.md](FACTCHECK_SETUP.md) for how to fetch and process more claims.
+
+#### Debate Podcast Motions
+
+The `debate_motions.json` file contains 37 motions from real-world debates with actual voting data:
+
+- **Sources**: Munk Debates (18), Open To Debate (7), Soho Forum (12)
+- **Topics**: Politics (26), Economics (4), Health (3), Technology (3), Religion (1)
+- **Data includes**: Pre/post debate voting percentages, vote swing, winner determination
+
+These motions differ from fact-checked claims in an important way:
+- **Fact-checked claims** evaluate **truth** (verdict: supported/contradicted/misleading/needs more evidence)
+- **Debate motions** evaluate **persuasiveness** (winner: who changed more minds in the actual debate)
+
+A debate "won" by the For side doesn't necessarily mean the claim is true—it means the For side was more persuasive in that particular debate. This data can be used to:
+- Compare AI debate outcomes to real human debate outcomes
+- Test whether AI debates produce similar vote swings
+- Benchmark persuasion strategies against real-world data
+
+### Running Experiments
+
+The debate system automatically saves all experiment results to a SQLite database for easy querying and analysis.
+
+#### Debate Suites
+
+For systematic testing, debates can be run in "suites" of 4 configurations to control for order effects:
+- **2 debater orders**: Model A arguing Pro vs Model B arguing Con, and vice versa
+- **2 turn orders**: Pro going first vs Con going first
+
+This 2×2 design (4 debates total) helps isolate the effect of argument strength from confounding factors like first-mover advantage or model-specific biases toward certain argument positions.
+
+Use `run_debate_motion_suite.py` to run all 4 configurations automatically:
+
+```bash
+python run_debate_motion_suite.py --motion 2 --debater1 claude --debater2 gpt4
+```
+
+This will run all 4 debate configurations for motion index 2 from `data/debate_motions.json`. The political correctness motion (index 2) has been run with all 6 possible debater matchups (claude-gemini, claude-gpt4, claude-grok, gemini-gpt4, gemini-grok, gpt4-grok), providing a comprehensive comparison of model debating capabilities on the same topic.
+
+#### Individual Experiments
+
+```bash
+python debate.py "Your claim here" \
+  --turns 2 \
+  --topic climate \
+  --claim-id "data/claims_gpt5_01.json:0" \
+  --gt-verdict supported \
+  --gt-source "Science Magazine"
+```
+
+Options for experiments:
+- `--topic TOPIC`: Specify claim topic (climate, health, etc.)
+- `--claim-id ID`: Claim ID in format "filename:index" (e.g., "data/claims_gpt5_01.json:0")
+- `--gt-verdict VERDICT`: Ground truth verdict (supported/contradicted/misleading/needs more evidence)
+- `--gt-source SOURCE`: Ground truth source (e.g., "gpt5", publisher name)
+- `--gt-url URL`: Ground truth URL
+- `--con-first`: Have con debater go first instead of pro (default: pro goes first)
+
+All experiments are saved to `experiments.db` in the repository root.
+
+#### Randomized Experiment Sweeps
+
+Use `run_experiments_randomize_all.py` to launch repeated experiment suites on randomly selected claims and model line-ups:
+
+```bash
+python run_experiments_randomize_all.py --count 10 --seed 42
+```
+
+The script samples uniformly across the `data/claims_verified_*.json` and `data/claims_gpt5_*.json` files, retries a failed suite once, and then continues so that a transient model hiccup doesn't halt the batch. Individual debates also retry once when a model returns malformed JSON.
+
+#### Querying Experiments
+
+Use `query_experiments.py` to search and analyze your experiments:
+
+```bash
+# List all experiments
+python query_experiments.py --list
+
+# Show statistics
+python query_experiments.py --stats
+
+# Filter by topic and score
+python query_experiments.py --topic climate --min-score 7
+
+# Filter by verdict
+python query_experiments.py --judge-verdict supported
+
+# Get specific experiment by ID
+python query_experiments.py --get 5
+
+# Export results to JSON for sharing
+python query_experiments.py --topic health --export health_results.json
+
+# Combine filters
+python query_experiments.py --topic climate --gt-verdict supported --judge-verdict contradicted
+```
+
+Query options:
+- `--topic`: Filter by topic
+- `--judge-verdict`: Filter by judge's verdict
+- `--gt-verdict`: Filter by ground truth verdict
+- `--min-score` / `--max-score`: Filter by judge score
+- `--pro-model` / `--con-model` / `--judge-model`: Filter by models used
+- `--verbose, -v`: Show detailed information
+- `--export FILE`: Export results to JSON file
+- `--limit N`: Limit number of results (default: 50)
+
+#### Experiment Schema
+
+Each experiment includes:
+- **claim_data**: The claim text, optional topic, and optional claim_id (format: "filename:index")
+- **ground_truth**: Expected verdict, source, and URL (if known)
+- **experiment_config**: Timestamp, models used, number of turns, who went first
+- **debate_transcript**: Complete record of all arguments with sources
+- **judge_decision**: Verdict, score (0-10 or null), and reasoning
+- **errors_or_refusals**: Any errors or model refusals during the debate
+
+The judge provides both a categorical verdict and a numeric score:
+- **Score null**: Needs more evidence (insufficient information to determine)
+- **Scores 0-4**: Contradicted (0=completely contradicted, 4=weakly contradicted)
+- **Score 5**: Misleading/ambiguous
+- **Scores 6-10**: Supported (6=weakly supported, 10=completely supported)
+
+See `experiment_schema_example.json` for a complete example of the data structure.
+
+### Prompt & Debate Logging
+
+- Every debate request and outcome is persisted in Upstash Redis under `promptlog:*` keys, including metadata (models, turns, hashed IP, user-agent), streaming progress updates, final transcripts, verdicts, and error details when runs fail. **This logging pipeline is new and has not yet been fully tested—verify it in your environment before relying on it.**
+- IP addresses are hashed with `PROMPT_LOG_IP_SALT` (falls back to `IP_HASH_SALT` if unset); set a unique salt so hashes cannot be reversed.
+- Storage is capped by a configurable byte budget. Defaults (tuned for the 256 MB free tier) can be overridden via:
+  - `PROMPT_LOG_MAX_BYTES` — total bytes before pruning kicks in (default ≈214 MB headroom)
+  - `PROMPT_LOG_ENTRY_BYTES` — expected per-entry size used to estimate how many records to trim (default 12 KB)
+  - `PROMPT_LOG_TRIM_PROBABILITY` — probability (0–1) of running the prune check on writes to spread out Redis commands (default 0.1)
+- Logs live in the same Upstash instance the rate limiter uses. Inspect them with the Upstash console or via `redis-cli`/REST: e.g. `ZREVRANGE promptlog:index 0 9` to list recent debates, then `GET <key>` for the JSON payload.
+- A running total of stored bytes is maintained (`promptlog:total_bytes`). When the cap is hit, the oldest entries (and their size bookkeeping) are purged automatically so storage stays within the budget.
+- A local helper (`scripts/analysis/inspect_prompt_logs.py`) is available for quick checks: run `python scripts/analysis/inspect_prompt_logs.py list --limit 5 --summary` to print the newest claims/metadata (add `--include-scores` for their timestamps) or `python scripts/analysis/inspect_prompt_logs.py get <key> --summary` for a single entry. Include `--include-payloads` if you want the full debate transcript. The script auto-loads `.env` in the repo root before reaching for `UPSTASH_REDIS_REST_URL`/`TOKEN`. Like the logging pipeline, this script is new and untested—confirm results against Upstash before relying on it.
 
 ### Core Components
 
@@ -785,13 +1025,91 @@ curl http://localhost:3000/api/check-usage | python3 -m json.tool
 - Run `npm run build` to check for type errors
 - Ensure ModelKey type matches MODELS object keys
 
-## Debate Visualization and Plotting
-
-### Overview
-
-After running debate experiments, we generate publication-quality visualizations showing how judge scores evolve across debate turns for different judge models, debater assignments, and turn orders.
-
 ### Plotting Scripts
+
+Several plotting scripts are available to visualize debate results:
+
+#### Debate Motion Plots (4-subplot format)
+
+**Full debate suites** (same motion with 4 configurations):
+- `plotting/scripts/create_debate_plot.py` - Creates a 4-subplot plot for debates matching a motion pattern
+- `plotting/scripts/generate_all_debate_plots.py` - Generates all 8 standard debate motion plots
+- Output: `plotting/plots/debate-motions/`
+- Each plot shows 4 subplots: (pro-first vs con-first) × (debaters swapped)
+- Shows judgment trajectories across all debate turns for all 4 judges
+
+**Duplicate judgment analysis**:
+- `plotting/scripts/create_debate_plot_max.py` - Same as above but uses MAX(id) for deduplication
+- `plotting/scripts/generate_all_debate_plots_max.py` - Generates all 8 plots with MAX deduplication
+- Output: `plotting/plots/debate-motions-with-duplicate-judging/`
+- Used to analyze how judgments changed when debates were re-judged
+
+#### Turn Progression Plots (legacy schema experiments)
+
+Early experiments used a different schema where debates were run with varying turn counts (1, 2, 4, 6 turns) but judged only at the end. These plots show how judge scores evolve as debate length increases:
+
+**Paired experiments** (same debaters switching sides):
+- `plotting/scripts/create_turn_progression_pair_plot.py` - Creates side-by-side plots for paired experiments
+- `plotting/scripts/generate_all_turn_progression_pairs.py` - Generates all 16 paired plots
+- Output: `plotting/plots/score-by-turn-pairs/`
+- Filename format: `{shortname}_debaters-{model1}-{model2}_judge-{judge}.png`
+- Left subplot: alphabetically earlier debater as Pro
+- Right subplot: alphabetically earlier debater as Con
+- Shows how the same judge's score changes with debate length for both debater orientations
+
+**Single experiments** (no matching pair):
+- `plotting/scripts/create_turn_progression_plot.py` - Creates single plot for one experiment
+- Output: `plotting/plots/score-by-turn/`
+- Filename format: `{shortname}_pro-{pro}_con-{con}_judge-{judge}.png`
+- Shows judge score progression across turns 1, 2, 4, 6
+
+**Claim shortnames**:
+- `plotting/scripts/claim_shortnames.py` - Maps full claim texts to short descriptive names used in filenames
+- Examples: "homeopathy-studies", "minimum-wage", "climate-models-overestimate"
+
+**Helper scripts**:
+- `plotting/scripts/cleanup_and_rename_misc_debates.py` - Consolidates paired experiments and renames singles
+
+#### Judge Analysis Plots
+
+**Self-scoring patterns**:
+- `plotting/scripts/create_self_score_plot.py` - Shows how judges score when judging debates they participated in
+- `plotting/scripts/generate_all_self_score_plots.py` and `generate_all_self_score_plots_full_debate.py`
+- Output: `plotting/plots/self-score-histogram/`
+- 3 vertical subplots per judge: all scores, scores when judging self as Pro, scores when judging self as Con
+- Supports normalized density plots (via `normalized=True` parameter) for direct comparison across different sample sizes
+- Key finding: Claude/GPT-4 heavily use score 5 (~50-60%), Gemini is more decisive
+
+**Judge-debater agreement (histograms)**:
+- `plotting/scripts/create_judge_debater_agreement_plot.py` - Shows score distributions for one judge scoring one debater
+- `plotting/scripts/generate_all_judge_debater_agreement_plots.py`
+- Output: `plotting/plots/judge-debater-agreement-histogram/`
+- 2 vertical subplots: debater as Pro, debater as Con
+- Filename: `judge={judge}_debater={debater}_agreement.png` (or `*_normalized.png` for density plots)
+- Supports normalized density plots for direct comparison
+- Key finding: Gemini trusts Claude, distrusts GPT-4
+
+**Judge-debater agreement (violin plots)**:
+- `plotting/scripts/create_judge_debater_agreement_violin.py` - Comprehensive 4×5 violin plot grid
+- `plotting/scripts/generate_judge_debater_agreement_violin.py`
+- Output: `plotting/plots/judge-debater-agreement-violin/`
+- Grid layout: 4 rows (judges) × 5 columns (overall + 4 debaters)
+- Column 1: Overall score distribution for each judge (colored by judge's model color)
+- Columns 2-5: Split violin plots showing Con (left, red) vs Pro (right, green) distributions
+- All violins normalized to equal visual area (representing densities, not counts)
+- Shows both mean (white diamond) and median (black circle) markers
+- When mean and median are close (<0.3 score units), markers are horizontally offset for visibility
+- Enables direct comparison of scoring patterns across all judge-debater-side combinations
+
+**Judge-judge agreement**:
+- `plotting/scripts/create_judge_judge_agreement_plot.py` - Scatterplots comparing two judges' scores
+- `plotting/scripts/generate_all_judge_judge_agreement_plots.py` and `generate_all_judge_judge_agreement_plots_full_debate.py`
+- Output: `plotting/plots/judge-judge-agreement-scatterplot/`
+- Shows correlation between judge pairs with jitter to reduce overplotting
+- Filename: `{judge1}-{judge2}-judge-judge-agreement.png` (or `*-full_debate_only.png`)
+- Correlations range from 0.67 (Gemini-GPT4) to 0.87 (Gemini-Grok) for full debates
+
+#### Debate Visualization Details
 
 **create_debate_plot.py** - Production plotting script
 - Generates 2×2 subplot grids for the full Claude vs Grok debate suite
