@@ -1,8 +1,54 @@
-# ai-debate
+# AI Debate in 2025
 
-## Summary
+<p align="center">
+  <a href="https://ai-debate-4-u.vercel.app/">
+    <img src="public/hero/ai-debate-display-2400x1260.png" alt="AI Debate Hero" width="400" style="max-width: 100%; height: auto; border-radius: 12px;">
+  </a>
+</p>
 
-We implement [AI Safety via Debate](https://arxiv.org/abs/1805.00899) (Irving et al., 2018), a proposed mechanism for AI alignment, within the context of natural language debates between LLMs.
+# TO DO
+
+- [ ] finish writeup
+- [ ] add ToC
+
+## Abstract
+
+We implement [AI Safety via Debate](https://arxiv.org/abs/1805.00899) (Irving et al., 2018), a proposed mechanism for AI alignment, within the context of natural language debates between LLMs. This comprises the following steps, which are each elaborated upon in more detail below.
+- We implement an end-to-end pipeline for running automated debates with two LLM debaters and an LLM judge. This is pipeline is also deployed as a web app [here](https://ai-debate-4-u.vercel.app/).
+- We source, clean, and verify datasets from a variety of sources:
+  - the Google Fact Check Claim Search API;
+  - direct generation via LLM;
+  - debates motions from popular debate podcasts.
+  Specifically, we obtain debate claims from all three of these sources, and we obtain ground-truth labels from the former two sources.
+- We run 280 debates in total, and analyze the results from a number of different angles.
+
+We begin with a brief discussion of the context for this demo project, and we conclude by enumerating some open directions for further investigation.
+
+The code itself was primarily written in collaboration with Claude Code. The repo itself is organized for further iteration, with extensive documentation (see particularly [docs/claude.md](docs/claude.md)). Please feel free to experiment and make a PR!
+
+## Introduction and Context
+
+The 2018 paper [AI Safety via Debate](https://arxiv.org/abs/1805.00899) proposes a mechanism for AI alignment: training agents via self-play in a zero-sum debate game. It is proposed that this may be useful in contexts where a human can adequately judge the end result despite not being able to evaluate turn-by-turn performance. (This is the case with complex games like Go or Chess, and the paper draws an extensive analogy with the distinction between P and NP algorithms.) As a proof-of-concept, this is implemented within the context of a very simple "debate" game: given a handwritten digit image from the MNIST dataset, two debater models try to convince a judge model of the true label by iterative revealing pixels turn-by-turn.
+
+The years since 2018 have seen an explosion of progress in both the power and popularity of AI models, particularly ushered in by the "ChatGPT moment" in late 2022. In particular, LLMs are now extremely well-suited to the above mechanism. However, before it can be trusted as a beneficial tool for AI alignement, it must be stress-tested in this new and qualitatively different context. Such stress-testing is the primary purpose of our experiments.
+
+## Pipeline
+
+
+
+
+
+## Data
+
+
+
+## Experiments
+
+
+## Further Directions
+
+
+
 
 
 
