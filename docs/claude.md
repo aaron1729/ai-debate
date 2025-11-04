@@ -101,23 +101,22 @@ An adversarial truth-seeking system that uses AI debate to evaluate factual clai
 │   └── utils/
 │       ├── check_rate_limits.py          # Check/reset rate limit cache
 │       └── test_anthropic_api.py         # Test API connection
-├── web/                           # Next.js web application
-│   ├── pages/
-│   │   ├── index.tsx             # Main web UI component
-│   │   └── api/
-│   │       ├── debate.ts         # Debate API endpoint with rate limiting
-│   │       ├── check-rate-limit.ts # Rate limit checker
-│   │       ├── check-usage.ts    # Debug: Redis inspection
-│   │       ├── list-redis-keys.ts # Debug: Redis keys
-│   │       └── get-remaining.ts  # Debug endpoint
-│   ├── lib/
-│   │   ├── debate-engine.ts      # TypeScript debate logic (shared with API)
-│   │   ├── prompt-log.ts         # Redis prompt logging
-│   │   ├── rate-limits.ts        # Rate limiting utilities
-│   │   └── request-ip.ts         # IP normalization helpers
-│   ├── components/               # React components (empty)
-│   └── shared/
-│       └── messages.json         # Progress messages (CLI & UI shared)
+├── pages/                         # Next.js pages
+│   ├── index.tsx                  # Main web UI component
+│   └── api/
+│       ├── debate.ts              # Debate API endpoint with rate limiting
+│       ├── check-rate-limit.ts    # Rate limit checker
+│       ├── check-usage.ts         # Debug: Redis inspection
+│       ├── list-redis-keys.ts     # Debug: Redis keys
+│       └── get-remaining.ts       # Debug endpoint
+├── lib/                           # TypeScript library code
+│   ├── debate-engine.ts           # TypeScript debate logic (shared with API)
+│   ├── prompt-log.ts              # Redis prompt logging
+│   ├── rate-limits.ts             # Rate limiting utilities
+│   └── request-ip.ts              # IP normalization helpers
+├── components/                    # React components (empty)
+├── shared/
+│   └── messages.json              # Progress messages (CLI & UI shared)
 ├── data/                          # Data files and database
 │   ├── experiments.db            # SQLite database for all experiments
 │   ├── claims_verified_climate_48.json  # Verified: 48 climate claims

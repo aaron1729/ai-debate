@@ -5,7 +5,8 @@
       "Bash(python:*)",
       "Bash(sqlite3:*)",
       "Bash(python3:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
