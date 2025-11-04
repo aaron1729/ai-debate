@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://ai-debate-4-u.vercel.app/">
-    <img src="public/hero/ai-debate-display-2400x1260.png" alt="AI Debate Hero" width="400" style="max-width: 100%; height: auto; border-radius: 12px;">
+    <img src="public/hero/ai-debate-display-2400x1260-rounded.png" alt="AI Debate Hero" width="400" style="max-width: 100%; height: auto;">
   </a>
 </p>
 
