@@ -9,7 +9,7 @@ def main():
     # Get output directory
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(os.path.dirname(script_dir))
-    output_dir = os.path.join(project_root, 'plotting', 'plots', 'self-score')
+    output_dir = os.path.join(project_root, 'plotting', 'plots', 'self-score-histogram')
 
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
@@ -24,6 +24,8 @@ def main():
 
     for model_id, filename in models:
         model_label = MODEL_LABELS.get(model_id, model_id)
+
+        # Generate regular plot
         output_path = os.path.join(output_dir, filename)
         print(f'\nGenerating {filename} for {model_label}...')
 
@@ -32,6 +34,18 @@ def main():
             print(f'✓ Successfully generated {filename}')
         except Exception as e:
             print(f'✗ Error generating {filename}: {e}')
+            return 1
+
+        # Generate normalized plot
+        normalized_filename = filename.replace('.png', '_normalized.png')
+        normalized_output_path = os.path.join(output_dir, normalized_filename)
+        print(f'Generating {normalized_filename} for {model_label}...')
+
+        try:
+            create_self_score_plot(model_id, normalized_output_path, normalized=True)
+            print(f'✓ Successfully generated {normalized_filename}')
+        except Exception as e:
+            print(f'✗ Error generating {normalized_filename}: {e}')
             return 1
 
     print('\n✓ All self-score plots generated successfully!')

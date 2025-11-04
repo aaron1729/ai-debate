@@ -3,7 +3,8 @@
     "allow": [
       "Bash(source venv/bin/activate)",
       "Bash(python:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

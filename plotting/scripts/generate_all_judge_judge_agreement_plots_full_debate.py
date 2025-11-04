@@ -10,7 +10,7 @@ def main():
     # Get output directory
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(os.path.dirname(script_dir))
-    output_dir = os.path.join(project_root, 'plotting', 'plots', 'judge-judge-agreement')
+    output_dir = os.path.join(project_root, 'plotting', 'plots', 'judge-judge-agreement-scatterplot')
 
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)

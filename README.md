@@ -46,12 +46,106 @@ everything of course, but particularly e.g.:
 
 ## things to note in writeup
 
-- data sources; data cleaning and verification.
+- data sources; data cleaning and verification. note that some of them are much worse, and are effectively just fact-checks (particularly from the google API).
 
 - functionality
 
 - web UI
 
+## Reproducibility and Analysis
+
+### Judgment Reproducibility
+
+Judgments are surprisingly stable: over the 8 suites of 4 debates between the same two debaters where all judges weighed in at all turns, we have judgment correlations:
+- claude: 0.87
+- gemini: 0.84
+- gpt-4: 0.82
+- grok: 0.79
+(see `plotting/plots/debate-motions/` and `plotting/plots/debate-motions-with-duplicate-judging/` for visual comparison.)
+
+### Plotting Scripts
+
+Several plotting scripts are available to visualize debate results:
+
+#### Debate Motion Plots (4-subplot format)
+
+**Full debate suites** (same motion with 4 configurations):
+- `plotting/scripts/create_debate_plot.py` - Creates a 4-subplot plot for debates matching a motion pattern
+- `plotting/scripts/generate_all_debate_plots.py` - Generates all 8 standard debate motion plots
+- Output: `plotting/plots/debate-motions/`
+- Each plot shows 4 subplots: (pro-first vs con-first) × (debaters swapped)
+- Shows judgment trajectories across all debate turns for all 4 judges
+
+**Duplicate judgment analysis**:
+- `plotting/scripts/create_debate_plot_max.py` - Same as above but uses MAX(id) for deduplication
+- `plotting/scripts/generate_all_debate_plots_max.py` - Generates all 8 plots with MAX deduplication
+- Output: `plotting/plots/debate-motions-with-duplicate-judging/`
+- Used to analyze how judgments changed when debates were re-judged
+
+#### Turn Progression Plots (legacy schema experiments)
+
+Early experiments used a different schema where debates were run with varying turn counts (1, 2, 4, 6 turns) but judged only at the end. These plots show how judge scores evolve as debate length increases:
+
+**Paired experiments** (same debaters switching sides):
+- `plotting/scripts/create_turn_progression_pair_plot.py` - Creates side-by-side plots for paired experiments
+- `plotting/scripts/generate_all_turn_progression_pairs.py` - Generates all 16 paired plots
+- Output: `plotting/plots/score-by-turn-pairs/`
+- Filename format: `{shortname}_debaters-{model1}-{model2}_judge-{judge}.png`
+- Left subplot: alphabetically earlier debater as Pro
+- Right subplot: alphabetically earlier debater as Con
+- Shows how the same judge's score changes with debate length for both debater orientations
+
+**Single experiments** (no matching pair):
+- `plotting/scripts/create_turn_progression_plot.py` - Creates single plot for one experiment
+- Output: `plotting/plots/score-by-turn/`
+- Filename format: `{shortname}_pro-{pro}_con-{con}_judge-{judge}.png`
+- Shows judge score progression across turns 1, 2, 4, 6
+
+**Claim shortnames**:
+- `plotting/scripts/claim_shortnames.py` - Maps full claim texts to short descriptive names used in filenames
+- Examples: "homeopathy-studies", "minimum-wage", "climate-models-overestimate"
+
+**Helper scripts**:
+- `plotting/scripts/cleanup_and_rename_misc_debates.py` - Consolidates paired experiments and renames singles
+
+#### Judge Analysis Plots
+
+**Self-scoring patterns**:
+- `plotting/scripts/create_self_score_plot.py` - Shows how judges score when judging debates they participated in
+- `plotting/scripts/generate_all_self_score_plots.py` and `generate_all_self_score_plots_full_debate.py`
+- Output: `plotting/plots/self-score-histogram/`
+- 3 vertical subplots per judge: all scores, scores when judging self as Pro, scores when judging self as Con
+- Supports normalized density plots (via `normalized=True` parameter) for direct comparison across different sample sizes
+- Key finding: Claude/GPT-4 heavily use score 5 (~50-60%), Gemini is more decisive
+
+**Judge-debater agreement (histograms)**:
+- `plotting/scripts/create_judge_debater_agreement_plot.py` - Shows score distributions for one judge scoring one debater
+- `plotting/scripts/generate_all_judge_debater_agreement_plots.py`
+- Output: `plotting/plots/judge-debater-agreement-histogram/`
+- 2 vertical subplots: debater as Pro, debater as Con
+- Filename: `judge={judge}_debater={debater}_agreement.png` (or `*_normalized.png` for density plots)
+- Supports normalized density plots for direct comparison
+- Key finding: Gemini trusts Claude, distrusts GPT-4
+
+**Judge-debater agreement (violin plots)**:
+- `plotting/scripts/create_judge_debater_agreement_violin.py` - Comprehensive 4×5 violin plot grid
+- `plotting/scripts/generate_judge_debater_agreement_violin.py`
+- Output: `plotting/plots/judge-debater-agreement-violin/`
+- Grid layout: 4 rows (judges) × 5 columns (overall + 4 debaters)
+- Column 1: Overall score distribution for each judge (colored by judge's model color)
+- Columns 2-5: Split violin plots showing Con (left, red) vs Pro (right, green) distributions
+- All violins normalized to equal visual area (representing densities, not counts)
+- Shows both mean (white diamond) and median (black circle) markers
+- When mean and median are close (<0.3 score units), markers are horizontally offset for visibility
+- Enables direct comparison of scoring patterns across all judge-debater-side combinations
+
+**Judge-judge agreement**:
+- `plotting/scripts/create_judge_judge_agreement_plot.py` - Scatterplots comparing two judges' scores
+- `plotting/scripts/generate_all_judge_judge_agreement_plots.py` and `generate_all_judge_judge_agreement_plots_full_debate.py`
+- Output: `plotting/plots/judge-judge-agreement-scatterplot/`
+- Shows correlation between judge pairs with jitter to reduce overplotting
+- Filename: `{judge1}-{judge2}-judge-judge-agreement.png` (or `*-full_debate_only.png`)
+- Correlations range from 0.67 (Gemini-GPT4) to 0.87 (Gemini-Grok) for full debates
 
 
 ====================================

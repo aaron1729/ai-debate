@@ -111,7 +111,7 @@ def create_judge_judge_agreement_plot(judge1_id, judge2_id, output_filename, ful
 if __name__ == '__main__':
     # Test with Claude and Gemini
     output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                              'plotting', 'plots', 'judge-judge-agreement')
+                              'plotting', 'plots', 'judge-judge-agreement-scatterplot')
     os.makedirs(output_dir, exist_ok=True)
 
     create_judge_judge_agreement_plot(

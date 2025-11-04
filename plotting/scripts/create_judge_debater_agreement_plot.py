@@ -21,13 +21,14 @@ MODEL_LABELS = {
     'grok-3': 'Grok'
 }
 
-def create_judge_debater_agreement_plot(judge_id, debater_id, output_filename):
+def create_judge_debater_agreement_plot(judge_id, debater_id, output_filename, normalized=False):
     """Create a 2-subplot histogram showing score distributions for a judge-debater pair.
 
     Args:
         judge_id: The judge model identifier
         debater_id: The debater model identifier
         output_filename: Path to save the plot
+        normalized: If True, normalize histograms to show density/percentage instead of counts
     """
 
     # Connect to database
@@ -70,27 +71,42 @@ def create_judge_debater_agreement_plot(judge_id, debater_id, output_filename):
     # Bins for integers 0-10
     bins = np.arange(0, 12) - 0.5  # Centers bins on integers
 
-    # Calculate max count across both distributions for shared y-axis
-    all_counts = []
-    for scores in [pro_scores, con_scores]:
-        if scores:
-            counts, _ = np.histogram(scores, bins=bins)
-            all_counts.extend(counts)
-    max_count = max(all_counts) if all_counts else 10
-    y_max = max_count * 1.1  # Add 10% headroom
+    # Determine histogram parameters based on normalization
+    if normalized:
+        density = True
+        ylabel = 'Density'
+        # Calculate max density across both distributions for shared y-axis
+        all_densities = []
+        for scores in [pro_scores, con_scores]:
+            if scores:
+                counts, _ = np.histogram(scores, bins=bins, density=True)
+                all_densities.extend(counts)
+        max_density = max(all_densities) if all_densities else 0.1
+        y_max = max_density * 1.1  # Add 10% headroom
+    else:
+        density = False
+        ylabel = 'Count'
+        # Calculate max count across both distributions for shared y-axis
+        all_counts = []
+        for scores in [pro_scores, con_scores]:
+            if scores:
+                counts, _ = np.histogram(scores, bins=bins)
+                all_counts.extend(counts)
+        max_count = max(all_counts) if all_counts else 10
+        y_max = max_count * 1.1  # Add 10% headroom
 
     # Plot 1: Debater arguing Pro
-    axes[0].hist(pro_scores, bins=bins, color=judge_color, alpha=0.7, edgecolor='black')
-    axes[0].set_ylabel('Count', fontsize=11)
+    axes[0].hist(pro_scores, bins=bins, color=judge_color, alpha=0.7, edgecolor='black', density=density)
+    axes[0].set_ylabel(ylabel, fontsize=11)
     axes[0].set_title(f'{debater_label} Arguing Pro (n={len(pro_scores)})', fontsize=12)
     axes[0].set_ylim(0, y_max)
     axes[0].grid(True, alpha=0.3, axis='y')
     axes[0].set_xticks(range(0, 11))
 
     # Plot 2: Debater arguing Con
-    axes[1].hist(con_scores, bins=bins, color=judge_color, alpha=0.7, edgecolor='black')
+    axes[1].hist(con_scores, bins=bins, color=judge_color, alpha=0.7, edgecolor='black', density=density)
     axes[1].set_xlabel('Score', fontsize=11)
-    axes[1].set_ylabel('Count', fontsize=11)
+    axes[1].set_ylabel(ylabel, fontsize=11)
     axes[1].set_title(f'{debater_label} Arguing Con (n={len(con_scores)})', fontsize=12)
     axes[1].set_ylim(0, y_max)
     axes[1].grid(True, alpha=0.3, axis='y')
@@ -108,7 +124,7 @@ def create_judge_debater_agreement_plot(judge_id, debater_id, output_filename):
 if __name__ == '__main__':
     # Test with Claude judging Grok
     output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                              'plotting', 'plots', 'judge-debater-agreement')
+                              'plotting', 'plots', 'judge-debater-agreement-histogram')
     os.makedirs(output_dir, exist_ok=True)
 
     create_judge_debater_agreement_plot(
