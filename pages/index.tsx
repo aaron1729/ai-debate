@@ -426,7 +426,15 @@ export default function Home() {
               Adversarial Truth-Seeking Through Structured Debates
             </p>
             <p className="hero-description">
-              A Modernization Of{' '}
+              A{' '}
+              <a
+                href="https://github.com/aaron1729/ai-debate/blob/main/README.md"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Modernization
+              </a>{' '}
+              Of{' '}
               <a href="https://arxiv.org/abs/1805.00899" target="_blank" rel="noopener noreferrer">
                 AI Safety Via Debate
               </a>{' '}
