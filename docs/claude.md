@@ -19,7 +19,7 @@ This implementation comprises:
 ### Deployment Status
 - ✅ **CLI working**: Python command-line interface fully functional
 - ✅ **Web UI working locally**: Next.js app runs on localhost with all features
-- ❌ **NOT deployed to Vercel**: Rate limiting logic needs to be fixed before deployment
+- ✅ **Deployed to Vercel**: Live at https://ai-debate-4-u.vercel.app/ with Upstash-backed rate limiting
 
 ### Implemented Features
 
