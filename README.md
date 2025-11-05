@@ -12,7 +12,7 @@
 * [Table of Contents](#table-of-contents)
 * [Overview](#overview)
 * [Background](#background)
-* [Pipeline](#pipeline)
+* [Debate Pipeline](#debate-pipeline)
 * [Data](#data)
 * [Results](#results)
   * [Consistency](#consistency)
@@ -46,7 +46,7 @@ The 2018 paper [AI Safety Via Debate](https://arxiv.org/abs/1805.00899) proposes
 
 The years since 2018 have seen an explosion of progress in both the power and popularity of AI models, particularly ushered in by the "ChatGPT moment" in late 2022. In particular, LLMs are now extremely well-suited to the above mechanism. However, before it can be trusted as a beneficial tool for AI alignement, it must be stress-tested in this new and qualitatively different context. Such stress-testing is the primary purpose of our experiments, to which end we discuss a number of salient observations below.
 
-## Pipeline
+## Debate Pipeline
 
 A debate consists of two debaters alternating arguments for & against a given claim, followed by a judge's evaluation.
 
@@ -58,7 +58,7 @@ Each debater is assigned a side, "pro" or "con". They are instructed to debate a
 - an explanation of the context for the evidence;
 - an argument for their position, based on the evidence provided (and within the context of the debate thus far).
 
-The judge is instructed to evaluate the debate, assigning both a category label and a numerical score and also providing a summary of the debate and its reasoning for its decision. The available labels are: "supported", "contradicted", "misleading", and "needs more evidence". The numerical score is an integer from 0 to 10 (inclusive), with 0 corresponding to "completely contradicted" and 10 corresponding to "completely supported"; the numerical score is `None` in the case of "needs more evidence".
+The judge is instructed to evaluate the debate, assigning both a category label and a numerical score and also providing a summary of the debate and its reasoning for its decision. The available labels are: "supported", "contradicted", "misleading", and "needs more evidence". The numerical score is an integer from 0 to 10 (inclusive), with 0 corresponding to "completely contradicted" and 10 corresponding to "completely supported"; the numerical score is `None` in the case of "needs more evidence". Among other instructions, the judge is explicitly told to evaluate the quality and credibility of the sources cited (and the debaters are told to keep this in mind when citing their sources).
 
 The user can specify:
 - the claim under debate;
@@ -200,7 +200,7 @@ When judges rate a long debate after each turn, one might expect that they "make
 
 ## Further Directions
 
-A number of immediate further directions remain to be explored.
+A number of further directions remain to be explored.
 
 1. One might introduce multiple models from the same vendor (e.g. GPT-4 and GPT-5) and assess their differences both as debaters and as judges.
 
@@ -216,15 +216,4 @@ A number of immediate further directions remain to be explored.
 
 1. One might replace the judge with a "mixture-of-experts judge" who synthesizes the judgments of multiple judges.
 
-Of course, the ultimate aim is to use this mechanism for AI safety. The following further directions 
-
-
-ACTUAL TRAINING
-
-- RL policy learning through self-play.
-
-- [ ] weight sources according to credibility, e.g. ranging from government websites and reuters and AP down towards blog posts and news sources that are known to be politically biased.
-
-- [ ] add an RL policy that learns which actions lead to higher final scores (depending on various hyperparameters such as the costs of various citations). this can be a single policy that updates after debates against a frozen opponent, or ideally multiple policies that learn through self-play.
-
-
+1. Of course, the ultimate aim is to use this debate mechanism for AI safety. Specifically, one might hope to train an RL policy that learns through self-play within this debate framework. This could manifest as a single policy that updates after debates against a frozen opponent, or alternatively as multiple policies that collectively learn through interated play.
