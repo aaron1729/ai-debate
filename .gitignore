@@ -52,3 +52,10 @@ yarn-error.log*
 .vercel
 
 # Experiment database
+
+# Cache directories
+.cache/
+.matplotlib/
+
+# Claude Code
+.claude/
