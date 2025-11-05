@@ -26,7 +26,9 @@
 
 ## Overview
 
-We implement [AI Safety Via Debate](https://arxiv.org/abs/1805.00899) (Irving et al., 2018), a proposed mechanism for AI alignment, within the context of natural language debates between LLMs. This comprises the following steps, which are each elaborated upon in more detail below.
+We implement [AI Safety Via Debate](https://arxiv.org/abs/1805.00899) (Irving et al., 2018), a proposed mechanism for AI alignment, within the context of natural language debates between LLMs. Our primary findings are a number of systematic biases that emerge across models, which should be addressed before using this mechanism for RL.
+
+This implementation comprises the following steps, which are each elaborated upon in more detail below.
 - We implement an end-to-end pipeline for running automated debates with two LLM debaters and an LLM judge. This is pipeline is also deployed as a web app [here](https://ai-debate-4-u.vercel.app/).
 - We source, clean, and verify datasets from a variety of sources:
   - the Google Fact Check Tools API;
@@ -119,6 +121,8 @@ The following bubble plot shows that despite their differences in temperment (wi
   <img src="plotting/plots/judge-judge-agreement-bubbleplot/claude-grok-judge-judge-agreement.png" width="600" style="max-width: 100%; height: auto;">
 </p>
 
+For further analysis of debater strength, we conduct a suite of six sub-suites of four 6-turn debates, all judged by all four judge models, all centered around the claim "Political correctness represents genuine progress." Each sub-suite corresponds to a choice of two (distinct) debater models, and the four debates correspond to the possible choices for which debater argues "pro" and whether "pro" goes first. These are not terribly conclusive (since many of the judges consistently determine that more evidence is needed), but generally display the same phenomena described above; see the corresponding plots in [`plotting/plots/debate-motions/`](plotting/plots/debate-motions/).
+
 ### Examples of Gemini Loving Claude
 
 The following plots illustrate Gemini judging Claude very favorably.
@@ -171,21 +175,6 @@ In a number of debates, the judges are fairly consistent in either agreeing or d
   <img src="plotting/plots/debate-motions/china_debates_claude_gemini.png" width="600" style="max-width: 100%; height: auto;">
 </p>
 
-###
-
-
-only gemini is willing to budge from 5: plotting/plots/debate-motions/antizionism_debates_gpt4_grok.png
-
-and again: plotting/plots/debate-motions/ai_threat_debates_gpt4_grok.png
-
-most judges agree with the claim, but are more convinced by claude than by gemini as debaters: 
-
-
-
-### DEBATER STRENGTH -- TO FILL IN
-
-for debater strength: compare the "political correctness debates", which involved _all_ six matchups (4 choose 2).
-
 ### No Long-Range Stability
 
 When judges rate a long debate after each turn, one might expect that they "make up their minds" after a few turns, and exhibit lower variance in their scores changes during the later turns. However, this did not bear out in the experiments, as illustrated in the following heatmap of score changes (removing all changes of 0 so the others become more visible).
@@ -193,10 +182,6 @@ When judges rate a long debate after each turn, one might expect that they "make
 <p align="center">
   <img src="plotting/plots/judge-score-change-histogram/judge-score-changes_no_zeros.png" width="1000" style="max-width: 100%; height: auto;">
 </p>
-
-
-
-
 
 ## Further Directions
 
