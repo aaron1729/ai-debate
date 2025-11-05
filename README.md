@@ -15,22 +15,23 @@
 
 ## Overview
 
-We implement [AI Safety via Debate](https://arxiv.org/abs/1805.00899) (Irving et al., 2018), a proposed mechanism for AI alignment, within the context of natural language debates between LLMs. This comprises the following steps, which are each elaborated upon in more detail below.
+We implement [AI Safety Via Debate](https://arxiv.org/abs/1805.00899) (Irving et al., 2018), a proposed mechanism for AI alignment, within the context of natural language debates between LLMs. This comprises the following steps, which are each elaborated upon in more detail below.
 - We implement an end-to-end pipeline for running automated debates with two LLM debaters and an LLM judge. This is pipeline is also deployed as a web app [here](https://ai-debate-4-u.vercel.app/).
 - We source, clean, and verify datasets from a variety of sources:
   - the Google Fact Check Tools API;
   - direct generation via LLM;
-  - debates motions from popular debate podcasts.
+  - debate motions from popular debate podcasts.
+  
   Specifically, we obtain debate claims from all three of these sources, and we obtain ground-truth labels from the former two sources.
 - We run 280 debates in total, and analyze the results from a number of different angles.
 
 We begin with a brief discussion of the context for this demo project, and we conclude by enumerating some open directions for further investigation.
 
-The code itself was primarily written in collaboration with Claude Code. The repo itself is carefully organized for further iteration, with extensive technical documentation in [`docs/`](docs/) (see particularly [docs/claude.md](docs/claude.md)). Please feel free to experiment and make a PR!
+The code itself was written in collaboration with OpenAI Codex (for the web app) and Claude Code (for everything else). The repo itself is carefully organized for further iteration, with extensive technical documentation in [`docs/`](docs/) (see particularly [docs/claude.md](docs/claude.md)). Please feel free to experiment and make a PR!
 
 ## Background
 
-The 2018 paper [AI Safety via Debate](https://arxiv.org/abs/1805.00899) proposes a mechanism for AI alignment: training agents via self-play in a zero-sum debate game. It is proposed that this may be useful in contexts where a human can adequately judge the end result despite not being able to evaluate turn-by-turn performance. (This is the case with complex games like Go or Chess, and the paper draws an extensive analogy with the distinction between P and NP algorithms.) As a proof-of-concept, this is implemented within the context of a very simple "debate" game: given a handwritten digit image from the MNIST dataset, two debater models try to convince a judge model of the true label by iterative revealing pixels turn-by-turn.
+The 2018 paper [AI Safety Via Debate](https://arxiv.org/abs/1805.00899) proposes a mechanism for AI alignment: training agents via self-play in a zero-sum debate game. It is proposed that this may be useful in contexts where a human can adequately judge the end result despite not being able to evaluate turn-by-turn performance. (This is the case with complex games like Go or Chess, and the paper draws an extensive analogy with the distinction between P and NP algorithms.) As a proof-of-concept, this is implemented within the context of a very simple "debate" game: given a handwritten digit image from the MNIST dataset, two debater models try to convince a judge model of the true label by iterative revealing pixels turn-by-turn.
 
 The years since 2018 have seen an explosion of progress in both the power and popularity of AI models, particularly ushered in by the "ChatGPT moment" in late 2022. In particular, LLMs are now extremely well-suited to the above mechanism. However, before it can be trusted as a beneficial tool for AI alignement, it must be stress-tested in this new and qualitatively different context. Such stress-testing is the primary purpose of our experiments.
 
@@ -71,7 +72,7 @@ The web app is written in TypeScript, built with Next.js, and deployed on Vercel
 As noted in [above](#overview), we source, clean, and verify datasets from a variety of sources:
 1. the Google Fact Check Tools (GFCT) API;
 1. direct generation via LLM;
-1. debates motions from popular debate podcasts.
+1. debate motions from popular debate podcasts.
 
 At a minimum, each claim consists of a claim text as well as a topic, e.g. the claim "Vaccines containing mRNA technology alter a person's DNA permanently." is tagged with the topic "health". The topics are drawn from the following list: "climate", "economics", "environment", "health", "politics", "religion", "science", "technology".
 
@@ -81,43 +82,124 @@ The debate podcasts used are "Munk Debates", "Open To Debate", and "Soho Forum".
 
 The various raw, cleaned, and verified datasets are all stored as json files in [`data/`](/data); the cleaning and verification scripts are in [`/scripts/data_processing/`](/scripts/data_processing/). All natural language tasks (e.g. clarifying vague claims and labeling by topic) are accomplished via LLM API calls (and spot-checked for accuracy after the fact).
 
-## Experiments
+## Results
+
+One experiment is comprised of a suite of debates between the same debaters, as well as one or more judgments. All experiment data is saved in the SQLite database [`data/experiments.db`](data/experiments.db). A flurry of observations follows. (The following plots and many more can be found in [`plotting/plots/`](plotting/plots/); click the plots themselves to see larger versions.)
+
+### Consistency
+
+First and foremost, it's worth noting that judgments of a given debate by a given judge are quite stable -- perhaps surprisingly so (given that the LLMs themselves exhibit randomness (i.e. have temperature > 0)). Specifically, for each judge we find the following correlations between their two judgments of the same debate: Claude has 0.87, Gemini has 0.84, GPT-4 has 0.82, and Grok has 0.79. See the figures in [`plotting/plots/debate-motions-with-duplicate-judging/`](plotting/plots/debate-motions-with-duplicate-judging/) and their corresponding figures in [`plotting/plots/debate-motions/`](plotting/plots/debate-motions/) for details.
+
+### General Observations of Debaters and Judges
+
+The following violin plots illustrate a number of interesting observations.
+
+<p align="center">
+  <img src="plotting/plots/judge-debater-agreement-violin/judge_debater_agreement_violin_grid.png" width="1000" style="max-width: 100%; height: auto;">
+</p>
+
+- Claude is generally the strongest debater: the split violin plots in its column are generally the most positively-sloped (indicating low scores when it's arguing "con" and high scores when it's arguing "pro"), and it's particularly convincing to Gemini -- and extremely convincing to Grok specifically when it's arguing "con".
+- By contrast, both Gemini and Grok are particularly unconvinced by GPT-4's debates.
+- Claude and GPT-4 are quite conservative as judges, generally giving scores of 4-6. Gemini is the most easily swayed towards an extreme position, and Grok errs towards contrarianism.
+
+### Examples of Gemini Loving Claude
+
+The following plots illustrate Gemini judging Claude very favorably.
+
+These first two images show that Gemini judges Claude as the winner when it argues for either side of the same claim -- even when the claims are fairly black-and-white.
+
+<p align="center">
+  <img src="plotting/plots/score-by-turn-pairs/radiation-danger_debaters-claude-gpt4_judge-gemini.png" width="600" style="max-width: 100%; height: auto;">
+</p>
+
+<p align="center">
+  <img src="plotting/plots/score-by-turn-pairs/population-8-billion_debaters-claude-gpt4_judge-gemini.png" width="600" style="max-width: 100%; height: auto;">
+</p>
+
+These second two images show Gemini _uniquely_ favoring Claude's argumentation -- the latter showing that this persists even when Claude is debating against Gemini.
+
+<p align="center">
+  <img src="plotting/plots/debate-motions/sex_work_debates_claude_gpt4.png" width="600" style="max-width: 100%; height: auto;">
+</p>
+
+<p align="center">
+  <img src="plotting/plots/debate-motions/religion_debates_claude_gemini.png" width="600" style="max-width: 100%; height: auto;">
+</p>
+
+
+### Second-Mover Advantage
+
+The following plots show that a modest advantage is obtained by debating second (within each turn), i.e. by responding to the other debater's claims. (This mirrors the known "last-word advantage" in human debates.) Each dot represents a single debate configuration that was carried out twice, once with "pro" starting and once with "con" starting (but with all other parameters held fixed). Thus, the dashed lines represent order-agnostic judging; datapoints below them indicate first-mover advantage, while datapoints above them indicate second-mover advantage.
+
+<p align="center">
+  <img src="plotting/plots/first-mover-advantage-scatterplot/first-mover-advantage.png" width="600" style="max-width: 100%; height: auto;">
+</p>
+
+### Implicit Bias
+
+In a number of debates, the judges are fairly consistent in either agreeing or disagreeing with the claim, regardless of who is debating each side.
+
+<p align="center">
+  <img src="plotting/plots/debate-motions/surveillance_debates_claude_gemini.png" width="600" style="max-width: 100%; height: auto;">
+</p>
+
+<p align="center">
+  <img src="plotting/plots/debate-motions/healthcare_debates_claude_gemini.png" width="600" style="max-width: 100%; height: auto;">
+</p>
+
+<p align="center">
+  <img src="plotting/plots/debate-motions/globalization_debates_gemini_grok.png" width="600" style="max-width: 100%; height: auto;">
+</p>
+
+<p align="center">
+  <img src="plotting/plots/debate-motions/china_debates_claude_gemini.png" width="600" style="max-width: 100%; height: auto;">
+</p>
+
+(This last image also shows that )
 
 
 
-
-API claims weren't great, because once they're 
-
+###
 
 
-see database, and plots.
+only gemini is willing to budge from 5: plotting/plots/debate-motions/antizionism_debates_gpt4_grok.png
+
+and again: plotting/plots/debate-motions/ai_threat_debates_gpt4_grok.png
+
+most judges agree with the claim, but are more convinced by claude than by gemini as debaters: 
 
 
 
-a hypothesis: as the debate length increases, the judge's verdict will stabilize -- presumably erring towards the truthful side (which requires human-labeled inputs). said differently, misleading arguments are more likely to win in short debates.
+###
+
+
+
+### No Long-Range Stability
+
+When judges rate a long debate after each turn, one might expect that they "make up their minds" after a few turns, and exhibit lower variance in their scores changes. However, this did not bear out in the experiments, as illustrated in the following heatmap of score changes (removing all changes of 0 so the others become more visible).
+
+<p align="center">
+  <img src="plotting/plots/judge-score-change-histogram/judge-score-changes_no_zeros.png" width="1000" style="max-width: 100%; height: auto;">
+</p>
+
+
+
 
 
 - have the two debaters switch sides and see how it goes [this is already happening in `run_experiments.py`]
 - switch whether pro or con goes first (with all else equal). plot this.
 
-debate-motions (no ground truth); note duplicate judging and stability (even though models have their own randomness (temperature > 0)).
+
 
 for debater strength: compare the "political correctness debates", which involved _all_ six matchups (4 choose 2).
 
 
-Judgments are surprisingly stable: over the 8 suites of 4 debates between the same two debaters where all judges weighed in at all turns, we have judgment correlations:
-- claude: 0.87
-- gemini: 0.84
-- gpt-4: 0.82
-- grok: 0.79
-(see `plotting/plots/debate-motions/` and `plotting/plots/debate-motions-with-duplicate-judging/` for visual comparison.)
 
 judge-debater-agreement (just violin plots) -- note particularly self-bias, refer to "implicit learning" or whatever it's called.
 
 
+
 make & discuss more plots!!
-
-
 
 
 

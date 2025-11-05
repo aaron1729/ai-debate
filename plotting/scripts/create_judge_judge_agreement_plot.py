@@ -5,6 +5,8 @@ import sqlite3
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import argparse
+from collections import Counter
 
 # Consistent color scheme
 MODEL_COLORS = {
@@ -21,7 +23,7 @@ MODEL_LABELS = {
     'grok-3': 'Grok'
 }
 
-def create_judge_judge_agreement_plot(judge1_id, judge2_id, output_filename, full_debate_only=False):
+def create_judge_judge_agreement_plot(judge1_id, judge2_id, output_filename, full_debate_only=False, use_bubble=False):
     """Create a scatterplot showing agreement between two judges.
 
     Args:
@@ -29,6 +31,7 @@ def create_judge_judge_agreement_plot(judge1_id, judge2_id, output_filename, ful
         judge2_id: Second judge model identifier (will be y-axis)
         output_filename: Path to save the plot
         full_debate_only: If True, only include judgments at turn 6
+        use_bubble: If True, use bubble plot with size indicating count
     """
 
     # Connect to database
@@ -70,12 +73,29 @@ def create_judge_judge_agreement_plot(judge1_id, judge2_id, output_filename, ful
     # Create scatterplot
     fig, ax = plt.subplots(figsize=(10, 10))
 
-    # Add jitter to avoid overplotting
-    jitter_amount = 0.1
-    judge1_jittered = [s + np.random.uniform(-jitter_amount, jitter_amount) for s in judge1_scores]
-    judge2_jittered = [s + np.random.uniform(-jitter_amount, jitter_amount) for s in judge2_scores]
+    if use_bubble:
+        # Count occurrences of each (score1, score2) pair
+        pair_counts = Counter(zip(judge1_scores, judge2_scores))
 
-    ax.scatter(judge1_jittered, judge2_jittered, alpha=0.3, s=50, color='#2424bf', edgecolors='black', linewidth=0.5)
+        # Extract unique pairs and their counts
+        unique_pairs = list(pair_counts.keys())
+        counts = [pair_counts[pair] for pair in unique_pairs]
+        judge1_unique = [pair[0] for pair in unique_pairs]
+        judge2_unique = [pair[1] for pair in unique_pairs]
+
+        # Scale bubble sizes (min size 50, scale factor 100)
+        sizes = [50 + count * 100 for count in counts]
+
+        # Plot bubbles
+        scatter = ax.scatter(judge1_unique, judge2_unique, s=sizes, alpha=0.5,
+                           color='#2424bf', edgecolors='black', linewidth=1.5)
+    else:
+        # Add jitter to avoid overplotting
+        jitter_amount = 0.1
+        judge1_jittered = [s + np.random.uniform(-jitter_amount, jitter_amount) for s in judge1_scores]
+        judge2_jittered = [s + np.random.uniform(-jitter_amount, jitter_amount) for s in judge2_scores]
+
+        ax.scatter(judge1_jittered, judge2_jittered, alpha=0.3, s=50, color='#2424bf', edgecolors='black', linewidth=0.5)
 
     # Add diagonal line (perfect agreement)
     ax.plot([0, 10], [0, 10], 'r--', linewidth=2, alpha=0.5, label='Perfect Agreement')
@@ -109,13 +129,33 @@ def create_judge_judge_agreement_plot(judge1_id, judge2_id, output_filename, ful
     plt.close()
 
 if __name__ == '__main__':
-    # Test with Claude and Gemini
+    parser = argparse.ArgumentParser(description='Create judge-judge agreement plots')
+    parser.add_argument('--bubble', action='store_true',
+                       help='Use bubble plot instead of scatterplot')
+    parser.add_argument('--judge1', type=str, default='claude-sonnet-4-5-20250929',
+                       help='First judge model ID')
+    parser.add_argument('--judge2', type=str, default='gemini-2.5-flash',
+                       help='Second judge model ID')
+    parser.add_argument('--full-debate-only', action='store_true',
+                       help='Only include judgments at turn 6')
+    args = parser.parse_args()
+
+    # Determine output directory based on plot type
+    plot_type = 'judge-judge-agreement-bubbleplot' if args.bubble else 'judge-judge-agreement-scatterplot'
     output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                              'plotting', 'plots', 'judge-judge-agreement-scatterplot')
+                              'plotting', 'plots', plot_type)
     os.makedirs(output_dir, exist_ok=True)
 
+    # Create filename
+    judge1_short = MODEL_LABELS.get(args.judge1, args.judge1).lower()
+    judge2_short = MODEL_LABELS.get(args.judge2, args.judge2).lower()
+    suffix = '-full_debate_only' if args.full_debate_only else ''
+    filename = f'{judge1_short}-{judge2_short}-judge-judge-agreement{suffix}.png'
+
     create_judge_judge_agreement_plot(
-        'claude-sonnet-4-5-20250929',
-        'gemini-2.5-flash',
-        os.path.join(output_dir, 'claude-gemini-judge-judge-agreement.png')
+        args.judge1,
+        args.judge2,
+        os.path.join(output_dir, filename),
+        full_debate_only=args.full_debate_only,
+        use_bubble=args.bubble
     )
