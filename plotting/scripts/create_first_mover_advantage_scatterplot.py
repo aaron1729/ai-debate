@@ -166,6 +166,11 @@ def create_first_mover_advantage_scatterplot(output_filename):
             pro_first_scores = [s[0] for s in scores]
             con_first_scores = [s[1] for s in scores]
 
+            # Calculate second-mover advantage (con_first - pro_first)
+            second_mover_advantages = [con - pro for pro, con in zip(pro_first_scores, con_first_scores)]
+            avg_advantage = np.mean(second_mover_advantages)
+            median_advantage = np.median(second_mover_advantages)
+
             # Add jitter to avoid overplotting
             jitter_amount = 0.1
             pro_jittered = [s + np.random.uniform(-jitter_amount, jitter_amount) for s in pro_first_scores]
@@ -176,6 +181,12 @@ def create_first_mover_advantage_scatterplot(output_filename):
 
             # Add diagonal line (no advantage)
             ax.plot([0, 10], [0, 10], 'r--', linewidth=2, alpha=0.5, label='No Advantage')
+
+            # Add second-mover advantage text
+            advantage_text = f'Second-mover advantage:\naverage {avg_advantage:+.1f} points, median {median_advantage:+.1f} points'
+            ax.text(0.02, 0.98, advantage_text, transform=ax.transAxes,
+                   fontsize=9, verticalalignment='top',
+                   bbox=dict(boxstyle='round', facecolor='white', alpha=0.8, edgecolor='gray'))
 
         # Formatting
         ax.set_xlim(-0.5, 10.5)
