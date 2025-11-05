@@ -6,15 +6,14 @@
   </a>
 </p>
 
-
 ## Table of Contents
 
 * [Table of Contents](#table-of-contents)
 * [Overview](#overview)
 * [Background](#background)
 * [Debate Pipeline](#debate-pipeline)
-* [Data](#data)
-* [Results](#results)
+* [Debate Claim Data](#debate-claim-data)
+* [Results and Analysis](#results-and-analysis)
   * [Consistency](#consistency)
   * [Aggregate Observations of Debaters and Judges](#aggregate-observations-of-debaters-and-judges)
   * [Examples of Gemini Loving Claude](#examples-of-gemini-loving-claude)
@@ -22,20 +21,18 @@
   * [Easily-Argued Claims (or Implicit Bias)](#easily-argued-claims-or-implicit-bias)
   * [No Long-Range Stability](#no-long-range-stability)
 * [Further Directions](#further-directions)
-
+* [Conclusion](#conclusion)
 
 ## Overview
 
-We implement [AI Safety Via Debate](https://arxiv.org/abs/1805.00899) (Irving et al., 2018), a proposed mechanism for AI alignment, within the context of natural language debates between LLMs. Our primary findings are a number of systematic biases that emerge across models, which should be addressed before using this mechanism for RL.
+We implement [AI Safety Via Debate](https://arxiv.org/abs/1805.00899) (Irving et al., 2018), a proposed mechanism for AI alignment, within the context of natural language debates between LLMs. Through extensive experimentation, we uncover a number of systematic biases that emerge across models, which should be addressed before using this mechanism for RL.
 
 This implementation comprises the following steps, which are each elaborated upon in more detail below.
 - We implement an end-to-end pipeline for running automated debates with two LLM debaters and an LLM judge. This is pipeline is also deployed as a web app [here](https://ai-debate-4-u.vercel.app/).
-- We source, clean, and verify datasets from a variety of sources:
+- We source, clean, and verify datasets of claims to be debated from a variety of sources:
   - the Google Fact Check Tools API;
   - direct generation via LLM;
   - debate motions from popular debate podcasts.
-  
-  Specifically, we obtain debate claims from all three of these sources, and we obtain ground-truth labels from the former two sources.
 - We run 280 debates in total, and analyze the results from a number of different angles.
 
 We begin with a brief discussion of the context for this demo project, and we conclude by enumerating some open directions for further investigation.
@@ -46,7 +43,7 @@ The code itself was written in collaboration with OpenAI Codex (for the web app)
 
 The 2018 paper [AI Safety Via Debate](https://arxiv.org/abs/1805.00899) proposes a mechanism for AI alignment: training agents via self-play in a zero-sum debate game. It is proposed that this may be useful in contexts where a human can adequately judge the end result despite not being able to evaluate turn-by-turn performance. (This is the case with complex games like Go or Chess, and the paper draws an extensive analogy with the distinction between P and NP algorithms.) As a proof-of-concept, this is implemented within the context of a very simple "debate" game: given a handwritten digit image from the MNIST dataset, two debater models try to convince a judge model of the true label by iterative revealing pixels turn-by-turn.
 
-The years since 2018 have seen an explosion of progress in both the power and popularity of AI models, particularly ushered in by the "ChatGPT moment" in late 2022. In particular, LLMs are now extremely well-suited to the above mechanism. However, before it can be trusted as a beneficial tool for AI alignement, it must be stress-tested in this new and qualitatively different context. Such stress-testing is the primary purpose of our experiments, to which end we discuss a number of salient observations below.
+The years since 2018 have seen an explosion of progress in both the power and popularity of AI models, particularly ushered in by the "ChatGPT moment" in late 2022. In particular, LLMs are now extremely well-suited to the above mechanism. However, before it can be trusted as a beneficial tool for AI alignement, it must be stress-tested in this new and qualitatively different context. Such stress-testing is the primary purpose of our experiments, to which end we discuss a number of salient observations [below](#results).
 
 ## Debate Pipeline
 
@@ -60,7 +57,7 @@ Each debater is assigned a side, "pro" or "con". They are instructed to debate a
 - an explanation of the context for the evidence;
 - an argument for their position, based on the evidence provided (and within the context of the debate thus far).
 
-The judge is instructed to evaluate the debate, assigning both a category label and a numerical score and also providing a summary of the debate and its reasoning for its decision. The available labels are: "supported", "contradicted", "misleading", and "needs more evidence". The numerical score is an integer from 0 to 10 (inclusive), with 0 corresponding to "completely contradicted" and 10 corresponding to "completely supported"; the numerical score is `None` in the case of "needs more evidence". Among other instructions, the judge is explicitly told to evaluate the quality and credibility of the sources cited (and the debaters are told to keep this in mind when citing their sources).
+The judge is instructed to evaluate the debate, assigning both a category label and a numerical score and also providing a summary of the debate and its reasoning for its decision. The available labels are: "supported", "contradicted", "misleading", and "needs more evidence". The numerical score is an integer from 0 to 10 (inclusive), with 0 corresponding to "completely contradicted" and 10 corresponding to "completely supported"; the numerical score is `None` in the case of "needs more evidence". Among other instructions, the judge is explicitly told to evaluate the quality and credibility of the sources cited (and the debaters are explicitly told to cite credible sources).
 
 The user can specify:
 - the claim under debate;
@@ -80,14 +77,14 @@ Here is an example of the above silly claim being debated via the web app.
 
 The web app is written in TypeScript, built with Next.js, and deployed on Vercel. In order to limit developer costs, the web app features rate-limiting: each IP address receives 5 free uses per model per day, and a global backstop ensures that no model is used more than 200 times per day. An Upstash/Redis database records usage (with IP addressed hashed for safety), both to handle rate-limiting and to afford the possibility of using user-generated debates as experiment data.
 
-## Data
+## Debate Claim Data
 
-As noted in [above](#overview), we source, clean, and verify datasets from a variety of sources:
+As noted [above](#overview), we source, clean, and verify datasets of claims to be debated from a variety of sources:
 1. the Google Fact Check Tools (GFCT) API;
 1. direct generation via LLM;
 1. debate motions from popular debate podcasts.
 
-At a minimum, each claim consists of a claim text as well as a topic, e.g. the claim "Vaccines containing mRNA technology alter a person's DNA permanently." is tagged with the topic "health". The topics are drawn from the following list: "climate", "economics", "environment", "health", "politics", "religion", "science", "technology".
+At a minimum, each claim consists of a claim text as well as a topic; for instance, the claim "Vaccines containing mRNA technology alter a person's DNA permanently." is tagged with the topic "health". The topics are drawn from the following list: "climate", "economics", "environment", "health", "politics", "religion", "science", "technology".
 
 The GFCT API serves factual claims that are submitted by fact-checking organizations (e.g. PolitiFact) and accompanied by verdicts (e.g. "mostly false") and links to articles with further details. Cleaning them amounts to clarifying the claims when they are vague or imprecise, assigning ground-truth values, and labeling by topic. Verifying them amounts to checking that the linked articles indeed support the corresponding verdicts (which is not always the case).
 
@@ -95,9 +92,9 @@ The debate podcasts used are "Munk Debates", "Open To Debate", and "Soho Forum".
 
 The various raw, cleaned, and verified datasets are all stored as json files in [`data/`](/data); the cleaning and verification scripts are in [`/scripts/data_processing/`](/scripts/data_processing/). All natural language tasks (e.g. clarifying vague claims and labeling by topic) are accomplished via LLM API calls (and spot-checked for accuracy after the fact).
 
-## Results
+## Results and Analysis
 
-One experiment is comprised of a suite of debates between the same debaters, as well as one or more judgments. All experiment data is saved in the SQLite database [`data/experiments.db`](data/experiments.db). A flurry of observations follows. (The following plots and many more can be found in [`plotting/plots/`](plotting/plots/); click the plots themselves to see larger versions.)
+Each experiment is comprised of a suite of debates between the same debaters, as well as one or more judgments. All experiment data is saved in the SQLite database [`data/experiments.db`](data/experiments.db). A flurry of observations follows. (The following plots and many more can be found in [`plotting/plots/`](plotting/plots/); click the plots themselves here to see larger versions.)
 
 ### Consistency
 
@@ -121,7 +118,7 @@ The following bubble plot shows that despite their differences in temperment (wi
   <img src="plotting/plots/judge-judge-agreement-bubbleplot/claude-grok-judge-judge-agreement.png" width="600" style="max-width: 100%; height: auto;">
 </p>
 
-For further analysis of debater strength, we conduct a suite of six sub-suites of four 6-turn debates, all judged by all four judge models, all centered around the claim "Political correctness represents genuine progress." Each sub-suite corresponds to a choice of two (distinct) debater models, and the four debates correspond to the possible choices for which debater argues "pro" and whether "pro" goes first. These are not terribly conclusive (since many of the judges consistently determine that more evidence is needed), but generally display the same phenomena described above; see the corresponding plots in [`plotting/plots/debate-motions/`](plotting/plots/debate-motions/).
+For further analysis of debater strength, we conduct a suite of six sub-suites of four 6-turn debates, all judged by all four judge models, all centered around the single claim "Political correctness represents genuine progress." Each sub-suite corresponds to a choice of two (distinct) debater models, and the four debates correspond to the possible choices for which debater argues "pro" and whether "pro" goes first. These are not terribly conclusive (especially since many of the judges consistently determine that more evidence is needed), but generally display the same phenomena described above; see the corresponding plots in [`plotting/plots/debate-motions/`](plotting/plots/debate-motions/).
 
 ### Examples of Gemini Loving Claude
 
@@ -177,7 +174,7 @@ In a number of debates, the judges are fairly consistent in either agreeing or d
 
 ### No Long-Range Stability
 
-When judges rate a long debate after each turn, one might expect that they "make up their minds" after a few turns, and exhibit lower variance in their scores changes during the later turns. However, this did not bear out in the experiments, as illustrated in the following heatmap of score changes (removing all changes of 0 so the others become more visible).
+When judges rate a long debate after each turn, one might hope that they "make up their minds" after a few turns, and exhibit lower variance in their scores changes during the later turns (so that the end result of the debate is not very dependent on the number of turns so long as it is sufficiently large). However, this did not bear out in the experiments, as illustrated in the following heatmap of score changes (removing all changes of 0 so the others become more visible).
 
 <p align="center">
   <img src="plotting/plots/judge-score-change-histogram/judge-score-changes_no_zeros.png" width="1000" style="max-width: 100%; height: auto;">
@@ -201,4 +198,8 @@ A number of further directions remain to be explored.
 
 1. One might replace the judge with a "mixture-of-experts judge" who synthesizes the judgments of multiple judges.
 
-1. Of course, the ultimate aim is to use this debate mechanism for AI safety. Specifically, one might hope to train an RL policy that learns through self-play within this debate framework. This could manifest as a single policy that updates after debates against a frozen opponent, or alternatively as multiple policies that collectively learn through interated play.
+1. Of course, the ultimate aim is to use this debate mechanism for AI safety. Specifically, one might train an RL policy that learns through self-play within this debate framework. This could manifest as a single policy that updates after debates against a frozen opponent, or alternatively as multiple policies that collectively learn through interated play.
+
+## Conclusion
+
+Collectively, these findings suggest that modern LLMs exhibit stable yet biased reasoning in adversarial debates. Debate mechanisms improve calibration only modestly, which suggests that robust AI alignment via debate will require ensemble judging or RL finetuning in order to reach reliability.
