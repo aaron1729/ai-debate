@@ -1505,7 +1505,6 @@ export default function Home() {
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s ease;
-            min-height: 200px;
           }
 
           .sample-card:not(.disabled):not(.loading):hover {
