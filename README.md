@@ -78,7 +78,7 @@ In case one or both of the models refuses to debate the claim, their refusal res
 
 This pipeline is available both as a CLI (using [`scripts/core/debate.py`](scripts/core/debate.py)) and as a [web app](https://ai-debate-4-u.vercel.app/).
 
-Here is an example of the above silly claim being debated via the web app.
+Here is a screenshot showing the above silly claim being debated via the web app.
 
 <p align="center">
   <img src="docs/assets/hot-dog-screenshot.png" alt="Screenshot of hot dog debate." width="600" style="max-width: 100%; height: auto;">
