@@ -26,7 +26,7 @@ export const SAMPLE_CLAIMS: SampleDebate[] = [
   { id: '2', claim: 'Humanity would be better off with a Universal Basic Income.' },
   { id: '3', claim: 'Free will is an illusion.' },
   { id: '4', claim: 'Mathematics is discovered, not invented.' },
-  { id: '5', claim: 'Anti-Zionism is anti-Semitism.' },
+  { id: '5', claim: 'Consciousness can emerge from computation.' },
   { id: '6', claim: 'Cereal is a type of soup.' },
 ];
 
