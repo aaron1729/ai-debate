@@ -856,6 +856,22 @@ const isAdmin = Boolean(ADMIN_IP && (identifier === ADMIN_IP || isLocalhost));
 4. Handle provider-specific response formats
 5. Test refusal behavior (varies significantly by model)
 
+### Important Note: GPT-4 Model Change (November 2025)
+
+**Post-Experiment Model Update**: After completing all experiments documented in README.md, the GPT-4 model ID was updated from `gpt-4-turbo-preview` to `gpt-4o` on November 6, 2025 to fix user API key compatibility issues.
+
+**Why this matters for reproducibility**:
+- All experiments in the writeup used `gpt-4-turbo-preview`
+- The model change may affect future results, though both are GPT-4-class models
+- Experiments are not literally reproducible anyway (temperature > 0 for all API calls)
+- This note ensures transparency about the model configuration timeline
+
+**User impact**:
+- Users with new/free-tier OpenAI API keys were getting 404 errors with `gpt-4-turbo-preview`
+- Server API keys retained access to the deprecated model, causing inconsistent behavior
+- Update to `gpt-4o` ensures compatibility with all API key types
+- `gpt-4o` is OpenAI's current recommended GPT-4 model as of November 2025
+
 ## Known Issues
 
 ### 🐛 CRITICAL: Rate Limit Reset on Page Refresh

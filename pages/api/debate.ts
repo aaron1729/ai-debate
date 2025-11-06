@@ -76,11 +76,33 @@ export default async function handler(
       return res.status(400).json({ error: 'Invalid first speaker' });
     }
 
-    // Determine if using server keys or user keys
-    const usingServerKeys = !userApiKeys || Object.keys(userApiKeys).length === 0;
-    const userApiKeyProviders = usingServerKeys
+    // Build hybrid API keys: use user key if provided, else server key
+    const apiKeys: APIKeys = {
+      anthropic: userApiKeys?.anthropic || process.env.ANTHROPIC_API_KEY,
+      openai: userApiKeys?.openai || process.env.OPENAI_API_KEY,
+      google: userApiKeys?.google || process.env.GOOGLE_API_KEY,
+      xai: userApiKeys?.xai || process.env.XAI_API_KEY,
+    };
+
+    // Track which providers user supplied keys for
+    const userApiKeyProviders = !userApiKeys
       ? []
-      : Object.entries(userApiKeys || {}).filter(([, value]) => Boolean(value)).map(([key]) => key);
+      : Object.entries(userApiKeys).filter(([, value]) => Boolean(value)).map(([key]) => key);
+
+    // Determine which models are using server keys (for rate limiting)
+    // Note: Models may repeat (e.g., Claude vs Claude judged by GPT-4)
+    const modelsUsingServerKeys: ModelKey[] = [];
+    if (!userApiKeys?.[MODELS[proModel].provider]) {
+      modelsUsingServerKeys.push(proModel);
+    }
+    if (!userApiKeys?.[MODELS[conModel].provider]) {
+      modelsUsingServerKeys.push(conModel);
+    }
+    if (!userApiKeys?.[MODELS[judgeModel].provider]) {
+      modelsUsingServerKeys.push(judgeModel);
+    }
+
+    const usingServerKeys = modelsUsingServerKeys.length > 0;
 
     const clientIp = getClientIp(req);
     const ipHash = hashIp(clientIp);
@@ -114,8 +136,8 @@ export default async function handler(
       wantsStream
     };
 
-    // If using server keys, apply per-model rate limiting
-    if (usingServerKeys && redis) {
+    // Apply rate limiting only for models using server keys
+    if (modelsUsingServerKeys.length > 0 && redis) {
       const identifier = clientIp;
       const isLocalhost = isLocalhostIp(identifier);
       const isAdmin = Boolean(ADMIN_IP && (identifier === ADMIN_IP || isLocalhost));
@@ -123,10 +145,19 @@ export default async function handler(
 
       console.log(`[Rate Limit] IP: ${identifier}, isLocalhost: ${isLocalhost}, isAdmin: ${isAdmin}, limit: ${rateLimit}`);
 
+      // Count usage per model (same model may appear multiple times in pro/con/judge)
       const usageCounts: Partial<Record<ModelKey, number>> = {};
-      usageCounts[proModel] = (usageCounts[proModel] || 0) + turns;
-      usageCounts[conModel] = (usageCounts[conModel] || 0) + turns;
-      usageCounts[judgeModel] = (usageCounts[judgeModel] || 0) + 1;
+      for (const modelKey of modelsUsingServerKeys) {
+        if (modelKey === proModel) {
+          usageCounts[modelKey] = (usageCounts[modelKey] || 0) + turns;
+        }
+        if (modelKey === conModel) {
+          usageCounts[modelKey] = (usageCounts[modelKey] || 0) + turns;
+        }
+        if (modelKey === judgeModel) {
+          usageCounts[modelKey] = (usageCounts[modelKey] || 0) + 1;
+        }
+      }
 
       const perModelStatus: Record<string, { remaining: number; limit: number; reset: number | null }> = {};
       const globalStatus: Record<string, { remaining: number; limit: number; reset: number | null }> = {};
@@ -211,16 +242,6 @@ export default async function handler(
       }
 
     }
-
-    // Prepare API keys
-    const apiKeys: APIKeys = usingServerKeys
-      ? {
-          anthropic: process.env.ANTHROPIC_API_KEY,
-          openai: process.env.OPENAI_API_KEY,
-          google: process.env.GOOGLE_API_KEY,
-          xai: process.env.XAI_API_KEY,
-        }
-      : userApiKeys;
 
     if (wantsStream) {
       res.statusCode = 200;

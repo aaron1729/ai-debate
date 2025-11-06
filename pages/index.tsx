@@ -282,8 +282,10 @@ export default function Home() {
       });
 
       if (!response.ok) {
+        // Read response body once to avoid "body stream already read" error
+        const responseText = await response.text();
         try {
-          const errorPayload = await response.json();
+          const errorPayload = JSON.parse(responseText);
           // Check if it's our new structured error format
           if (errorPayload.userMessage) {
             throw new Error(JSON.stringify(errorPayload));
@@ -292,8 +294,8 @@ export default function Home() {
           const message = errorPayload.message || errorPayload.error || 'Failed to run debate';
           throw new Error(message);
         } catch (jsonError) {
-          const text = await response.text();
-          throw new Error(text || 'Failed to run debate');
+          // If JSON parsing fails, use the raw text
+          throw new Error(responseText || 'Failed to run debate');
         }
       }
 
@@ -497,9 +499,8 @@ export default function Home() {
       }
 
       // Refresh rate limits so UI reflects the latest usage
-      if (usingServerKeys) {
-        await fetchRateLimits();
-      }
+      // Always refresh, even with user keys, to update the "Free uses remaining" counters
+      await fetchRateLimits();
     } catch (err: any) {
       // Try to parse structured error
       try {

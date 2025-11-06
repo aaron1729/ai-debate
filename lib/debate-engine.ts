@@ -19,7 +19,7 @@ export const MODELS = {
   },
   gpt4: {
     name: "GPT-4",
-    id: "gpt-4-turbo-preview",
+    id: "gpt-4o",
     provider: "openai"
   },
   gemini: {
