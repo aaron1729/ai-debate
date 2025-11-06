@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import { MODELS, ModelKey, DebateResult, DebateTurn } from '../lib/debate-engine';
 import messages from '../shared/messages.json';
+import { generateSampleConfigs, ConfiguredSample } from '../lib/sample-debates';
 
 type ModelLimitInfo = {
   remaining: number;
@@ -45,6 +46,7 @@ export default function Home() {
   const [hasLoadedLimits, setHasLoadedLimits] = useState(false);
   const [rateLimit, setRateLimit] = useState(5);
   const [globalLimit, setGlobalLimit] = useState(200);
+  const [sampleDebates, setSampleDebates] = useState<ConfiguredSample[]>([]);
 
   const description = 'Adversarial Truth-Seeking Through Structured AI Debates';
   const rawSiteUrl = process.env.SITE_URL;
@@ -74,13 +76,25 @@ export default function Home() {
   const allServerModelsExhausted = usingServerKeys && modelKeys.every(model => isModelExhausted(model));
 
   const fetchRateLimits = useCallback(async () => {
+    const startTime = performance.now();
+    console.log('[Rate Limits] Starting fetchRateLimits...', { startTime });
+
     try {
+      const fetchStart = performance.now();
       const response = await fetch('/api/check-rate-limit', { cache: 'no-store' });
+      const fetchEnd = performance.now();
+      console.log('[Rate Limits] Fetch completed', { elapsed: `${(fetchEnd - fetchStart).toFixed(2)}ms` });
+
       if (!response.ok) {
+        console.log('[Rate Limits] Response not OK', { status: response.status });
         return;
       }
 
+      const parseStart = performance.now();
       const data = await response.json();
+      const parseEnd = performance.now();
+      console.log('[Rate Limits] JSON parsed', { elapsed: `${(parseEnd - parseStart).toFixed(2)}ms` });
+
       if (typeof data.limit === 'number') {
         setRateLimit(data.limit);
       }
@@ -92,6 +106,12 @@ export default function Home() {
         setModelLimits(data.modelLimits);
         setHasLoadedLimits(true);
       }
+
+      const endTime = performance.now();
+      console.log('[Rate Limits] fetchRateLimits completed', {
+        totalElapsed: `${(endTime - startTime).toFixed(2)}ms`,
+        endTime
+      });
     } catch (err) {
       console.error('Failed to check rate limit:', err);
     }
@@ -99,8 +119,36 @@ export default function Home() {
 
   // Fetch initial rate limit and usage on page load
   useEffect(() => {
+    console.log('[Page Mount] Component mounted, page load started', { timestamp: Date.now() });
     fetchRateLimits();
   }, [fetchRateLimits]);
+
+  // Generate sample debates when model limits are loaded or when a debate completes
+  useEffect(() => {
+    console.log('[Sample Debates] useEffect triggered', {
+      modelLimitsKeys: Object.keys(modelLimits).length,
+      loading,
+      timestamp: Date.now()
+    });
+
+    // Only regenerate if modelLimits loaded AND not currently loading
+    if (Object.keys(modelLimits).length > 0 && !loading) {
+      const startTime = performance.now();
+      console.log('[Sample Debates] Starting generateSampleConfigs...', { startTime });
+
+      const newConfigs = generateSampleConfigs(modelLimits, rateLimit, globalLimit);
+
+      const endTime = performance.now();
+      const elapsed = endTime - startTime;
+      console.log('[Sample Debates] generateSampleConfigs completed', {
+        elapsed: `${elapsed.toFixed(2)}ms`,
+        configsGenerated: newConfigs.length,
+        endTime
+      });
+
+      setSampleDebates(newConfigs);
+    }
+  }, [modelLimits, loading, rateLimit, globalLimit]);
 
   const getVerdictColor = (verdictType: string) => {
     switch (verdictType) {
@@ -110,6 +158,28 @@ export default function Home() {
       case 'needs more evidence': return '#6b7280'; // gray
       default: return '#3b82f6'; // blue
     }
+  };
+
+  const handleSampleClick = (sample: ConfiguredSample) => {
+    // Ignore if debate running
+    if (loading) return;
+
+    // Pre-fill form with sample debate configuration
+    setClaim(sample.claim);
+    setTurns(sample.turns);
+    setProModel(sample.proModel);
+    setConModel(sample.conModel);
+    setJudgeModel(sample.judgeModel);
+    setFirstSpeaker(sample.openingSide);
+
+    // Trigger form submission (will be validated by handleSubmit)
+    // We use setTimeout to ensure state updates have been applied
+    setTimeout(() => {
+      const form = document.querySelector('form');
+      if (form) {
+        form.requestSubmit();
+      }
+    }, 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -150,12 +220,27 @@ export default function Home() {
         const exhaustedSelection = [proModel, conModel, judgeModel].some(model => isModelExhausted(model));
         if (exhaustedSelection) {
           setLoading(false);
-          setError({
-            userMessage: 'The selected model(s) have no free-tier runs remaining.',
-            suggestion: 'Provide your own API keys or wait for the 24-hour window to reset.',
-            category: 'RATE_LIMITED',
-            isRetryable: false
-          });
+
+          // Check if ANY model combination can work (even with 1 turn)
+          const allModelsExhausted = modelKeys.every(model => isModelExhausted(model));
+
+          if (allModelsExhausted) {
+            // No models available at all
+            setError({
+              userMessage: 'All free uses have been exhausted for today.',
+              suggestion: 'Please add your own API keys below or return tomorrow.',
+              category: 'RATE_LIMITED',
+              isRetryable: false
+            });
+          } else {
+            // Specific selected models are exhausted, but others might work
+            setError({
+              userMessage: 'The selected models do not have sufficient free uses remaining for this debate.',
+              suggestion: 'Please try different models, reduce the number of turns, or add your own API keys below.',
+              category: 'RATE_LIMITED',
+              isRetryable: false
+            });
+          }
           return;
         }
       }
@@ -501,6 +586,56 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Sample Debates Section */}
+        {sampleDebates.length > 0 && (
+          <section className="sample-debates-section">
+            <h2 className="sample-debates-heading">Choose a sample debate to run:</h2>
+            <div className="sample-debates-grid" ref={(el) => {
+              if (el) {
+                console.log('[Render] Sample debates cards rendered in DOM', {
+                  timestamp: Date.now(),
+                  cardCount: sampleDebates.length
+                });
+              }
+            }}>
+              {sampleDebates.map((sample) => (
+                <div
+                  key={sample.id}
+                  className={`sample-card ${loading ? 'loading' : ''}`}
+                  onClick={() => handleSampleClick(sample)}
+                  role="button"
+                  tabIndex={loading ? -1 : 0}
+                  onKeyDown={(e) => {
+                    if ((e.key === 'Enter' || e.key === ' ') && !loading) {
+                      e.preventDefault();
+                      handleSampleClick(sample);
+                    }
+                  }}
+                  aria-disabled={loading}
+                >
+                  <div className="sample-claim">{sample.claim}</div>
+                  <div className="sample-metadata">
+                    <div className="sample-debaters">
+                      Pro: {MODELS[sample.proModel].name} • Con: {MODELS[sample.conModel].name}
+                    </div>
+                    <div className="sample-judge">Judge: {MODELS[sample.judgeModel].name}</div>
+                    <div className="sample-turns">
+                      {sample.turns} {sample.turns === 1 ? 'turn' : 'turns'} • {sample.openingSide === 'pro' ? 'Pro' : 'Con'} argues first
+                    </div>
+                  </div>
+                  <button type="button" className="sample-button" disabled={loading}>
+                    Run this debate!
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {sampleDebates.length > 0 && (
+          <h2 className="create-your-own-heading">Or, create your own!</h2>
+        )}
+
         <form onSubmit={handleSubmit} style={{ marginBottom: '40px' }}>
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
@@ -840,7 +975,7 @@ export default function Home() {
                   onClick={() => setFirstSpeaker('pro')}
                   disabled={loading}
                 >
-                  Pro starts
+                  Pro
                 </button>
                 <button
                   type="button"
@@ -849,7 +984,7 @@ export default function Home() {
                   onClick={() => setFirstSpeaker('con')}
                   disabled={loading}
                 >
-                  Con starts
+                  Con
                 </button>
               </div>
             </div>
@@ -1328,6 +1463,132 @@ export default function Home() {
             .hero-section {
               gap: 56px;
               padding: 0 32px;
+            }
+          }
+
+          /* Sample Debates Section */
+          .sample-debates-section {
+            margin-bottom: 48px;
+          }
+
+          .sample-debates-heading {
+            font-size: 18px;
+            font-weight: bold;
+            color: #374151;
+            margin: 0 0 20px 0;
+            text-align: center;
+          }
+
+          .create-your-own-heading {
+            font-size: 18px;
+            font-weight: bold;
+            color: #374151;
+            margin: 0 0 20px 0;
+            text-align: center;
+          }
+
+          .sample-debates-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+          }
+
+          .sample-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px;
+            background: #fefaf5;
+            border: 1px solid #e7d7c7;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 200px;
+          }
+
+          .sample-card:not(.disabled):not(.loading):hover {
+            border-color: #c46b36;
+            box-shadow: 0 2px 8px rgba(196, 107, 54, 0.15);
+            transform: translateY(-1px);
+          }
+
+          .sample-card:not(.disabled):not(.loading):focus {
+            outline: 2px solid #c46b36;
+            outline-offset: 2px;
+          }
+
+          .sample-card.loading {
+            opacity: 0.5;
+            pointer-events: none;
+          }
+
+          .sample-claim {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1f2937;
+            line-height: 1.4;
+          }
+
+          .sample-metadata {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 12px;
+            color: #6b7280;
+          }
+
+          .sample-debaters {
+            font-size: 12px;
+          }
+
+          .sample-judge {
+            font-size: 12px;
+          }
+
+          .sample-turns {
+            font-size: 11px;
+            color: #9ca3af;
+          }
+
+          .sample-button {
+            margin-top: auto;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            background: #c46b36;
+            border: none;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+          }
+
+          .sample-button:not(:disabled):hover {
+            background: #a85a2e;
+          }
+
+          .sample-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+          }
+
+          /* Tablet: 2 columns, all 6 cards */
+          @media (max-width: 900px) {
+            .sample-debates-grid {
+              grid-template-columns: repeat(2, 1fr);
+            }
+          }
+
+          /* Mobile: 1 column, show only 2 cards */
+          @media (max-width: 600px) {
+            .sample-debates-grid {
+              grid-template-columns: 1fr;
+            }
+
+            .sample-card:nth-child(n+3) {
+              display: none;
             }
           }
 

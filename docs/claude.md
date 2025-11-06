@@ -41,6 +41,8 @@ This implementation comprises:
 - ✅ Turn-by-turn result display with animations
 - ✅ Optional user-provided API keys (stored in browser only)
 - ✅ Server-side API keys for free tier
+- ✅ Sample debate cards with adaptive model selection
+- ✅ Responsive design (6 cards desktop, 2 cards mobile)
 - ⚠️ **PARTIAL**: Per-model rate limiting with Upstash Redis (UI refresh bug exists)
 
 **Rate Limiting (Partially Working):**
@@ -1359,6 +1361,138 @@ The plotting system went through several iterations to achieve publication quali
 - Add sampling (verify subset of citations)
 - Cache fetched content to reduce redundant requests
 - Consider using dedicated scraping service/API
+
+### 7. Sample Debate Cards (November 2025)
+
+**Purpose**: Allow users to quickly start a debate without thinking of a claim.
+
+**Problem**: Users face blank textarea on first visit. Providing examples reduces friction and showcases the app's capabilities.
+
+**Solution**: Responsive grid of 6 sample debate cards with smart model selection.
+
+**Implementation** (lib/sample-debates.ts, pages/index.tsx):
+
+**Key Design Decisions**:
+
+1. **Pre-computation over Random Retry**
+   - Generates all 128 possible debate configs (4 models³ × 2 turn counts)
+   - Filters to valid configs based on available free uses
+   - Samples 6 configs with replacement from valid pool
+   - **Performance**: 0.3-0.6ms (100x faster than previous retry-based approach)
+
+2. **Sampling with Replacement**
+   - User might see duplicate model combinations (e.g., Claude vs Claude)
+   - Always shows exactly 6 cards if ANY valid config exists
+   - Simplifies logic: no need for "disabled" card states
+
+3. **Adaptive Reconfiguration**
+   - Cards silently reconfigure after each debate
+   - Example: Card previously had 2 turns → now only 1 turn possible → adjusts automatically
+   - Example: Card previously used Claude → now Claude exhausted → picks different model
+   - User doesn't notice unless paying close attention
+
+4. **Responsive Design**
+   - Desktop (>900px): 3 columns × 2 rows = 6 cards
+   - Tablet (600-900px): 2 columns × 3 rows = 6 cards
+   - Mobile (<600px): 1 column × 2 rows = 2 cards (CSS display:none hides others)
+
+5. **Card Content**
+   - Claim text (14px bold)
+   - Debater models (12px): "Pro: Claude • Con: GPT-4"
+   - Judge model (12px): "Judge: Gemini"
+   - Turn count + opening side (11px): "2 turns • Pro argues first"
+   - "Run this debate!" button
+
+6. **UI States**
+   - Cards gray out during debates (opacity: 0.5, no pointer events)
+   - No disabled states (if no valid configs, section doesn't render)
+   - "Or, create your own!" heading only shows when cards present
+
+**Sample Claims** (hardcoded in lib/sample-debates.ts):
+1. "A hot dog is a sandwich."
+2. "Pineapple belongs on pizza."
+3. "Cats make better pets than dogs."
+4. "Remote work is superior to office work."
+5. "Social media does more harm than good."
+6. "The Oxford comma is necessary."
+
+**Cost Calculation**:
+- 1-turn debate: (1 × 2) + 1 = 3 total API calls
+- 2-turn debate: (2 × 2) + 1 = 5 total API calls
+- Pro model: `turns` uses
+- Con model: `turns` uses
+- Judge model: 1 use (always)
+
+**Files Modified**:
+- `lib/sample-debates.ts` - New file with generation logic
+- `pages/index.tsx` - Added cards section, state management, click handler
+- Toggle labels: "Pro starts" / "Con starts" → "Pro" / "Con"
+
+**Performance Optimization**: Pre-computation approach avoids nested retry loops, enabling sub-millisecond card generation even with complex validation logic.
+
+### 8. Redis Pipelining Optimization (November 2025)
+
+**Problem**: Rate limit check on page load was taking **~11.6 seconds** on airplane WiFi (~2 Mbps upload, high latency).
+
+**Root Cause**:
+- For each of 4 models: 4 sequential Redis calls (get, zcard, zcard, get)
+- Total: 4 models × 4 calls = **16 sequential round-trips** to Upstash
+- On high-latency connections: 16 × ~700ms = 11.2 seconds
+
+**Solution**: Batch all Redis commands using pipeline
+
+**Implementation** (pages/api/check-rate-limit.ts):
+
+```typescript
+// Before: 16 sequential awaits
+for (const modelKey of modelKeys) {
+  const usedRaw = await redis.get(usageKey);      // call 1
+  const result = await redis.zcard(slidingKey);    // call 2
+  const globalResult = await redis.zcard(globalSlidingKey); // call 3
+  const globalRaw = await redis.get(globalUsageKey); // call 4
+}
+
+// After: 1 batched pipeline
+const pipeline = redis.pipeline();
+for (const modelKey of modelKeys) {
+  pipeline.get(usageKey);
+  pipeline.zcard(slidingKey);
+  pipeline.zcard(globalSlidingKey);
+  pipeline.get(globalUsageKey);
+}
+const results = await pipeline.exec(); // Single round-trip
+```
+
+**Performance Improvement**:
+- **Before**: 11,586ms (16 round-trips)
+- **After**: 1,255ms (1 round-trip)
+- **Speedup**: **9.2x faster** on airplane WiFi
+- **Expected on normal WiFi**: Probably 100-300ms (still faster due to reduced HTTP overhead)
+
+**Key Benefits**:
+- Dramatically faster on high-latency connections (airplane, mobile, international)
+- Still faster on good connections (reduces HTTP overhead)
+- Maintains same validation logic and error handling
+- Graceful fallback if pipeline fails
+
+**Debug Logging**:
+- Server-side logs show pipeline execution time
+- Client-side logs show fetch completion time
+- Both kept in codebase for future performance monitoring
+
+**Files Modified**:
+- `pages/api/check-rate-limit.ts` - Replaced sequential calls with pipeline
+- `pages/index.tsx` - Added timing instrumentation (kept for debugging)
+- `lib/sample-debates.ts` - Added timing logs (kept for debugging)
+
+**Upstash Pipeline Support**:
+- Uses `@upstash/redis` v1.28.0 built-in pipeline support
+- Pipeline queues commands, executes in single HTTP request
+- Returns array of results in same order as commands
+
+**Future Optimization Opportunities**:
+- Could also pipeline the debate API's rate limit checks
+- Consider caching rate limits client-side for 30-60 seconds
 
 ## API Key Management
 

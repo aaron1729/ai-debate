@@ -44,6 +44,12 @@ export default async function handler(
   const modelLimits: Record<string, any> = {};
 
   if (redis) {
+    // Build pipeline with all Redis commands in a single batch
+    console.log('[check-rate-limit] Using Redis pipelining for batched requests');
+    const pipelineStart = Date.now();
+    const pipeline = redis.pipeline();
+    const keyMapping: Array<{ modelKey: ModelKey; usageKey: string; slidingKey: string; globalUsageKey: string; globalSlidingKey: string }> = [];
+
     for (const modelKey of modelKeys) {
       const modelIdentifier = `${identifier}:${modelKey}`;
       const usageKey = `ratelimit:usage:${modelIdentifier}`;
@@ -51,97 +57,133 @@ export default async function handler(
       const globalUsageKey = `ratelimit:usage-global:${modelKey}`;
       const globalSlidingKey = `@upstash/ratelimit:global:${modelKey}`;
 
+      // Queue all 4 commands for this model
+      pipeline.get(usageKey);
+      pipeline.zcard(slidingKey);
+      pipeline.zcard(globalSlidingKey);
+      pipeline.get(globalUsageKey);
 
-    // TEMPORARY DEBUGGING LOGGING
-    // const usageRaw = redis ? await redis.get(usageKey) : null;
-    // console.log('[check-rate-limit] raw snapshot', usageKey, usageRaw);
-    ///////////////
+      keyMapping.push({ modelKey, usageKey, slidingKey, globalUsageKey, globalSlidingKey });
+    }
 
-      let storedUsed: number | null = null;
-      let reset: number | null = null;
-      let globalStoredUsed: number | null = null;
-      let globalReset: number | null = null;
-      let slidingEntries = 0;
-      let globalSlidingEntries = 0;
+    // Execute all commands in a single round-trip
+    try {
+      console.log('[check-rate-limit] Executing pipeline with', modelKeys.length * 4, 'commands');
+      const execStart = Date.now();
+      const results = await pipeline.exec();
+      const execEnd = Date.now();
+      console.log('[check-rate-limit] Pipeline executed in', execEnd - execStart, 'ms');
 
-      try {
-        const usedRaw = await redis.get(usageKey);
-        if (usedRaw) {
-          if (typeof usedRaw === 'string') {
-            const parsed = JSON.parse(usedRaw);
-            storedUsed = typeof parsed.used === 'number' ? parsed.used : Number(parsed.used) || 0;
-            reset = typeof parsed.reset === 'number' ? parsed.reset : parsed.reset ? Number(parsed.reset) : null;
-          } else if (typeof usedRaw === 'number') {
-            storedUsed = usedRaw;
-          } else if (typeof usedRaw === 'object') {
-            const parsed = usedRaw as any;
-            storedUsed = typeof parsed.used === 'number' ? parsed.used : Number(parsed.used) || 0;
-            reset = typeof parsed.reset === 'number' ? parsed.reset : parsed.reset ? Number(parsed.reset) : null;
+      // Process results (results array has 4 entries per model)
+      for (let i = 0; i < modelKeys.length; i++) {
+        const { modelKey, slidingKey, globalSlidingKey } = keyMapping[i];
+        const baseIdx = i * 4;
+
+        let storedUsed: number | null = null;
+        let reset: number | null = null;
+        let globalStoredUsed: number | null = null;
+        let globalReset: number | null = null;
+        let slidingEntries = 0;
+        let globalSlidingEntries = 0;
+
+        // Parse usageKey result
+        try {
+          const usedRaw = results[baseIdx];
+          if (usedRaw) {
+            if (typeof usedRaw === 'string') {
+              const parsed = JSON.parse(usedRaw);
+              storedUsed = typeof parsed.used === 'number' ? parsed.used : Number(parsed.used) || 0;
+              reset = typeof parsed.reset === 'number' ? parsed.reset : parsed.reset ? Number(parsed.reset) : null;
+            } else if (typeof usedRaw === 'number') {
+              storedUsed = usedRaw;
+            } else if (typeof usedRaw === 'object') {
+              const parsed = usedRaw as any;
+              storedUsed = typeof parsed.used === 'number' ? parsed.used : Number(parsed.used) || 0;
+              reset = typeof parsed.reset === 'number' ? parsed.reset : parsed.reset ? Number(parsed.reset) : null;
+            }
           }
+        } catch (err) {
+          // ignore
         }
-      } catch (err) {
-        storedUsed = null;
-        reset = null;
-      }
 
-      try {
-        const result = await redis.zcard(slidingKey);
-        const sanitized = Number(result);
-        if (!Number.isNaN(sanitized)) {
-          slidingEntries = sanitized;
-        }
-      } catch (err) {
-        // ignore
-      }
-
-      try {
-        const globalResult = await redis.zcard(globalSlidingKey);
-        const sanitized = Number(globalResult);
-        if (!Number.isNaN(sanitized)) {
-          globalSlidingEntries = sanitized;
-        }
-      } catch (err) {
-        // ignore
-      }
-
-      try {
-        const globalRaw = await redis.get(globalUsageKey);
-        if (globalRaw) {
-          if (typeof globalRaw === 'string') {
-            const parsed = JSON.parse(globalRaw);
-            globalStoredUsed = typeof parsed.used === 'number' ? parsed.used : Number(parsed.used) || 0;
-            globalReset = typeof parsed.reset === 'number' ? parsed.reset : parsed.reset ? Number(parsed.reset) : null;
-          } else if (typeof globalRaw === 'number') {
-            globalStoredUsed = globalRaw;
-          } else if (typeof globalRaw === 'object') {
-            const parsed = globalRaw as any;
-            globalStoredUsed = typeof parsed.used === 'number' ? parsed.used : Number(parsed.used) || 0;
-            globalReset = typeof parsed.reset === 'number' ? parsed.reset : parsed.reset ? Number(parsed.reset) : null;
+        // Parse slidingKey result
+        try {
+          const result = results[baseIdx + 1];
+          const sanitized = Number(result);
+          if (!Number.isNaN(sanitized)) {
+            slidingEntries = sanitized;
           }
+        } catch (err) {
+          // ignore
         }
-      } catch (err) {
-        globalStoredUsed = null;
-        globalReset = null;
+
+        // Parse globalSlidingKey result
+        try {
+          const globalResult = results[baseIdx + 2];
+          const sanitized = Number(globalResult);
+          if (!Number.isNaN(sanitized)) {
+            globalSlidingEntries = sanitized;
+          }
+        } catch (err) {
+          // ignore
+        }
+
+        // Parse globalUsageKey result
+        try {
+          const globalRaw = results[baseIdx + 3];
+          if (globalRaw) {
+            if (typeof globalRaw === 'string') {
+              const parsed = JSON.parse(globalRaw);
+              globalStoredUsed = typeof parsed.used === 'number' ? parsed.used : Number(parsed.used) || 0;
+              globalReset = typeof parsed.reset === 'number' ? parsed.reset : parsed.reset ? Number(parsed.reset) : null;
+            } else if (typeof globalRaw === 'number') {
+              globalStoredUsed = globalRaw;
+            } else if (typeof globalRaw === 'object') {
+              const parsed = globalRaw as any;
+              globalStoredUsed = typeof parsed.used === 'number' ? parsed.used : Number(parsed.used) || 0;
+              globalReset = typeof parsed.reset === 'number' ? parsed.reset : parsed.reset ? Number(parsed.reset) : null;
+            }
+          }
+        } catch (err) {
+          // ignore
+        }
+
+        const effectiveUsed = storedUsed !== null ? storedUsed : slidingEntries;
+        const effectiveGlobalUsed = globalStoredUsed !== null ? globalStoredUsed : globalSlidingEntries;
+
+        const actualRemaining = Math.max(0, rateLimit - effectiveUsed);
+        const globalRemaining = Math.max(0, GLOBAL_MODEL_LIMIT - effectiveGlobalUsed);
+
+        modelLimits[modelKey] = {
+          remaining: actualRemaining,
+          limit: rateLimit,
+          reset,
+          globalRemaining,
+          globalLimit: GLOBAL_MODEL_LIMIT,
+          globalReset,
+          slidingKey,
+          globalSlidingKey,
+          slidingEntries,
+          globalSlidingEntries
+        };
       }
-
-      const effectiveUsed = storedUsed !== null ? storedUsed : slidingEntries;
-      const effectiveGlobalUsed = globalStoredUsed !== null ? globalStoredUsed : globalSlidingEntries;
-
-      const actualRemaining = Math.max(0, rateLimit - effectiveUsed);
-      const globalRemaining = Math.max(0, GLOBAL_MODEL_LIMIT - effectiveGlobalUsed);
-
-      modelLimits[modelKey] = {
-        remaining: actualRemaining,
-        limit: rateLimit,
-        reset,
-        globalRemaining,
-        globalLimit: GLOBAL_MODEL_LIMIT,
-        globalReset,
-        slidingKey,
-        globalSlidingKey,
-        slidingEntries,
-        globalSlidingEntries
-      };
+    } catch (err) {
+      console.error('Pipeline execution failed:', err);
+      // Fallback: return default limits for all models
+      for (const modelKey of modelKeys) {
+        modelLimits[modelKey] = {
+          remaining: rateLimit,
+          limit: rateLimit,
+          reset: null,
+          globalRemaining: GLOBAL_MODEL_LIMIT,
+          globalLimit: GLOBAL_MODEL_LIMIT,
+          globalReset: null,
+          slidingKey: '',
+          globalSlidingKey: '',
+          slidingEntries: 0,
+          globalSlidingEntries: 0
+        };
+      }
     }
   }
 
