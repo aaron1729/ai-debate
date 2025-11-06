@@ -25,7 +25,15 @@ export default function Home() {
   const [progressMessage, setProgressMessage] = useState<ProgressMessage>({ primary: '', secondary: undefined });
   const [debateHistory, setDebateHistory] = useState<DebateTurn[]>([]);
   const [verdict, setVerdict] = useState<DebateResult['verdict'] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{
+    userMessage: string;
+    suggestion?: string;
+    provider?: string;
+    model?: string;
+    category?: string;
+    isRetryable?: boolean;
+    completedSteps?: number;
+  } | null>(null);
   const [showApiKeys, setShowApiKeys] = useState(false);
   const [apiKeys, setApiKeys] = useState({
     anthropic: '',
@@ -142,7 +150,12 @@ export default function Home() {
         const exhaustedSelection = [proModel, conModel, judgeModel].some(model => isModelExhausted(model));
         if (exhaustedSelection) {
           setLoading(false);
-          setError('The selected model(s) have no free-tier runs remaining. Provide your own API keys or wait for the 24-hour window to reset.');
+          setError({
+            userMessage: 'The selected model(s) have no free-tier runs remaining.',
+            suggestion: 'Provide your own API keys or wait for the 24-hour window to reset.',
+            category: 'RATE_LIMITED',
+            isRetryable: false
+          });
           return;
         }
       }
@@ -184,17 +197,19 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        let message = 'Failed to run debate';
         try {
           const errorPayload = await response.json();
-          message = errorPayload.message || errorPayload.error || message;
-        } catch {
-          const text = await response.text();
-          if (text) {
-            message = text;
+          // Check if it's our new structured error format
+          if (errorPayload.userMessage) {
+            throw new Error(JSON.stringify(errorPayload));
           }
+          // Fallback to old format
+          const message = errorPayload.message || errorPayload.error || 'Failed to run debate';
+          throw new Error(message);
+        } catch (jsonError) {
+          const text = await response.text();
+          throw new Error(text || 'Failed to run debate');
         }
-        throw new Error(message);
       }
 
       const reader = response.body?.getReader();
@@ -339,7 +354,21 @@ export default function Home() {
             break;
           }
           case 'error': {
-            streamError = rawEvent.message || 'Failed to run debate';
+            // Handle new structured error format
+            if (rawEvent.userMessage) {
+              streamError = JSON.stringify({
+                userMessage: rawEvent.userMessage,
+                suggestion: rawEvent.suggestion,
+                provider: rawEvent.provider,
+                model: rawEvent.model,
+                category: rawEvent.category,
+                isRetryable: rawEvent.isRetryable,
+                completedSteps: rawEvent.completedSteps
+              });
+            } else {
+              // Fallback for old format
+              streamError = rawEvent.message || 'Failed to run debate';
+            }
             break;
           }
           default:
@@ -387,7 +416,18 @@ export default function Home() {
         await fetchRateLimits();
       }
     } catch (err: any) {
-      setError(err.message);
+      // Try to parse structured error
+      try {
+        const errorData = JSON.parse(err.message);
+        if (errorData.userMessage) {
+          setError(errorData);
+        } else {
+          setError({ userMessage: err.message });
+        }
+      } catch {
+        // Not JSON, just use the message
+        setError({ userMessage: err.message });
+      }
     } finally {
       setLoading(false);
     }
@@ -863,14 +903,78 @@ export default function Home() {
 
         {error && (
           <div style={{
-            padding: '15px',
+            padding: '20px',
             background: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '4px',
+            border: '2px solid #fcc',
+            borderRadius: '8px',
             marginBottom: '20px',
-            color: '#c00'
+            color: '#333'
           }}>
-            <strong>Error:</strong> {error}
+            <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '24px' }}>⚠️</span>
+              <strong style={{ fontSize: '18px', color: '#c00' }}>Error</strong>
+              {error.model && (
+                <span style={{
+                  fontSize: '12px',
+                  padding: '2px 8px',
+                  background: '#fdd',
+                  borderRadius: '4px',
+                  color: '#800'
+                }}>
+                  {error.model}
+                </span>
+              )}
+            </div>
+
+            <p style={{ margin: '10px 0', fontSize: '16px', lineHeight: '1.5' }}>
+              {error.userMessage}
+            </p>
+
+            {error.suggestion && (
+              <p style={{
+                margin: '10px 0',
+                padding: '10px',
+                background: '#fff',
+                border: '1px solid #fbb',
+                borderRadius: '4px',
+                fontSize: '14px',
+                lineHeight: '1.5'
+              }}>
+                <strong>Suggestion:</strong> {error.suggestion}
+              </p>
+            )}
+
+            {error.completedSteps !== undefined && error.completedSteps > 0 && (
+              <p style={{ margin: '10px 0 0 0', fontSize: '14px', color: '#666' }}>
+                The debate completed {error.completedSteps} step{error.completedSteps !== 1 ? 's' : ''} before this error occurred.
+              </p>
+            )}
+
+            {error.isRetryable && (
+              <button
+                onClick={(e) => {
+                  setError(null);
+                  handleSubmit(e as any);
+                }}
+                disabled={loading}
+                style={{
+                  marginTop: '15px',
+                  padding: '10px 20px',
+                  background: loading ? '#6c757d' : '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  opacity: loading ? 0.6 : 1
+                }}
+                onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#0056b3')}
+                onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#007bff')}
+              >
+                {loading ? 'Retrying...' : 'Try Again'}
+              </button>
+            )}
           </div>
         )}
 

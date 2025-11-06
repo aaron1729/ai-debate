@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { randomUUID } from 'crypto';
-import { runDebate, ModelKey, APIKeys, MODELS, DebateProgressUpdate, DebateResult } from '../../lib/debate-engine';
+import { runDebate, ModelKey, APIKeys, MODELS, DebateProgressUpdate, DebateResult, type CategorizedError } from '../../lib/debate-engine';
 import { getClientIp, isLocalhostIp } from '../../lib/request-ip';
 import {
   ADMIN_RATE_LIMIT,
@@ -11,6 +11,7 @@ import {
 } from '../../lib/rate-limits';
 import { hashIp, logDebateEntry } from '../../lib/prompt-log';
 import type { DebateLogMetadata } from '../../lib/prompt-log';
+import { handleUnexpectedError } from '../../lib/error-handler';
 
 // Rate limiter: per-model quotas (configurable via env / lib/rate-limits.ts)
 const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
@@ -297,18 +298,34 @@ export default async function handler(
     console.error('Debate error:', error);
     const durationMs = Date.now() - startedAt;
 
+    // Extract categorized error information if available
+    let categorized: CategorizedError;
+
+    if (error.categorized) {
+      // Error was already categorized by the ModelClient
+      categorized = error.categorized;
+    } else if (error.message?.includes('API_KEY')) {
+      // Handle API key errors
+      categorized = {
+        category: 'AUTHENTICATION',
+        provider: 'anthropic', // Default, but not critical for API key errors
+        modelName: 'Unknown',
+        httpStatus: 400,
+        userMessage: 'API key is missing or invalid.',
+        suggestion: 'Please check that all required API keys are configured correctly.',
+        technicalDetails: error.message,
+        originalError: error,
+        isRetryable: false
+      };
+    } else {
+      // Handle unexpected errors with global handler
+      categorized = handleUnexpectedError(error, 'debate API');
+    }
+
+    // Determine HTTP status code
+    const status = categorized.httpStatus || 500;
+
     if (wantsStream) {
-      let status = 500;
-      let errorLabel = 'Internal server error';
-
-      if (error.message?.includes('API_KEY')) {
-        status = 400;
-        errorLabel = 'Missing API key';
-      } else if (error.message?.includes('API error')) {
-        status = 502;
-        errorLabel = 'API error';
-      }
-
       if (logMetadata && requestSnapshot) {
         logMetadata.durationMs = durationMs;
         await logDebateEntry({
@@ -319,7 +336,7 @@ export default async function handler(
           error: {
             message: error.message || 'An unexpected error occurred',
             stack: error.stack,
-            label: errorLabel,
+            label: categorized.category,
             statusCode: status
           }
         });
@@ -336,8 +353,14 @@ export default async function handler(
 
       res.write(`${JSON.stringify({
         type: 'error',
-        error: errorLabel,
-        message: error.message || 'An unexpected error occurred'
+        category: categorized.category,
+        provider: categorized.provider,
+        model: categorized.modelName,
+        userMessage: categorized.userMessage,
+        suggestion: categorized.suggestion,
+        technicalDetails: categorized.technicalDetails,
+        isRetryable: categorized.isRetryable,
+        completedSteps: progressUpdates.length
       })}\n`);
       res.end();
       return;
@@ -357,24 +380,16 @@ export default async function handler(
       });
     }
 
-    // Handle specific error types
-    if (error.message.includes('API_KEY')) {
-      return res.status(400).json({
-        error: 'Missing API key',
-        message: error.message
-      });
-    }
-
-    if (error.message.includes('API error')) {
-      return res.status(502).json({
-        error: 'API error',
-        message: error.message
-      });
-    }
-
-    return res.status(500).json({
-      error: 'Internal server error',
-      message: error.message
+    // Non-streaming response
+    return res.status(status).json({
+      error: categorized.category,
+      category: categorized.category,
+      provider: categorized.provider,
+      model: categorized.modelName,
+      userMessage: categorized.userMessage,
+      suggestion: categorized.suggestion,
+      technicalDetails: categorized.technicalDetails,
+      isRetryable: categorized.isRetryable
     });
   }
 }

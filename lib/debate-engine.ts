@@ -6,6 +6,10 @@
 import { Anthropic } from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { categorizeAPIError, type Provider, type CategorizedError } from './error-handler';
+
+// Re-export CategorizedError for use in other modules
+export type { CategorizedError } from './error-handler';
 
 export const MODELS = {
   claude: {
@@ -157,7 +161,14 @@ class ModelClient {
       }
       throw new Error(`Unknown provider: ${provider}`);
     } catch (error: any) {
-      throw new Error(`API error (${error.constructor.name}): ${error.message}`);
+      // Categorize and enrich the error with user-friendly information
+      const categorized = categorizeAPIError(error, provider as Provider, this.modelConfig.name);
+
+      // Throw an enriched error that includes categorization
+      const enrichedError = new Error(categorized.technicalDetails) as any;
+      enrichedError.categorized = categorized;
+      enrichedError.originalError = error;
+      throw enrichedError;
     }
   }
 }
