@@ -1,5 +1,108 @@
 # Changelog
 
+## 2025-11-05 - Enhanced Error Handling
+
+### Added
+
+**New Error Classification System** (`lib/error-handler.ts`)
+- Comprehensive error categorization for all API providers (Anthropic Claude, OpenAI GPT-4, xAI Grok, Google Gemini)
+- 12 error categories: `OVERLOADED`, `RATE_LIMITED`, `AUTHENTICATION`, `PERMISSION`, `NOT_FOUND`, `REQUEST_TOO_LARGE`, `TIMEOUT`, `INVALID_REQUEST`, `SAFETY_FILTER`, `INVALID_RESPONSE`, `NETWORK`, `UNKNOWN`
+- User-friendly error messages with actionable suggestions
+- Provider-specific error detection based on official API documentation
+- Global error handler for unexpected errors
+
+**Error Categories Implemented:**
+- **Anthropic Claude**: All error types (400, 401, 403, 404, 413, 429, 500, 529 overloaded_error)
+- **OpenAI GPT-4**: Authentication, rate limits, quota errors, model not found, service unavailable
+- **xAI Grok**: 401, 403, 404, 429, 500/5xx errors (OpenAI-compatible)
+- **Google Gemini**: Safety filter blocks, invalid arguments, rate limits, region restrictions, model not found
+
+**Enhanced Error Response Format:**
+```typescript
+{
+  type: 'error',
+  category: 'OVERLOADED',
+  provider: 'anthropic',
+  model: 'Claude Sonnet 4.5',
+  userMessage: 'Claude is currently experiencing high demand...',
+  suggestion: 'Please wait a few minutes and try again...',
+  isRetryable: true,
+  completedSteps: 2
+}
+```
+
+### Modified
+
+**Updated `lib/debate-engine.ts`**
+- ModelClient.generate() now catches and categorizes all API errors
+- Enriched errors include categorization metadata and user-friendly messages
+- Re-exports CategorizedError type for use in API routes
+
+**Updated `pages/api/debate.ts`**
+- Extracts categorized error information from enriched errors
+- Sends structured error responses for both streaming and non-streaming modes
+- Improved error logging with error category labels
+
+**Updated `pages/index.tsx`**
+- Changed error state from simple string to structured object with multiple fields
+- Enhanced error display UI with:
+  - Warning icon and error badge showing failed model
+  - User-friendly error message
+  - Suggestion box with actionable guidance
+  - Progress indicator showing completed steps before error
+  - "Try Again" button for retryable errors (only appears for transient errors)
+- Improved error parsing for both streaming and non-streaming responses
+
+**Updated `README.md`**
+- Added "Error Handling" section describing comprehensive error handling features
+- Documented user experience improvements for API errors
+
+### User Experience Improvements
+
+**Before:**
+```
+Error: API error (InternalServerError): 500 {"type":"error","error":{"type":"api_error","message":"Overloaded"},"request_id":null}
+```
+
+**After:**
+```
+⚠️ Error [Claude Sonnet 4.5]
+
+Claude is currently experiencing high demand and cannot process your request.
+
+Suggestion: Please wait a few minutes and try again. You can also try using a different model.
+
+The debate completed 2 steps before this error occurred.
+
+[Try Again] button
+```
+
+### Technical Details
+
+**Error Detection Methods:**
+- HTTP status code matching (400, 401, 403, 404, 413, 429, 500, 503, 529)
+- Error type field checking (e.g., `error.type === 'overloaded_error'`)
+- Error message pattern matching for provider-specific errors
+- Network error code detection (ECONNREFUSED, ENOTFOUND, ETIMEDOUT)
+
+**Retry Logic:**
+- Retryable errors: `OVERLOADED`, `TIMEOUT`, `NETWORK`, `RATE_LIMITED`, `UNKNOWN`
+- Non-retryable errors: `AUTHENTICATION`, `PERMISSION`, `NOT_FOUND`, `REQUEST_TOO_LARGE`, `INVALID_REQUEST`, `SAFETY_FILTER`, `INVALID_RESPONSE`
+
+**Global Error Handler:**
+- Catches all unexpected errors not categorized by provider-specific handlers
+- Provides safe fallback with generic user message and technical details for debugging
+- Logs errors for monitoring and troubleshooting
+
+### Files Added
+- `lib/error-handler.ts` - Complete error classification and handling system
+
+### Files Modified
+- `lib/debate-engine.ts` - Error enrichment in ModelClient
+- `pages/api/debate.ts` - Structured error responses
+- `pages/index.tsx` - Enhanced error UI with retry functionality
+- `README.md` - Error handling documentation
+
 ## 2025-10-30 - Debate Podcast Data Integration
 
 ### Added

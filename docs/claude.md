@@ -29,7 +29,8 @@ This implementation comprises:
 - ✅ Multi-model support: Claude Sonnet 4.5, GPT-4, Gemini 2.5 Flash, Grok 3
 - ✅ Judge using Paul Graham's disagreement hierarchy (DH0-DH6)
 - ✅ Structured refusal handling (models can refuse in JSON format)
-- ✅ Proper API error handling vs refusal detection
+- ✅ Comprehensive API error handling with user-friendly messages
+- ✅ Retry functionality for transient errors (overload, timeout, network)
 - ✅ Debate shortening when refusals occur
 - ✅ Shared message templates between CLI and UI (shared/messages.json)
 - ✅ One-shot retries when debaters or judge return malformed JSON (Python CLI + TS engine)
