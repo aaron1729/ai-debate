@@ -23,7 +23,7 @@ export type ModelLimits = Record<string, ModelLimitInfo>;
 // 6 hardcoded sample debate claims
 export const SAMPLE_CLAIMS: SampleDebate[] = [
   { id: '1', claim: 'A hot dog is a type of sandwich.' },
-  { id: '2', claim: 'Humanity would be better off with a Universal Basic Income.' },
+  { id: '2', claim: 'We should institute a Universal Basic Income.' },
   { id: '3', claim: 'Free will is an illusion.' },
   { id: '4', claim: 'Mathematics is discovered, not invented.' },
   { id: '5', claim: 'Consciousness can emerge from computation.' },
