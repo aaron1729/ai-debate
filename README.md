@@ -207,7 +207,7 @@ A number of further directions remain to be explored.
 
 1. One might label claims by how controversial they are and by their political polarity (if any), to see if debaters and judges carry implicit biases along these axes.
 
-1. Similarly, one might decompose the above plots by topic (as they have already been labeled), to see if any debaters or judges carry implicit biases on any of these topics.
+1. Similarly, one might decompose the above plots by topic (as the debate claims have already been labeled thereby), to see if any debaters or judges carry implicit biases on any of these topics.
 
 1. One might study correlations between debate outcomes and either ground truth (where it exists) or human debate outcomes (for debate motions coming from podcast debates).
 
