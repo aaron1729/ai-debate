@@ -916,7 +916,7 @@ export default function Home() {
                 <div style={{ display: 'grid', gap: '10px' }}>
                   <input
                     type="password"
-                    placeholder="Anthropic API Key (optional)"
+                    placeholder="Anthropic API Key (for Claude)"
                     value={apiKeys.anthropic}
                     onChange={(e) => setApiKeys({ ...apiKeys, anthropic: e.target.value })}
                     disabled={loading}
@@ -933,7 +933,7 @@ export default function Home() {
                   />
                   <input
                     type="password"
-                    placeholder="OpenAI API Key (optional)"
+                    placeholder="OpenAI API Key (for GPT-4)"
                     value={apiKeys.openai}
                     onChange={(e) => setApiKeys({ ...apiKeys, openai: e.target.value })}
                     disabled={loading}
@@ -950,7 +950,7 @@ export default function Home() {
                   />
                   <input
                     type="password"
-                    placeholder="Google API Key (optional)"
+                    placeholder="Google API Key (for Gemini)"
                     value={apiKeys.google}
                     onChange={(e) => setApiKeys({ ...apiKeys, google: e.target.value })}
                     disabled={loading}
@@ -967,7 +967,7 @@ export default function Home() {
                   />
                   <input
                     type="password"
-                    placeholder="xAI API Key (optional)"
+                    placeholder="xAI API Key (for Grok)"
                     value={apiKeys.xai}
                     onChange={(e) => setApiKeys({ ...apiKeys, xai: e.target.value })}
                     disabled={loading}
