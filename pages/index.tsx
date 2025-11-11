@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Head from 'next/head';
 import { MODELS, ModelKey, DebateResult, DebateTurn } from '../lib/debate-engine';
 import messages from '../shared/messages.json';
@@ -48,6 +48,9 @@ export default function Home() {
   const [globalLimit, setGlobalLimit] = useState(200);
   const [sampleDebates, setSampleDebates] = useState<ConfiguredSample[]>([]);
 
+  // Ref for auto-scrolling to bottom
+  const bottomRef = useRef<HTMLDivElement>(null);
+
   const description = 'Adversarial Truth-Seeking Through Structured AI Debates';
   const rawSiteUrl = process.env.SITE_URL;
   const siteUrl = rawSiteUrl ? rawSiteUrl.replace(/\/$/, '') : '';
@@ -74,6 +77,34 @@ export default function Home() {
   };
 
   const allServerModelsExhausted = usingServerKeys && modelKeys.every(model => isModelExhausted(model));
+
+  // Smooth scroll to bottom
+  const scrollToBottom = useCallback(() => {
+    // Scroll to the absolute bottom of the page
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+  }, []);
+
+  // Auto-scroll when loading state changes (debate starts)
+  useEffect(() => {
+    if (loading) {
+      // Small delay to ensure progress bar is rendered
+      setTimeout(scrollToBottom, 100);
+    }
+  }, [loading, scrollToBottom]);
+
+  // Auto-scroll when new debate turns arrive
+  useEffect(() => {
+    if (debateHistory.length > 0) {
+      scrollToBottom();
+    }
+  }, [debateHistory.length, scrollToBottom]);
+
+  // Auto-scroll when verdict arrives
+  useEffect(() => {
+    if (verdict) {
+      scrollToBottom();
+    }
+  }, [verdict, scrollToBottom]);
 
   const fetchRateLimits = useCallback(async () => {
     const startTime = performance.now();
@@ -1114,32 +1145,6 @@ export default function Home() {
           </div>
         )}
 
-        {verdict && (
-          <div style={{
-            padding: '20px',
-            background: '#f0f8ff',
-            border: '2px solid #add8e6',
-            borderRadius: '4px',
-            marginBottom: '30px',
-            animation: 'fadeIn 0.5s ease-in'
-          }}>
-            <h2 style={{ marginTop: 0, marginBottom: '15px' }}>Final Verdict</h2>
-            <p style={{ fontSize: '18px', marginBottom: '10px' }}>
-              <strong>Verdict: </strong>
-              <span style={{
-                color: getVerdictColor(verdict.verdict),
-                fontWeight: 'bold',
-                fontSize: '20px'
-              }}>
-                {verdict.verdict.toUpperCase()}
-              </span>
-            </p>
-            <p style={{ fontSize: '16px', lineHeight: '1.6' }}>
-              <strong>Explanation:</strong> {verdict.explanation}
-            </p>
-          </div>
-        )}
-
         {debateHistory.length > 0 && (
           <div>
             <h2 style={{ marginBottom: '20px' }}>Debate Transcript</h2>
@@ -1176,6 +1181,38 @@ export default function Home() {
             ))}
           </div>
         )}
+
+        {verdict && (
+          <div style={{
+            padding: '20px',
+            background: '#f0f8ff',
+            border: '2px solid #add8e6',
+            borderRadius: '4px',
+            marginBottom: '30px',
+            animation: 'fadeIn 0.5s ease-in'
+          }}>
+            <h2 style={{ marginTop: 0, marginBottom: '15px' }}>Final Verdict</h2>
+            <p style={{ fontSize: '14px', color: '#666', marginBottom: '12px' }}>
+              Judge: {MODELS[judgeModel].name}
+            </p>
+            <p style={{ fontSize: '18px', marginBottom: '10px' }}>
+              <strong>Verdict: </strong>
+              <span style={{
+                color: getVerdictColor(verdict.verdict),
+                fontWeight: 'bold',
+                fontSize: '20px'
+              }}>
+                {verdict.verdict.toUpperCase()}
+              </span>
+            </p>
+            <p style={{ fontSize: '16px', lineHeight: '1.6' }}>
+              <strong>Explanation:</strong> {verdict.explanation}
+            </p>
+          </div>
+        )}
+
+        {/* Invisible div at the bottom for auto-scrolling */}
+        <div ref={bottomRef} style={{ height: '1px' }} />
 
         <style jsx>{`
           .page {

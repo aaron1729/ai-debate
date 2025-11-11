@@ -2,6 +2,10 @@
 
 This file provides comprehensive implementation details and design decisions for the AI Debates system to help future development.
 
+## IMPORTANT: README.md is Human-Written
+
+**NEVER modify README.md** - it is a human-written document that reflects the project vision and roadmap. All implementation details and context for AI assistance should go in this file (docs/claude.md) instead.
+
 ## Project Overview
 
 An adversarial truth-seeking system that uses AI debate to evaluate factual claims. Two AI agents argue opposing sides while a judge evaluates the evidence presented.
