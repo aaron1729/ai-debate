@@ -933,7 +933,7 @@ export default function Home() {
                   />
                   <input
                     type="password"
-                    placeholder="OpenAI API Key (for GPT-4)"
+                    placeholder="OpenAI API Key (for GPT)"
                     value={apiKeys.openai}
                     onChange={(e) => setApiKeys({ ...apiKeys, openai: e.target.value })}
                     disabled={loading}
