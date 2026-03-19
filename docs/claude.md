@@ -47,9 +47,9 @@ This implementation comprises:
 - ✅ Server-side API keys for free tier
 - ✅ Sample debate cards with adaptive model selection
 - ✅ Responsive design (6 cards desktop, 2 cards mobile)
-- ⚠️ **PARTIAL**: Per-model rate limiting with Upstash Redis (UI refresh bug exists)
+- ✅ Per-model rate limiting with Upstash Redis
 
-**Rate Limiting (Partially Working):**
+**Rate Limiting:**
 - ✅ Upstash Redis integration
 - ✅ Sliding window rate limiting (24 hour window)
 - ✅ Admin IP privileges via environment variables
@@ -57,6 +57,7 @@ This implementation comprises:
 - ✅ Localhost detection for development (treated as admin)
 - ✅ Redis-backed usage snapshots so the web UI shows true remaining counts across refreshes and restarts
 - ✅ Global backstop of 200 free-tier requests per model per 24h (shared across all IPs)
+- ✅ Vercel cron job (`/api/keep-alive`) pings Redis twice daily to prevent Upstash from closing the database due to inactivity. Schedule: `0 0,12 * * *` (midnight and noon UTC). Requires `CRON_SECRET` env var (auto-provided by Vercel) for authorization. Note: Vercel Hobby plan only supports cron jobs that run at daily or sub-daily frequency — schedules longer than 24h (e.g. `*/3` days) are silently never triggered.
 
 **Test Data Integration:**
 - ✅ Google Fact Check Tools API integration
